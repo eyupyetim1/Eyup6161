@@ -40,3 +40,5 @@ Teslim edilmiş sipariş ekranından şu parçalar kayda geçti: 30 pin ESP-32S 
 pH, EC, çözünmüş oksijen, bulanıklık, 18650 ve şarj kartı bu görüntülerde yok. Kullanıcı başka siparişler olduğunu söyledi; onlar gelmeden envanter tamamlanmış sayılmaz.
 
 Pin atanmadı. 12 V adaptörün ESP32'ye doğrudan bağlanmayacağı bağlantı politikasına yazıldı. LM2596 çıkışı ölçülmeden kullanılmayacak.
+
+Aynı gün parça adlarını ve lehimden önceki ilk dersi `docs/SIFIRDAN_ILK_DERS.md` içine yazdım. İlk fiziksel iş fotoğraf; kablo ve havya yok.
