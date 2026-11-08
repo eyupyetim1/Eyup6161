@@ -28,6 +28,14 @@ Her sinyal için:
 - Tuşlar: soyut Menü, Yukarı, Aşağı, OK, Geri
 - Pil: bölücü orta noktası, ancak oran ve şarj entegresi bilindikten sonra
 
+## Siparişte görülen güç parçaları
+
+12 V 2 A adaptör yalnız LM2596-5V kartının girişine gidebilir. ESP32'nin 5 V veya 3,3 V pinine, TFT'ye ve DS18B20'ye 12 V bağlanmaz.
+
+LM2596 çıkışı, başka hiçbir karta bağlı değilken UT33B+ ile ölçülür. Beklenen boşta değer yaklaşık 5,0 V'tur. 5,3 V üzerindeyse modül kullanılmaz.
+
+İlk açılış Micro USB veri kablosuyladır. Adaptör ve regülatör o denemeye girmez.
+
 ## Hasar riski
 
 - 5 V çıkışlı bir modül, 3,3 V GPIO'ya doğrudan bağlanmaz.

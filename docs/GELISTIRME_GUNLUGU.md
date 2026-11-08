@@ -32,3 +32,11 @@ Cihaz derlemesi PlatformIO `espressif32@8.0.0` ile geçti. Yükleme yapılmadı;
 | esp32-s3-usb-field | geçti | 26360 / 327680 bayt | 354566 / 3342336 bayt |
 
 Sonraki iş, kartın ipek baskısı ve panel header fotoğrafı geldikten sonra tek bir doğrulanmış pin profili açmaktır. Ondan önce sürücü eklenmez.
+
+## 2026-11-08 — İlk sipariş görüntüleri
+
+Teslim edilmiş sipariş ekranından şu parçalar kayda geçti: 30 pin ESP-32S geliştirme kartı (2), ILI9341 2,8 inç dokunmatik TFT (1), su geçirmez DS18B20 (2), LM2596-5V (2), 12 V 2 A adaptör, 6×6 mm tuş (10), mikro SD modülü, breadboard, jumper, direnç ve UT33B+ multimetre.
+
+pH, EC, çözünmüş oksijen, bulanıklık, 18650 ve şarj kartı bu görüntülerde yok. Kullanıcı başka siparişler olduğunu söyledi; onlar gelmeden envanter tamamlanmış sayılmaz.
+
+Pin atanmadı. 12 V adaptörün ESP32'ye doğrudan bağlanmayacağı bağlantı politikasına yazıldı. LM2596 çıkışı ölçülmeden kullanılmayacak.

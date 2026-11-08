@@ -13,9 +13,8 @@ Amaç: işlemcinin açıldığını ve seri metni verdiğini görmek. Sensör, e
 
 | Gözlem | Komut |
 | --- | --- |
-| Klasik ESP32 modülü | `pio run -e esp32dev -t upload` |
-| ESP32-S3, UART köprülü USB | `pio run -e esp32-s3-devkitc-1 -t upload` |
-| ESP32-S3, doğal USB ve seri sessiz kaldıysa | `pio run -e esp32-s3-usb -t upload` |
+| Siparişteki 30 pin ESP-32S kartı, metal kutuda ESP32 yazıyorsa | `pio run -e esp32dev -t upload` |
+| Metal kutuda ESP32-S3 yazıyorsa | Yükleme yapılmaz; yazılım hedefi değiştirilir |
 
 Yanlış aile genellikle yüklemeyi reddeder. Yine de yazıyı okumadan ortam seçilmez. Yükleme hızı 115200.
 
