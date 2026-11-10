@@ -109,6 +109,66 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Kurulum programı (NSIS setup.exe) — oluştur ve sessiz kur/kaldır testi
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress | Out-Null }
+            $env:PATH += ";${env:ProgramFiles(x86)}\NSIS"
+          }
+          [xml]$proj = Get-Content src/PayControl.Desktop/PayControl.Desktop.csproj
+          $surum = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $kur = Join-Path $env:RUNNER_TEMP 'kur'
+          New-Item -ItemType Directory -Force -Path "$kur/app" | Out-Null
+          Copy-Item publish/win-x64/* "$kur/app" -Recurse -Force
+          Get-ChildItem "$kur/app" -Filter *.pdb | Remove-Item
+          Copy-Item docs/KULLANIM.md "$kur/app"
+          Copy-Item src/PayControl.Desktop/Assets/PayControl.ico, samples/bordro-ornek.xlsx $kur
+          $setup = Join-Path $PWD "dist/PayControl-$surum-Kurulum.exe"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          makensis -V2 "-DSURUM=$surum" "-DKAYNAK=$kur\app" "-DCIKTI=$setup" installer/PayControl.nsi
+          if ($LASTEXITCODE -ne 0) { throw "makensis başarısız" }
+          if ($env:CODE_SIGN_PFX) {
+            $pfx = Join-Path $env:RUNNER_TEMP 'imza2.pfx'
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CODE_SIGN_PFX))
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe | Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+            & $signtool.FullName sign /f $pfx /p $env:CODE_SIGN_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $setup
+            Remove-Item $pfx -Force
+          }
+          # Sessiz kurulum testi
+          $p = Start-Process $setup -ArgumentList '/S' -PassThru -Wait
+          Write-Output "Kurulum çıkış kodu: $($p.ExitCode)"
+          $hedef = Join-Path $env:LOCALAPPDATA 'Programs\PayControl'
+          foreach ($f in @('PayControl.exe', 'Kaldir.exe', 'KULLANIM.md', 'Ornekler\bordro-ornek.xlsx')) {
+            if (-not (Test-Path (Join-Path $hedef $f))) { throw "Kurulumda eksik: $f" }
+          }
+          if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'PayControl.lnk'))) { throw "Masaüstü kısayolu yok" }
+          $kayit = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\PayControl'
+          if ($kayit.DisplayVersion -ne $surum) { throw "Programlar listesinde sürüm hatalı: $($kayit.DisplayVersion)" }
+          Write-Output "KURULUM TAMAM: $hedef, sürüm $($kayit.DisplayVersion)"
+          # Kurulu exe ile ekran görüntüsü modunun açıldığını doğrula (kurulan dosyalar eksiksiz)
+          $o = Join-Path $env:RUNNER_TEMP 'kurulu-test'
+          $q = Start-Process (Join-Path $hedef 'PayControl.exe') -ArgumentList @('--ekran-goruntusu', "`"$o`"") -PassThru
+          if (-not $q.WaitForExit(300000)) { $q.Kill(); throw "Kurulu uygulama zaman aşımı" }
+          if (-not (Test-Path "$o/TAMAM.txt")) { if (Test-Path "$o/HATA.txt") { Get-Content "$o/HATA.txt" }; throw "Kurulu uygulama çalışmadı" }
+          Write-Output "KURULU UYGULAMA ÇALIŞTI: $((Get-ChildItem $o -Filter *.png).Count) ekran"
+          # Sessiz kaldırma testi (veriler korunur)
+          $u = Start-Process (Join-Path $hedef 'Kaldir.exe') -ArgumentList '/S' -PassThru -Wait
+          Start-Sleep -Seconds 5
+          if (Test-Path (Join-Path $hedef 'PayControl.exe')) { throw "Kaldırma sonrası dosyalar duruyor" }
+          if (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\PayControl') { throw "Kaldırma kaydı silinmedi" }
+          Write-Output "KALDIRMA TAMAM"
+          Get-Item $setup | Format-List FullName, Length
+
+      - name: Upload setup.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: PayControl-Kurulum-Setup
+          path: PayControl/dist/PayControl-*-Kurulum.exe
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Stage installer package
         shell: pwsh
         run: |
@@ -166,10 +226,14 @@ jobs:
         with:
           name: PayControl-Kurulum-win-x64
           path: paket
+      - uses: actions/download-artifact@v4
+        with:
+          name: PayControl-Kurulum-Setup
+          path: paket
       - name: GitHub sürümü oluştur (otomatik güncelleme bu dosyaları okur)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -R paket
           gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --title "PayControl ${GITHUB_REF_NAME}" --generate-notes \
-            $(find paket -name 'PayControl-Kurulum-win-x64.zip') $(find paket -name 'guncelleme.json')
+            $(find paket -name 'PayControl-*-Kurulum.exe') $(find paket -name 'PayControl-Kurulum-win-x64.zip') $(find paket -name 'guncelleme.json')
