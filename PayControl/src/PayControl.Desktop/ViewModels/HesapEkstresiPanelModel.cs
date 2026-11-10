@@ -45,7 +45,7 @@ public partial class HesapEkstresiPanelModel : ObservableObject
         };
         if (dlg.ShowDialog() != true) return;
         var bytes = await _servis.ExcelOlarakAktarAsync(_personelId);
-        await File.WriteAllBytesAsync(dlg.FileName, bytes);
+        await System.IO.File.WriteAllBytesAsync(dlg.FileName, bytes);
         Mesaj = "Excel kaydedildi.";
     }
 
@@ -60,7 +60,7 @@ public partial class HesapEkstresiPanelModel : ObservableObject
         };
         if (dlg.ShowDialog() != true) return;
         var bytes = await _servis.PdfOlarakAktarAsync(_personelId);
-        await File.WriteAllBytesAsync(dlg.FileName, bytes);
+        await System.IO.File.WriteAllBytesAsync(dlg.FileName, bytes);
         Mesaj = "PDF kaydedildi.";
     }
 }

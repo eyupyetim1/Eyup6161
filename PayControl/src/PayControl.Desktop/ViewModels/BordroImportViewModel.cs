@@ -56,14 +56,14 @@ public partial class BordroImportViewModel : ObservableObject
     private async Task OnizleAsync()
     {
         Mesaj = null;
-        if (string.IsNullOrWhiteSpace(DosyaYolu) || !File.Exists(DosyaYolu))
+        if (string.IsNullOrWhiteSpace(DosyaYolu) || !System.IO.File.Exists(DosyaYolu))
         {
             Mesaj = "Dosya seçiniz.";
             return;
         }
 
-        await using var fs = File.OpenRead(DosyaYolu);
-        Onizleme = await _servis.OnizleAsync(fs, Path.GetFileName(DosyaYolu), DonemYil, DonemAy);
+        await using var fs = System.IO.File.OpenRead(DosyaYolu);
+        Onizleme = await _servis.OnizleAsync(fs, System.IO.Path.GetFileName(DosyaYolu), DonemYil, DonemAy);
         Satirlar.Clear();
         foreach (var s in Onizleme.Satirlar)
             Satirlar.Add(s);
@@ -77,16 +77,16 @@ public partial class BordroImportViewModel : ObservableObject
     private async Task AktarAsync()
     {
         Mesaj = null;
-        if (string.IsNullOrWhiteSpace(DosyaYolu) || !File.Exists(DosyaYolu))
+        if (string.IsNullOrWhiteSpace(DosyaYolu) || !System.IO.File.Exists(DosyaYolu))
         {
             Mesaj = "Dosya seçiniz.";
             return;
         }
 
-        await using var fs = File.OpenRead(DosyaYolu);
+        await using var fs = System.IO.File.OpenRead(DosyaYolu);
         var sonuc = await _servis.AktarAsync(
             fs,
-            Path.GetFileName(DosyaYolu),
+            System.IO.Path.GetFileName(DosyaYolu),
             DonemYil,
             DonemAy,
             _oturum.KullaniciAdi ?? "sistem",

@@ -44,7 +44,7 @@ public partial class OdemeKontrolViewModel : ObservableObject
     private async Task KontrolEtAsync()
     {
         Mesaj = null;
-        if (string.IsNullOrWhiteSpace(BankaDosyaYolu) || !File.Exists(BankaDosyaYolu))
+        if (string.IsNullOrWhiteSpace(BankaDosyaYolu) || !System.IO.File.Exists(BankaDosyaYolu))
         {
             Mesaj = "Banka ödeme Excel dosyasını seçin.";
             return;
@@ -52,15 +52,15 @@ public partial class OdemeKontrolViewModel : ObservableObject
 
         try
         {
-            await using var fs = File.OpenRead(BankaDosyaYolu);
-            var bytes = await File.ReadAllBytesAsync(BankaDosyaYolu);
+            await using var fs = System.IO.File.OpenRead(BankaDosyaYolu);
+            var bytes = await System.IO.File.ReadAllBytesAsync(BankaDosyaYolu);
             var hash = Convert.ToHexString(SHA256.HashData(bytes));
-            await using var ms = new MemoryStream(bytes);
+            await using var ms = new System.IO.MemoryStream(bytes);
             var talimatlar = BankaTalimatOkuyucu.Oku(ms);
 
             KontrolOturumu = await _servis.KontrolBaslatAsync(
                 DonemYil, DonemAy, talimatlar,
-                Path.GetFileName(BankaDosyaYolu), hash,
+                System.IO.Path.GetFileName(BankaDosyaYolu), hash,
                 _oturumServisi.KullaniciAdi ?? "sistem");
 
             Satirlar.Clear();
@@ -102,7 +102,7 @@ public partial class OdemeKontrolViewModel : ObservableObject
         if (KontrolOturumu is null) return;
         try
         {
-            var klasor = Path.Combine(
+            var klasor = System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                 "PayControl", "OnayliOdemeListeleri");
             var liste = await _servis.OnayliListeUretAsync(KontrolOturumu.Id, _oturumServisi.KullaniciAdi ?? "sistem", klasor);
