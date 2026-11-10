@@ -26,5 +26,13 @@ public enum MaliIslemTuru
     DevredenBorc = 17,
     DevredenAlacak = 18,
     MaasDegisikligi = 19,
-    IzinUcreti = 20
+    IzinUcreti = 20,
+    IseGiris = 21,
+    IstenCikis = 22,
+    /// <summary>İncelenen şüpheli fazla ödemenin kesin geri ödeme borcuna dönüşmesi.</summary>
+    FazlaOdemeKesinlesti = 24,
+    /// <summary>Şüpheli fazla ödemenin belgeli hak ediş olarak açıklanması.</summary>
+    FazlaOdemeAciklandi = 25,
+    /// <summary>Bordro kalem dökümü (net istihkaka dahil kalemler; bakiyeyi etkilemez).</summary>
+    BordroKalemBilgisi = 26
 }

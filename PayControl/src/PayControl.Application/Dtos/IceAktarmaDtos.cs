@@ -50,4 +50,5 @@ public sealed class IceAktarmaSonucu
     public int GuncellenenPersonel { get; init; }
     public bool MukerrerEngellendi { get; init; }
     public string Mesaj { get; init; } = string.Empty;
+    public IReadOnlyList<string> Uyarilar { get; init; } = Array.Empty<string>();
 }

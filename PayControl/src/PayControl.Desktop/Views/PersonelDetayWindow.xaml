@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding Baslik}"
-        Height="680" Width="920"
+        Height="760" Width="1240"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgBrush}">
     <DockPanel>
@@ -78,53 +78,141 @@
             </TabItem>
 
             <TabItem Header="Hesap Ekstresi">
-                <DockPanel Margin="12">
-                    <Border DockPanel.Dock="Top" Background="#EEF2F7" Padding="12" Margin="0,0,0,12">
-                        <UniformGrid Columns="3" Rows="2">
-                            <TextBlock Text="{Binding Ekstre.Ozet.ToplamHakEdis, StringFormat=Toplam hak ediş: {0:N2}}"/>
-                            <TextBlock Text="{Binding Ekstre.Ozet.GerceklesenToplamOdeme, StringFormat=Gerçekleşen ödeme: {0:N2}}"/>
-                            <TextBlock Text="{Binding Ekstre.Ozet.OdenmemisHakEdis, StringFormat=Ödenmemiş hak ediş: {0:N2}}"/>
-                            <TextBlock Text="{Binding Ekstre.Ozet.AcikAvansBorcu, StringFormat=Açık avans: {0:N2}}"/>
-                            <TextBlock Text="{Binding Ekstre.Ozet.IncelemeBekleyenFazlaOdeme, StringFormat=İnceleme bekleyen fazla: {0:N2}}"/>
-                            <TextBlock Text="{Binding Ekstre.Ozet.KesinlesmisGeriOdemeBorcu, StringFormat=Kesinleşmiş geri ödeme: {0:N2}}"/>
-                        </UniformGrid>
+                <DockPanel Margin="10">
+                    <!-- Üst bölüm: dört ayrı bakiye; birbirine mahsup edilmez -->
+                    <Border DockPanel.Dock="Top" Background="#EEF2F7" Padding="10" Margin="0,0,0,8">
+                        <StackPanel>
+                            <UniformGrid Columns="3" Rows="2">
+                                <TextBlock Text="{Binding Ekstre.Ozet.ToplamHakEdis, StringFormat=Toplam hak ediş: {0:N2}}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Ekstre.Ozet.GerceklesenToplamOdeme, StringFormat=Gerçekleşen ödeme: {0:N2}}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Ekstre.Ozet.OdenmemisHakEdis, StringFormat=Ödenmemiş hak ediş: {0:N2}}" FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}"/>
+                                <TextBlock Text="{Binding Ekstre.Ozet.AcikAvansBorcu, StringFormat=Açık avans borcu: {0:N2}}"/>
+                                <TextBlock Text="{Binding Ekstre.Ozet.IncelemeBekleyenFazlaOdeme, StringFormat=İnceleme bekleyen fazla ödeme: {0:N2}}" Foreground="{StaticResource WarnBrush}"/>
+                                <TextBlock Text="{Binding Ekstre.Ozet.KesinlesmisGeriOdemeBorcu, StringFormat=Kesinleşmiş geri ödeme borcu: {0:N2}}" Foreground="{StaticResource DangerBrush}"/>
+                            </UniformGrid>
+                            <TextBlock Margin="0,6,0,0" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap">
+                                <Run Text="{Binding Ekstre.FiltreAciklamasi, StringFormat=Filtre: {0}}"/>
+                                <Run Text="{Binding Ekstre.GenelOzet.OdenmemisHakEdis, StringFormat=  |  Genel ödenmemiş: {0:N2}}"/>
+                                <Run Text="{Binding Ekstre.GenelOzet.AcikAvansBorcu, StringFormat=  |  Genel açık avans: {0:N2}}"/>
+                            </TextBlock>
+                        </StackPanel>
                     </Border>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button Content="Excel" Style="{StaticResource SecondaryButton}"
-                                Command="{Binding Ekstre.ExcelAktarCommand}" Margin="0,0,8,0"/>
-                        <Button Content="PDF" Style="{StaticResource SecondaryButton}"
-                                Command="{Binding Ekstre.PdfAktarCommand}"/>
-                        <TextBlock Text="{Binding Ekstre.Mesaj}" Margin="12,0,0,0" VerticalAlignment="Center"
-                                   Foreground="{StaticResource NavyBrush}"/>
-                    </StackPanel>
-                    <DataGrid ItemsSource="{Binding Ekstre.Hareketler}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Tarih" Binding="{Binding IslemTarihi}" Width="100"/>
-                            <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="80"/>
-                            <DataGridTextColumn Header="Tür" Binding="{Binding IslemTuru}" Width="120"/>
-                            <DataGridTextColumn Header="Bakiye" Binding="{Binding BakiyeTuru}" Width="120"/>
-                            <DataGridTextColumn Header="Tutar" Binding="{Binding Tutar, StringFormat=N2}" Width="100"/>
-                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="2*"/>
-                            <DataGridTextColumn Header="Belge" Binding="{Binding KaynakBelge}" Width="*"/>
-                            <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdi}" Width="100"/>
-                            <DataGridTextColumn Header="İşlem Kimliği" Binding="{Binding IslemKimligi}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <TextBlock Text="Tarih" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <DatePicker SelectedDate="{Binding Ekstre.Baslangic}" Width="115"/>
+                        <DatePicker SelectedDate="{Binding Ekstre.Bitis}" Width="115" Margin="4,0,8,0"/>
+                        <TextBox Width="110" Text="{Binding Ekstre.Sirket, UpdateSourceTrigger=PropertyChanged}" ToolTip="Şirket"/>
+                        <TextBox Width="110" Margin="4,0,0,0" Text="{Binding Ekstre.Isyeri, UpdateSourceTrigger=PropertyChanged}" ToolTip="Tesis / işyeri"/>
+                        <ComboBox Width="160" Margin="4,0,0,0" ItemsSource="{Binding Ekstre.IslemTuruSecenekleri}"
+                                  SelectedItem="{Binding Ekstre.SeciliIslemTuru}" DisplayMemberPath="Ad"/>
+                        <ComboBox Width="230" Margin="4,0,0,0" ItemsSource="{Binding Ekstre.CalismaDonemiSecenekleri}"
+                                  SelectedItem="{Binding Ekstre.SeciliCalismaDonemi}" DisplayMemberPath="Ad" ToolTip="Çalışma dönemi"/>
+                        <Button Content="Uygula" Style="{StaticResource PrimaryButton}" Margin="6,0,0,0" Command="{Binding Ekstre.UygulaCommand}"/>
+                        <Button Content="Temizle" Style="{StaticResource SecondaryButton}" Margin="4,0,0,0" Command="{Binding Ekstre.FiltreTemizleCommand}"/>
+                        <Button Content="Excel" Style="{StaticResource SecondaryButton}" Margin="12,0,0,0" Command="{Binding Ekstre.ExcelAktarCommand}"/>
+                        <Button Content="PDF" Style="{StaticResource SecondaryButton}" Margin="4,0,0,0" Command="{Binding Ekstre.PdfAktarCommand}"/>
+                    </WrapPanel>
+
+                    <Expander DockPanel.Dock="Top" Header="Manuel mali işlem / ters kayıt" Margin="0,0,0,6">
+                        <StackPanel Margin="0,6,0,0">
+                            <WrapPanel>
+                                <ComboBox Width="230" ItemsSource="{Binding Ekstre.GirisTurleri}" SelectedItem="{Binding Ekstre.GirisTuru}"/>
+                                <DatePicker SelectedDate="{Binding Ekstre.GirisTarihi}" Width="115" Margin="4,0,0,0"/>
+                                <TextBlock Text="Hak ediş dönemi" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                <TextBox Width="55" Text="{Binding Ekstre.GirisDonemYil}"/>
+                                <TextBox Width="35" Margin="2,0,0,0" Text="{Binding Ekstre.GirisDonemAy}"/>
+                                <TextBlock Text="Tutar" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                <TextBox Width="90" Text="{Binding Ekstre.GirisTutar}"/>
+                                <TextBox Width="200" Margin="4,0,0,0" Text="{Binding Ekstre.GirisAciklama, UpdateSourceTrigger=PropertyChanged}" ToolTip="Açıklama / gerekçe (zorunlu)"/>
+                                <TextBox Width="100" Margin="4,0,0,0" Text="{Binding Ekstre.GirisBelge, UpdateSourceTrigger=PropertyChanged}" ToolTip="Kaynak belge no"/>
+                                <Button Content="Kaydet" Style="{StaticResource PrimaryButton}" Margin="6,0,0,0" Command="{Binding Ekstre.KaydetCommand}"/>
+                            </WrapPanel>
+                            <WrapPanel Margin="0,6,0,0">
+                                <TextBox Width="380" Text="{Binding Ekstre.TersKayitNedeni, UpdateSourceTrigger=PropertyChanged}" ToolTip="Seçili hareket için ters kayıt nedeni"/>
+                                <Button Content="Seçili harekete ters kayıt" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Command="{Binding Ekstre.TersKayitCommand}"/>
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"
+                                           Text="Hareketler silinmez; düzeltme ters kayıtla yapılır."/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding Ekstre.Mesaj}" Foreground="{StaticResource NavyBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+
+                    <TabControl>
+                        <TabItem Header="Mali hareketler">
+                            <DataGrid ItemsSource="{Binding Ekstre.Hareketler}" SelectedItem="{Binding Ekstre.SeciliHareket}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tarih" Binding="{Binding IslemTarihi, StringFormat=dd.MM.yyyy}" Width="85"/>
+                                    <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="65"/>
+                                    <DataGridTextColumn Header="İşlem" Binding="{Binding IslemTuruEtiket}" Width="130"/>
+                                    <DataGridTextColumn Header="Bakiye" Binding="{Binding BakiyeEtiket}" Width="110"/>
+                                    <DataGridTextColumn Header="Tutar" Binding="{Binding Etki, StringFormat=N2}" Width="90"/>
+                                    <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="2*"/>
+                                    <DataGridTextColumn Header="Kaynak belge" Binding="{Binding KaynakBelge}" Width="*"/>
+                                    <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdi}" Width="80"/>
+                                    <DataGridTextColumn Header="Maaş alacağı" Binding="{Binding MaasAlacagiBakiyesi, StringFormat=N2}" Width="95"/>
+                                    <DataGridTextColumn Header="Avans" Binding="{Binding AvansBorcuBakiyesi, StringFormat=N2}" Width="85"/>
+                                    <DataGridTextColumn Header="Şüpheli" Binding="{Binding SupheliFazlaBakiyesi, StringFormat=N2}" Width="80"/>
+                                    <DataGridTextColumn Header="Geri ödeme" Binding="{Binding GeriOdemeBakiyesi, StringFormat=N2}" Width="85"/>
+                                    <DataGridTextColumn Header="İşlem kimliği" Binding="{Binding IslemKimligi}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Dönem bakiyeleri">
+                            <DataGrid ItemsSource="{Binding Ekstre.DonemBakiyeleri}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="90"/>
+                                    <DataGridTextColumn Header="Hak ediş" Binding="{Binding HakEdis, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Ödenen" Binding="{Binding Odenen, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Fark" Binding="{Binding Fark, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Avans mahsubu" Binding="{Binding AvansMahsup, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Kesintiler" Binding="{Binding Kesintiler, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Çalışma dönemleri">
+                            <DataGrid ItemsSource="{Binding Ekstre.CalismaDonemiOzetleri}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Çalışma dönemi" Binding="{Binding Etiket}" Width="2*"/>
+                                    <DataGridTextColumn Header="Şirket" Binding="{Binding Donem.Sirket}" Width="*"/>
+                                    <DataGridTextColumn Header="Hak ediş" Binding="{Binding Ozet.ToplamHakEdis, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Ödeme" Binding="{Binding Ozet.GerceklesenToplamOdeme, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Ödenmemiş" Binding="{Binding Ozet.OdenmemisHakEdis, StringFormat=N2}" Width="110"/>
+                                    <DataGridTextColumn Header="Açık avans" Binding="{Binding Ozet.AcikAvansBorcu, StringFormat=N2}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
                 </DockPanel>
             </TabItem>
 
             <TabItem Header="Avans Geçmişi">
-                <DataGrid ItemsSource="{Binding Avanslar}" Margin="8">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Tarih" Binding="{Binding AvansTarihi}" Width="100"/>
-                        <DataGridTextColumn Header="Tür" Binding="{Binding AvansTuru}" Width="140"/>
-                        <DataGridTextColumn Header="Tutar" Binding="{Binding Tutar, StringFormat=N2}" Width="100"/>
-                        <DataGridTextColumn Header="Taksit" Binding="{Binding TaksitSayisi}" Width="70"/>
-                        <DataGridTextColumn Header="Aylık Mahsup" Binding="{Binding AylikMahsupTutari, StringFormat=N2}" Width="110"/>
-                        <DataGridTextColumn Header="Kalan Borç" Binding="{Binding KalanBorc, StringFormat=N2}" Width="100"/>
-                        <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <DockPanel Margin="8">
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <TextBlock Text="Avans ver:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                        <DatePicker SelectedDate="{Binding AvansTarihi}" Width="115"/>
+                        <TextBlock Text="Tutar" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                        <TextBox Width="90" Text="{Binding AvansTutari}"/>
+                        <TextBlock Text="Taksit" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                        <TextBox Width="40" Text="{Binding AvansTaksit}"/>
+                        <TextBox Width="220" Margin="8,0,0,0" Text="{Binding AvansAciklama, UpdateSourceTrigger=PropertyChanged}" ToolTip="Açıklama"/>
+                        <Button Content="Avans Ver" Style="{StaticResource PrimaryButton}" Margin="6,0,0,0" Command="{Binding AvansVerCommand}"/>
+                        <TextBlock Text="{Binding IslemMesaji}" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource NavyBrush}"/>
+                    </WrapPanel>
+                    <DataGrid ItemsSource="{Binding Avanslar}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding AvansTarihi, StringFormat=dd.MM.yyyy}" Width="100"/>
+                            <DataGridTextColumn Header="Tür" Binding="{Binding AvansTuru}" Width="140"/>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding Tutar, StringFormat=N2}" Width="100"/>
+                            <DataGridTextColumn Header="Taksit" Binding="{Binding TaksitSayisi}" Width="70"/>
+                            <DataGridTextColumn Header="Aylık Mahsup" Binding="{Binding AylikMahsupTutari, StringFormat=N2}" Width="110"/>
+                            <DataGridTextColumn Header="Kalan Borç" Binding="{Binding KalanBorc, StringFormat=N2}" Width="100"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
             </TabItem>
             <TabItem Header="Banka Ödemeleri">
                 <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}"
@@ -141,7 +229,17 @@
             </TabItem>
 
             <TabItem Header="İşe Giriş/Çıkış Geçmişi">
-                <DataGrid ItemsSource="{Binding CalismaDonemleri}" Margin="8">
+                <DockPanel Margin="8">
+                <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock Text="Yeniden işe al (geçmiş korunur):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                    <DatePicker SelectedDate="{Binding YenidenGirisTarihi}" Width="115"/>
+                    <TextBox Width="140" Margin="6,0,0,0" Text="{Binding YenidenIsyeri, UpdateSourceTrigger=PropertyChanged}" ToolTip="Yeni işyeri/tesis"/>
+                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding YenidenMaas}" ToolTip="Yeni maaş"/>
+                    <Button Content="Yeniden İşe Al" Style="{StaticResource PrimaryButton}" Margin="6,0,0,0"
+                            Command="{Binding YenidenIseAlCommand}" IsEnabled="{Binding IstenAyrildi}"/>
+                    <TextBlock Text="{Binding IslemMesaji}" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource NavyBrush}"/>
+                </WrapPanel>
+                <DataGrid ItemsSource="{Binding CalismaDonemleri}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Giriş" Binding="{Binding IseGirisTarihi}" Width="120"/>
                         <DataGridTextColumn Header="Çıkış" Binding="{Binding IstenCikisTarihi}" Width="120"/>
@@ -151,6 +249,7 @@
                         <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="100"/>
                     </DataGrid.Columns>
                 </DataGrid>
+                </DockPanel>
             </TabItem>
 
             <TabItem Header="Evraklar">

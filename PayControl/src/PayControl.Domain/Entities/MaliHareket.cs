@@ -33,5 +33,21 @@ public class MaliHareket
     public string? KaynakReferans { get; set; }
     public string? KaynakBelge { get; set; }
     public string? KullaniciAdi { get; set; }
+
+    /// <summary>Hareketin ait olduğu şirket (çalışma döneminden).</summary>
+    public string? Sirket { get; set; }
+
+    /// <summary>Hareketin ait olduğu tesis / işyeri.</summary>
+    public string? Isyeri { get; set; }
+
+    /// <summary>Ters kayıt ise iptal ettiği hareket; mahsup/kesinleştirme ise ilişkili hareket.</summary>
+    public Guid? IlgiliHareketId { get; set; }
+
+    /// <summary>
+    /// true ise bu kayıt <see cref="IlgiliHareketId"/> hareketinin ters kaydıdır: aynı işlem türü,
+    /// aynı bakiye, işaret ters. Orijinal hareket silinmez.
+    /// </summary>
+    public bool TersKayitMi { get; set; }
+
     public DateTime KayitZamani { get; set; } = DateTime.UtcNow;
 }

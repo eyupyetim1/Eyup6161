@@ -24,4 +24,14 @@ public class OnayliOdemeListesi
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
     public string? OlusturanKullanici { get; set; }
     public string? KaynakFormatNotu { get; set; }
+
+    public Guid? BordroIceAktarmaId { get; set; }
+    public string? BordroDosyaAdi { get; set; }
+
+    /// <summary>Sonradan değişiklik/yeni sürüm üretildiğinde false olur; dosya silinmez.</summary>
+    public bool Gecerli { get; set; } = true;
+    public string? GecersizlikNedeni { get; set; }
+    public Guid? YerineGecenListeId { get; set; }
+
+    public ICollection<OnayliOdemeListesiSatiri> Satirlar { get; set; } = new List<OnayliOdemeListesiSatiri>();
 }

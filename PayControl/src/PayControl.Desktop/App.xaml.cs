@@ -18,6 +18,13 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
+        // Tutar/tarih metinleri (ekstre, PDF, kontrol gerekçeleri) Türkçe biçimde üretilir.
+        var tr = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = tr;
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = tr;
+        System.Threading.Thread.CurrentThread.CurrentCulture = tr;
+        System.Threading.Thread.CurrentThread.CurrentUICulture = tr;
+
         DispatcherUnhandledException += (_, args) =>
         {
             KaydetVeGoster(args.Exception);

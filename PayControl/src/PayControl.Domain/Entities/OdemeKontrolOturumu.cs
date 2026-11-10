@@ -18,10 +18,19 @@ public class OdemeKontrolOturumu
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
     public string? OlusturanKullanici { get; set; }
 
+    /// <summary>Kontrolün dayandığı bordro içe aktarma kaydı.</summary>
+    public Guid? BordroIceAktarmaId { get; set; }
+
+    /// <summary>Yüklenen banka dosyasının başlık/kolon şablonu (JSON). Onaylı liste bu formatta üretilir.</summary>
+    public string? BankaSablonJson { get; set; }
+
+    public DateTime? SonDegisiklikZamani { get; set; }
+
     public bool KontrolTamamlandi { get; set; }
     public DateTime? OnayZamani { get; set; }
     public string? OnaylayanKullanici { get; set; }
 
     public ICollection<OdemeKontrolSatiri> Satirlar { get; set; } = new List<OdemeKontrolSatiri>();
+    public ICollection<OdemeTalimatSatiri> Talimatlar { get; set; } = new List<OdemeTalimatSatiri>();
     public ICollection<OnayliOdemeListesi> OnayliListeler { get; set; } = new List<OnayliOdemeListesi>();
 }

@@ -35,6 +35,15 @@ public class MaasDonemKaydi
 
     public int? KaynakSatirNo { get; set; }
 
+    public Guid? CalismaDonemiId { get; set; }
+    public string? Sirket { get; set; }
+
+    /// <summary>Bordro geri alındıysa kayıt silinmez, iptal işaretlenir.</summary>
+    public bool IptalEdildi { get; set; }
+    public DateTime? IptalZamani { get; set; }
+    public string? IptalEden { get; set; }
+    public string? IptalNedeni { get; set; }
+
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
 
     public ICollection<MaasKalemi> Kalemler { get; set; } = new List<MaasKalemi>();

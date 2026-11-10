@@ -9,9 +9,15 @@ namespace PayControl.Application.Services;
 
 public sealed class PersonelServisi : IPersonelServisi
 {
+    private static readonly System.Globalization.CultureInfo Tr = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
     private readonly IPayControlDbContext _db;
+    private readonly IMaliHareketServisi _defter;
 
-    public PersonelServisi(IPayControlDbContext db) => _db = db;
+    public PersonelServisi(IPayControlDbContext db, IMaliHareketServisi defter)
+    {
+        _db = db;
+        _defter = defter;
+    }
 
     public async Task<IReadOnlyList<PersonelOzetDto>> ListeleAsync(
         string? arama = null,
@@ -87,12 +93,15 @@ public sealed class PersonelServisi : IPersonelServisi
             CalismaDurumu = CalismaDurumu.Aktif
         };
 
+        CalismaDonemi? ilkDonem = null;
         if (dto.IseGirisTarihi.HasValue)
         {
-            PersonelDonemKurallari.YeniDonemAc(personel, dto.IseGirisTarihi.Value, dto.Isyeri, dto.Gorevi, dto.Sirket);
+            ilkDonem = PersonelDonemKurallari.YeniDonemAc(personel, dto.IseGirisTarihi.Value, dto.Isyeri, dto.Gorevi, dto.Sirket);
         }
 
         _db.Personeller.Add(personel);
+        if (ilkDonem is not null)
+            await IseGirisHareketiAsync(personel, ilkDonem, kullaniciAdi, ct);
         _db.DenetimKayitlari.Add(new DenetimKaydi
         {
             PersonelId = personel.Id,
@@ -117,6 +126,25 @@ public sealed class PersonelServisi : IPersonelServisi
         var personel = await _db.Personeller.FirstOrDefaultAsync(p => p.Id == id, ct)
             ?? throw new InvalidOperationException("Personel bulunamadı.");
 
+        if (personel.GuncelMaas != dto.GuncelMaas)
+        {
+            // Maaş değişikliği ekstrede bilgi satırı olarak görünür; geçmiş dönem hak edişleri değişmez.
+            await _defter.DeftereEkleAsync(new MaliHareket
+            {
+                IslemKimligi = MaliHareketKurallari.IslemKimligi("MaasDegisikligi", personel.Id, Guid.NewGuid().ToString("N")),
+                PersonelId = personel.Id,
+                IslemTarihi = DateOnly.FromDateTime(DateTime.Today),
+                IslemTuru = MaliIslemTuru.MaasDegisikligi,
+                BakiyeTuru = BakiyeTuru.Bilgi,
+                Tutar = dto.GuncelMaas ?? 0m,
+                Aciklama = $"Maaş değişikliği: {personel.GuncelMaas?.ToString("N2", Tr) ?? "-"} → {dto.GuncelMaas?.ToString("N2", Tr) ?? "-"}" +
+                           (string.IsNullOrWhiteSpace(neden) ? "" : $" ({neden})"),
+                KaynakTuru = nameof(Personel),
+                KaynakReferans = personel.Id.ToString(),
+                KullaniciAdi = kullaniciAdi
+            }, false, ct);
+        }
+
         KaydetDegisiklik(personel, nameof(Personel.AdSoyad), personel.AdSoyad, dto.AdSoyad, kullaniciAdi, neden);
         personel.AdSoyad = dto.AdSoyad.Trim();
 
@@ -137,6 +165,65 @@ public sealed class PersonelServisi : IPersonelServisi
         await _db.SaveChangesAsync(ct);
         return (await GetirAsync(id, ct))!;
     }
+
+    public async Task<PersonelDetayDto> YenidenIseAlAsync(
+        Guid id,
+        DateOnly iseGirisTarihi,
+        string? isyeri,
+        string? gorevi,
+        string? sirket,
+        decimal? maas,
+        string kullaniciAdi,
+        CancellationToken ct = default)
+    {
+        var personel = await _db.Personeller.Include(p => p.CalismaDonemleri)
+            .FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new InvalidOperationException("Personel bulunamadı.");
+
+        if (personel.CalismaDurumu != CalismaDurumu.IstenAyrildi)
+            throw new InvalidOperationException("Yalnızca işten ayrılmış personel yeniden işe alınabilir.");
+        if (personel.SonCikisTarihi.HasValue && iseGirisTarihi <= personel.SonCikisTarihi.Value)
+            throw new InvalidOperationException("Yeni giriş tarihi önceki çıkış tarihinden sonra olmalıdır.");
+
+        // Önceki çalışma dönemleri ve tüm mali geçmiş aynı kartta korunur.
+        var donem = PersonelDonemKurallari.YeniDonemAc(personel, iseGirisTarihi, isyeri, gorevi, sirket);
+        _db.CalismaDonemleri.Add(donem);
+        if (isyeri is not null) personel.Isyeri = isyeri;
+        if (gorevi is not null) personel.Gorevi = gorevi;
+        if (sirket is not null) personel.Sirket = sirket;
+        if (maas.HasValue) personel.GuncelMaas = maas;
+
+        await IseGirisHareketiAsync(personel, donem, kullaniciAdi, ct);
+        _db.DenetimKayitlari.Add(new DenetimKaydi
+        {
+            PersonelId = personel.Id,
+            VarlikTuru = nameof(CalismaDonemi),
+            VarlikId = donem.Id,
+            Islem = "YenidenIseAlim",
+            YeniDeger = iseGirisTarihi.ToString("yyyy-MM-dd"),
+            KullaniciAdi = kullaniciAdi
+        });
+
+        await _db.SaveChangesAsync(ct);
+        return (await GetirAsync(id, ct))!;
+    }
+
+    private async Task IseGirisHareketiAsync(Personel personel, CalismaDonemi donem, string kullanici, CancellationToken ct) =>
+        await _defter.DeftereEkleAsync(new MaliHareket
+        {
+            IslemKimligi = MaliHareketKurallari.IslemKimligi("IseGiris", personel.Id, donem.Id.ToString("N")),
+            PersonelId = personel.Id,
+            CalismaDonemiId = donem.Id,
+            IslemTarihi = donem.IseGirisTarihi,
+            IslemTuru = MaliIslemTuru.IseGiris,
+            BakiyeTuru = BakiyeTuru.Bilgi,
+            Tutar = personel.GuncelMaas ?? 0m,
+            Aciklama = $"İşe giriş — {donem.Sirket ?? personel.Sirket} / {donem.Isyeri ?? personel.Isyeri}" +
+                       (personel.GuncelMaas.HasValue ? $", başlangıç maaşı {personel.GuncelMaas:N2}" : ""),
+            KaynakTuru = nameof(CalismaDonemi),
+            KaynakReferans = donem.Id.ToString(),
+            KullaniciAdi = kullanici
+        }, false, ct);
 
     private void KaydetDegisiklik(
         Personel personel,

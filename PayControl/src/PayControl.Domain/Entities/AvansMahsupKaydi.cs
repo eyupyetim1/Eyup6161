@@ -13,4 +13,8 @@ public class AvansMahsupKaydi
     public bool BordroyaGirildi { get; set; }
     public DateOnly? GerceklesmeTarihi { get; set; }
     public string? Aciklama { get; set; }
+
+    /// <summary>Mahsup bordro içe aktarmasından geldiyse kaynak içe aktarma (geri almada iade edilir).</summary>
+    public Guid? KaynakIceAktarmaId { get; set; }
+    public string? GerceklestirenKullanici { get; set; }
 }

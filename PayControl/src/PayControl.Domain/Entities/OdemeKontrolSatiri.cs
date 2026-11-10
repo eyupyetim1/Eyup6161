@@ -17,6 +17,12 @@ public class OdemeKontrolSatiri
     public string? BankaIban { get; set; }
     public string? KartIban { get; set; }
 
+    public string? KartAdSoyad { get; set; }
+    public string? BankaAdSoyad { get; set; }
+
+    /// <summary>Bu kontrol satırını oluşturan banka talimat satır numaraları (virgülle).</summary>
+    public string? TalimatSatirNolari { get; set; }
+
     public decimal? BordroNetIstihkak { get; set; }
     public decimal? BankaOdemeTutari { get; set; }
 

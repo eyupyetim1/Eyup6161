@@ -28,5 +28,18 @@ public class BankaOdemeKaydi
     public bool EslesmeOnaylandi { get; set; }
     public string? EslesmeNotu { get; set; }
 
+    public OdemeKanali OdemeKanali { get; set; } = OdemeKanali.Banka;
+
+    /// <summary>Mükerrer engeli için benzersiz anahtar (banka referansı veya satır özeti).</summary>
+    public string? TekillikAnahtari { get; set; }
+
+    public string? KaynakTuru { get; set; }
+    public Guid? IceAktarmaId { get; set; }
+
+    /// <summary>Banka satırındaki ham kimlik/ad (eşleşmeyen hareketler için).</summary>
+    public string? TcKimlikNo { get; set; }
+    public string? AdSoyad { get; set; }
+    public string? KullaniciAdi { get; set; }
+
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
 }

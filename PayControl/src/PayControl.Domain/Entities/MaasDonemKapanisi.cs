@@ -32,8 +32,13 @@ public class MaasDonemKapanisi
     public string? YenidenAcanKullanici { get; set; }
     public string? YenidenAcmaNedeni { get; set; }
 
+    /// <summary>Kaç kez kapatıldığı (yeniden açılıp tekrar kapatılanlar dahil).</summary>
+    public int KapanisSayisi { get; set; }
+    public DateTime? MutabakatZamani { get; set; }
+
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
 
     public ICollection<DonemKontrolMaddesi> KontrolMaddeleri { get; set; } = new List<DonemKontrolMaddesi>();
+    public ICollection<MutabakatFarki> Farklar { get; set; } = new List<MutabakatFarki>();
     public ICollection<DonemDuzeltmeKaydi> Duzeltmeler { get; set; } = new List<DonemDuzeltmeKaydi>();
 }

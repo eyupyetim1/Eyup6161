@@ -27,6 +27,11 @@ public interface IPayControlDbContext
     DbSet<OdemeKontrolOturumu> OdemeKontrolOturumlari { get; }
     DbSet<OdemeKontrolSatiri> OdemeKontrolSatirlari { get; }
     DbSet<OnayliOdemeListesi> OnayliOdemeListeleri { get; }
+    DbSet<OnayliOdemeListesiSatiri> OnayliOdemeListesiSatirlari { get; }
+    DbSet<OdemeTalimatSatiri> OdemeTalimatSatirlari { get; }
+    DbSet<MutabakatFarki> MutabakatFarklari { get; }
+    DbSet<DonemKapanisAnlikGoruntusu> DonemKapanisAnlikGoruntuleri { get; }
+    DbSet<DonemKapanisOzeti> DonemKapanisOzetleri { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

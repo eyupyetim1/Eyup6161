@@ -2,54 +2,138 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Aylık Maaş Kapanış ve Mutabakat"
-        Height="720" Width="960"
+        Height="800" Width="1240"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgBrush}">
-    <DockPanel Margin="16">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-            <TextBlock Text="Dönem kapanış" FontSize="18" FontWeight="SemiBold"
-                       Foreground="{StaticResource NavyBrush}"/>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+    <DockPanel Margin="14">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <TextBlock Text="Dönem kapanış ve banka mutabakatı" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource NavyBrush}"/>
+            <WrapPanel Margin="0,8,0,6">
                 <TextBlock Text="Dönem" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                <TextBox Width="70" Text="{Binding DonemYil}" Margin="0,0,6,0"/>
-                <TextBox Width="40" Text="{Binding DonemAy}" Margin="0,0,12,0"/>
-                <Button Content="Yükle" Style="{StaticResource PrimaryButton}"
-                        Command="{Binding YukleCommand}" Margin="0,0,8,0"/>
-                <Button Content="Maddeyi Tamamla" Style="{StaticResource SecondaryButton}"
-                        Command="{Binding MaddeTamamlaCommand}" Margin="0,0,8,0"/>
-                <Button Content="Dönemi Kapat" Style="{StaticResource PrimaryButton}"
-                        Command="{Binding KapatCommand}" Margin="0,0,8,0"/>
-                <Button Content="Yeniden Aç" Style="{StaticResource SecondaryButton}"
-                        Command="{Binding YenidenAcCommand}"/>
-            </StackPanel>
-            <TextBox Text="{Binding KapanisNotu, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="Kapanış notu / gerekçeli istisna" Margin="0,0,0,6"/>
-            <TextBox Text="{Binding YenidenAcmaNedeni, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="Yeniden açma gerekçesi" Margin="0,0,0,6"/>
-            <TextBlock Text="{Binding Mesaj}" Foreground="{StaticResource NavyBrush}" Margin="0,0,0,8"/>
-            <Border Background="#EEF2F7" Padding="10" Margin="0,0,0,8">
-                <StackPanel>
-                    <TextBlock FontWeight="SemiBold" Text="{Binding Donem.Durum, StringFormat=Durum: {0}}"/>
-                    <TextBlock Text="{Binding Donem.ToplamBeklenenMaas, StringFormat=Beklenen maaş: {0:N2}}"/>
-                    <TextBlock Text="{Binding Donem.ToplamBankaOdemesi, StringFormat=Banka ödemesi: {0:N2}}"/>
-                    <TextBlock Text="{Binding Donem.ToplamEksikOdeme, StringFormat=Eksik: {0:N2}}"/>
-                    <TextBlock Text="{Binding Donem.ToplamFazlaOdeme, StringFormat=Fazla: {0:N2}}"/>
-                    <TextBlock Text="{Binding Donem.AcikAvanslar, StringFormat=Açık avans: {0:N2}}"/>
-                </StackPanel>
+                <TextBox Width="60" Text="{Binding DonemYil}" Margin="0,0,4,0"/>
+                <TextBox Width="36" Text="{Binding DonemAy}" Margin="0,0,10,0"/>
+                <Button Content="Yükle" Style="{StaticResource PrimaryButton}" Command="{Binding YukleCommand}" Margin="0,0,6,0"/>
+                <Button Content="Liste bankaya iletildi" Style="{StaticResource SecondaryButton}" Command="{Binding BankayaIletildiCommand}" Margin="0,0,6,0"/>
+                <Button Content="Gerçekleşen Banka Ödemelerini İçe Aktar" Style="{StaticResource SecondaryButton}" Command="{Binding BankaHareketIceAktarCommand}" Margin="0,0,6,0"/>
+                <Button Content="Mutabakat Yap" Style="{StaticResource PrimaryButton}" Command="{Binding MutabakatYapCommand}" Margin="0,0,6,0"/>
+                <Button Content="Kapanış Raporu (Excel)" Style="{StaticResource SecondaryButton}" Command="{Binding RaporExcelCommand}"/>
+            </WrapPanel>
+            <TextBlock Text="{Binding Mesaj}" Foreground="{StaticResource NavyBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+            <Border Background="#EEF2F7" Padding="10">
+                <UniformGrid Columns="3">
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Rapor.Durum, StringFormat=Durum: {0}}"/>
+                    <TextBlock Text="{Binding Rapor.ToplamBeklenenMaas, StringFormat=Toplam beklenen maaş: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.ToplamBankaOdemesi, StringFormat=Toplam banka/kasa ödemesi: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.ToplamEksikOdeme, StringFormat=Toplam eksik ödeme: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.ToplamFazlaOdeme, StringFormat=Toplam fazla ödeme: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.OdenmemisHakEdisler, StringFormat=Ödenmemiş hak edişler: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.AcikAvanslar, StringFormat=Açık avanslar: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.CikisSonrasiSupheli, StringFormat=Çıkış sonrası şüpheli: {0:N2}}"/>
+                    <TextBlock Text="{Binding Rapor.CozulmemisUyariSayisi, StringFormat=Çözülmemiş uyarı: {0}}" Foreground="{StaticResource DangerBrush}"/>
+                    <TextBlock Text="{Binding Rapor.GerekceliIstisnaSayisi, StringFormat=Gerekçeli istisna: {0}}"/>
+                    <TextBlock Text="{Binding Rapor.KapanisSayisi, StringFormat=Kapanış sayısı: {0}}"/>
+                </UniformGrid>
             </Border>
-            <TextBlock Text="Önceki ay karşılaştırması" FontWeight="SemiBold"/>
-            <TextBlock Text="{Binding KarsilastirmaMetni}" TextWrapping="Wrap" Margin="0,4,0,8"
-                       Foreground="{StaticResource MutedBrush}"/>
         </StackPanel>
 
-        <DataGrid ItemsSource="{Binding Maddeler}" SelectedItem="{Binding SeciliMadde}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="#" Binding="{Binding Sira}" Width="40"/>
-                <DataGridTextColumn Header="Kod" Binding="{Binding MaddeKodu}" Width="100"/>
-                <DataGridTextColumn Header="Kontrol maddesi" Binding="{Binding Aciklama}" Width="2*"/>
-                <DataGridCheckBoxColumn Header="Tamam" Binding="{Binding Tamamlandi}" Width="70"/>
-                <DataGridTextColumn Header="Kullanıcı" Binding="{Binding TamamlayanKullanici}" Width="120"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <TabControl>
+            <TabItem Header="Kontrol listesi ve kapanış">
+                <DockPanel Margin="6">
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                        <WrapPanel>
+                            <TextBox Width="420" Text="{Binding MaddeNotu, UpdateSourceTrigger=PropertyChanged}" ToolTip="Otomatik kontrol başarısızsa gerekçe zorunlu"/>
+                            <Button Content="Seçili Maddeyi Tamamla" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Command="{Binding MaddeTamamlaCommand}"/>
+                        </WrapPanel>
+                        <WrapPanel Margin="0,6,0,0">
+                            <TextBox Width="420" Text="{Binding KapanisNotu, UpdateSourceTrigger=PropertyChanged}" ToolTip="Kapanış notu"/>
+                            <Button Content="Dönemi Kapat (Yönetici)" Style="{StaticResource PrimaryButton}" Margin="6,0,0,0" Command="{Binding KapatCommand}"/>
+                        </WrapPanel>
+                        <WrapPanel Margin="0,6,0,0">
+                            <TextBox Width="420" Text="{Binding YenidenAcmaNedeni, UpdateSourceTrigger=PropertyChanged}" ToolTip="Yeniden açma gerekçesi (zorunlu)"/>
+                            <Button Content="Gerekçeyle Yeniden Aç (Yönetici)" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Command="{Binding YenidenAcCommand}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Maddeler}" SelectedItem="{Binding SeciliMadde}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding Sira}" Width="30"/>
+                            <DataGridTextColumn Header="Kontrol maddesi" Binding="{Binding Aciklama}" Width="2*"/>
+                            <DataGridCheckBoxColumn Header="Otomatik" Binding="{Binding OtomatikSonuc}" Width="65"/>
+                            <DataGridTextColumn Header="Veri kontrolü" Binding="{Binding OtomatikAciklama}" Width="3*"/>
+                            <DataGridCheckBoxColumn Header="Tamam" Binding="{Binding Tamamlandi}" Width="55"/>
+                            <DataGridCheckBoxColumn Header="Elle onay" Binding="{Binding ElleOnaylandi}" Width="65"/>
+                            <DataGridTextColumn Header="Kullanıcı" Binding="{Binding TamamlayanKullanici}" Width="90"/>
+                            <DataGridTextColumn Header="Not" Binding="{Binding Not}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Mutabakat farkları">
+                <DockPanel Margin="6">
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                        <TextBox Width="460" Text="{Binding FarkAciklama, UpdateSourceTrigger=PropertyChanged}" ToolTip="Çözüm / istisna gerekçesi (zorunlu)"/>
+                        <Button Content="Çözüldü" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Command="{Binding FarkCozCommand}"/>
+                        <Button Content="Gerekçeli İstisna (Yönetici)" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Command="{Binding FarkIstisnaCommand}"/>
+                    </WrapPanel>
+                    <DataGrid ItemsSource="{Binding Farklar}" SelectedItem="{Binding SeciliFark}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Personel" Binding="{Binding AdSoyad}" Width="140"/>
+                            <DataGridTextColumn Header="TC" Binding="{Binding TcKimlikNo}" Width="100"/>
+                            <DataGridTextColumn Header="Tür" Binding="{Binding FarkTuru}" Width="150"/>
+                            <DataGridTextColumn Header="Beklenen" Binding="{Binding Beklenen, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Ödenen" Binding="{Binding Odenen, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Fark" Binding="{Binding Fark, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="70"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="2*"/>
+                            <DataGridTextColumn Header="Çözüm" Binding="{Binding CozumAciklamasi}" Width="*"/>
+                            <DataGridTextColumn Header="Çözen" Binding="{Binding Cozen}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Önceki ay karşılaştırması">
+                <DockPanel Margin="6">
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding KarsilastirmaMetni}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <DataGrid ItemsSource="{Binding Degisiklikler}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tür" Binding="{Binding Tur}" Width="130"/>
+                            <DataGridTextColumn Header="Personel" Binding="{Binding AdSoyad}" Width="150"/>
+                            <DataGridTextColumn Header="TC" Binding="{Binding TcKimlikNo}" Width="100"/>
+                            <DataGridTextColumn Header="Önceki" Binding="{Binding OncekiTutar, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Yeni" Binding="{Binding YeniTutar, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Net etki" Binding="{Binding NetEtki, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Kaynak kayıt" Binding="{Binding Kaynak}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Düzeltmeler ve istisnalar">
+                <DockPanel Margin="6">
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <TextBlock Text="Düzeltme kaydı (kapalı dönemde de; eski kayıt değişmez):" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBox Width="110" Text="{Binding DuzeltmeTc, UpdateSourceTrigger=PropertyChanged}" ToolTip="Personel TC"/>
+                        <TextBox Width="100" Margin="4,0,0,0" Text="{Binding DuzeltmeAlan, UpdateSourceTrigger=PropertyChanged}" ToolTip="Alan (örn. NetIstihkak)"/>
+                        <TextBox Width="80" Margin="4,0,0,0" Text="{Binding DuzeltmeEski, UpdateSourceTrigger=PropertyChanged}" ToolTip="Eski değer"/>
+                        <TextBox Width="80" Margin="4,0,0,0" Text="{Binding DuzeltmeYeni, UpdateSourceTrigger=PropertyChanged}" ToolTip="Yeni değer"/>
+                        <TextBox Width="240" Margin="4,0,0,0" Text="{Binding DuzeltmeNeden, UpdateSourceTrigger=PropertyChanged}" ToolTip="Neden (zorunlu)"/>
+                        <Button Content="Düzeltme Ekle" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Command="{Binding DuzeltmeEkleCommand}"/>
+                    </WrapPanel>
+                    <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding Duzeltmeler}" Height="200">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Zaman" Binding="{Binding IslemZamani, StringFormat=dd.MM.yyyy HH:mm}" Width="110"/>
+                            <DataGridTextColumn Header="Alan" Binding="{Binding AlanAdi}" Width="100"/>
+                            <DataGridTextColumn Header="Eski" Binding="{Binding EskiDeger}" Width="90"/>
+                            <DataGridTextColumn Header="Yeni" Binding="{Binding YeniDeger}" Width="90"/>
+                            <DataGridTextColumn Header="Fark" Binding="{Binding FarkTutari, StringFormat=N2}" Width="90"/>
+                            <DataGridTextColumn Header="Uygulanacak yıl" Binding="{Binding UygulanacakDonemYil}" Width="90"/>
+                            <DataGridTextColumn Header="Ay" Binding="{Binding UygulanacakDonemAy}" Width="40"/>
+                            <DataGridTextColumn Header="Neden" Binding="{Binding Neden}" Width="*"/>
+                            <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdi}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock DockPanel.Dock="Top" Text="Gerekçeli istisnalar" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                    <ListBox ItemsSource="{Binding Istisnalar}"/>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>

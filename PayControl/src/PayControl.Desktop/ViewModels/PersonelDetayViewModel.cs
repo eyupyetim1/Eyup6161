@@ -19,6 +19,18 @@ public partial class PersonelDetayViewModel : ObservableObject
     [ObservableProperty] private PersonelDetayDto? _detay;
     [ObservableProperty] private string _baslik = "Personel Detayı";
     [ObservableProperty] private string? _kontrolOzeti;
+    [ObservableProperty] private string? _islemMesaji;
+
+    // Avans verme
+    [ObservableProperty] private DateTime _avansTarihi = DateTime.Today;
+    [ObservableProperty] private decimal _avansTutari;
+    [ObservableProperty] private int _avansTaksit = 1;
+    [ObservableProperty] private string? _avansAciklama;
+
+    // Yeniden işe alım
+    [ObservableProperty] private DateTime _yenidenGirisTarihi = DateTime.Today;
+    [ObservableProperty] private string? _yenidenIsyeri;
+    [ObservableProperty] private decimal? _yenidenMaas;
 
     public HesapEkstresiPanelModel Ekstre { get; }
     public ObservableCollection<MaasDonemDto> MaasGecmisi { get; } = new();
@@ -33,13 +45,15 @@ public partial class PersonelDetayViewModel : ObservableObject
         IIstenCikisServisi cikisServisi,
         IAvansServisi avansServisi,
         IHesapEkstresiServisi ekstreServisi,
+        IMaliHareketServisi defter,
+        IBankaOdemeServisi banka,
         OturumServisi oturum)
     {
         _personelServisi = personelServisi;
         _cikisServisi = cikisServisi;
         _avansServisi = avansServisi;
         _oturum = oturum;
-        Ekstre = new HesapEkstresiPanelModel(ekstreServisi);
+        Ekstre = new HesapEkstresiPanelModel(ekstreServisi, defter, banka, oturum);
     }
 
     public async Task YukleAsync(Guid personelId)
@@ -82,6 +96,40 @@ public partial class PersonelDetayViewModel : ObservableObject
         win.Owner = System.Windows.Application.Current.Windows.OfType<PersonelDetayWindow>().FirstOrDefault();
         if (win.ShowDialog() == true)
             await YukleAsync(Detay.Id);
+    }
+
+    public bool IstenAyrildi => Detay?.CalismaDurumu == CalismaDurumu.IstenAyrildi;
+
+    partial void OnDetayChanged(PersonelDetayDto? value) => OnPropertyChanged(nameof(IstenAyrildi));
+
+    [RelayCommand]
+    private async Task AvansVerAsync()
+    {
+        if (Detay is null) return;
+        try
+        {
+            await _avansServisi.VerAsync(Detay.Id, DateOnly.FromDateTime(AvansTarihi), AvansTutari, AvansTaksit, 0m,
+                null, _oturum.KullaniciAdi ?? "sistem", AvansAciklama);
+            IslemMesaji = $"{AvansTutari:N2} TL avans verildi; {AvansTaksit} taksitlik mahsup planı oluşturuldu.";
+            AvansTutari = 0;
+            AvansAciklama = null;
+            await YukleAsync(Detay.Id);
+        }
+        catch (Exception ex) { IslemMesaji = ex.Message; }
+    }
+
+    [RelayCommand]
+    private async Task YenidenIseAlAsync()
+    {
+        if (Detay is null) return;
+        try
+        {
+            await _personelServisi.YenidenIseAlAsync(Detay.Id, DateOnly.FromDateTime(YenidenGirisTarihi),
+                string.IsNullOrWhiteSpace(YenidenIsyeri) ? null : YenidenIsyeri, null, null, YenidenMaas, _oturum.KullaniciAdi ?? "sistem");
+            IslemMesaji = "Personel yeni çalışma dönemiyle yeniden işe alındı; önceki dönem ve mali geçmiş korunuyor.";
+            await YukleAsync(Detay.Id);
+        }
+        catch (Exception ex) { IslemMesaji = ex.Message; }
     }
 
     [RelayCommand]

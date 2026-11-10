@@ -3,6 +3,7 @@ using PayControl.Domain.Enums;
 
 namespace PayControl.Domain.Services;
 
+/// <summary>Bankaya gönderilecek dosyanın bir satırı.</summary>
 public sealed record BankaTalimatSatiri(
     string? TcKimlikNo,
     string? AdSoyad,
@@ -10,8 +11,53 @@ public sealed record BankaTalimatSatiri(
     decimal Tutar,
     int SatirNo);
 
+/// <summary>Başka bir oturumda daha önce onaylı listeye alınmış ödeme.</summary>
+public sealed record OncekiOnayliOdeme(Guid PersonelId, int Surum, decimal Tutar, string DosyaAdi);
+
+/// <summary>Ödeme öncesi kontrolün ihtiyaç duyduğu tüm veriler — motor veritabanına erişmez.</summary>
+public sealed class OdemeKontrolBaglami
+{
+    public int DonemYil { get; init; }
+    public int DonemAy { get; init; }
+    public IReadOnlyList<MaasDonemKaydi> Bordro { get; init; } = Array.Empty<MaasDonemKaydi>();
+    public IReadOnlyList<BankaTalimatSatiri> Talimatlar { get; init; } = Array.Empty<BankaTalimatSatiri>();
+    public IReadOnlyList<Personel> Personeller { get; init; } = Array.Empty<Personel>();
+    /// <summary>Bu hak ediş dönemi için daha önce kaydedilmiş banka/kasa ödemeleri.</summary>
+    public IReadOnlyList<BankaOdemeKaydi> DonemOdemeleri { get; init; } = Array.Empty<BankaOdemeKaydi>();
+    public IReadOnlyList<IstenCikisKaydi> Cikislar { get; init; } = Array.Empty<IstenCikisKaydi>();
+    public IReadOnlyList<AvansKaydi> Avanslar { get; init; } = Array.Empty<AvansKaydi>();
+    public IReadOnlyList<MaasDonemKaydi> OncekiAyBordro { get; init; } = Array.Empty<MaasDonemKaydi>();
+    public IReadOnlyDictionary<Guid, decimal> DevredenDuzeltmeler { get; init; } = new Dictionary<Guid, decimal>();
+    public IReadOnlyDictionary<Guid, decimal> AcikSupheliBakiyeler { get; init; } = new Dictionary<Guid, decimal>();
+    public IReadOnlyList<OncekiOnayliOdeme> OncekiOnayliOdemeler { get; init; } = Array.Empty<OncekiOnayliOdeme>();
+}
+
+/// <summary>Tek bir kontrol kuralının bulgusu.</summary>
+public sealed record KontrolBulgusu(OdemeKontrolSonucu Sonuc, bool Kritik, bool Belirsiz, string Mesaj)
+{
+    public static KontrolBulgusu Bilgi(string m) => new(OdemeKontrolSonucu.Uygun, false, false, m);
+}
+
+/// <summary>
+/// Bankaya göndermeden önce bordro × banka talimatı × personel kartı × geçmiş işlemler denetimi.
+/// Her kural bir bulgu üretir; satırın sonucu en yüksek öncelikli bulgudan belirlenir.
+/// </summary>
 public sealed class OdemeOncesiKontrolMotoru
 {
+    private const decimal Tolerans = 0.01m;
+
+    private static readonly OdemeKontrolSonucu[] Oncelik =
+    [
+        OdemeKontrolSonucu.BordroUyusmazligi,
+        OdemeKontrolSonucu.IbanUyusmazligi,
+        OdemeKontrolSonucu.MukerrerOdemeRiski,
+        OdemeKontrolSonucu.IstenCikisKontrolu,
+        OdemeKontrolSonucu.FazlaOdemeRiski,
+        OdemeKontrolSonucu.EksikOdemeRiski,
+        OdemeKontrolSonucu.IncelemeGerekiyor
+    ];
+
+    /// <summary>Eski imza (1.1) — geriye dönük uyumluluk.</summary>
     public IReadOnlyList<OdemeKontrolSatiri> Karsilastir(
         int donemYil,
         int donemAy,
@@ -19,223 +65,416 @@ public sealed class OdemeOncesiKontrolMotoru
         IReadOnlyList<BankaTalimatSatiri> bankaTalimatlari,
         IReadOnlyList<Personel> personeller,
         IReadOnlyList<BankaOdemeKaydi> oncekiOdemeler,
-        IReadOnlyList<IstenCikisKaydi> cikislar)
-    {
-        var sonuc = new List<OdemeKontrolSatiri>();
-        var personelByTc = personeller
-            .GroupBy(p => p.TcKimlikNo)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        var ibanGruplari = personeller
-            .Where(p => !string.IsNullOrWhiteSpace(p.Iban))
-            .GroupBy(p => p.Iban!, StringComparer.OrdinalIgnoreCase)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var bankaByTc = bankaTalimatlari
-            .Where(b => !string.IsNullOrWhiteSpace(b.TcKimlikNo))
-            .GroupBy(b => NormalizeTc(b.TcKimlikNo!))
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        // Aynı IBAN ile birden fazla talimat
-        var bankaIbanCift = bankaTalimatlari
-            .Where(b => !string.IsNullOrWhiteSpace(b.Iban))
-            .GroupBy(b => NormalizeIban(b.Iban!))
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var bordro in bordroKayitlari)
+        IReadOnlyList<IstenCikisKaydi> cikislar) =>
+        Karsilastir(new OdemeKontrolBaglami
         {
-            var personel = personeller.FirstOrDefault(p => p.Id == bordro.PersonelId);
-            var tc = personel?.TcKimlikNo ?? "";
-            bankaByTc.TryGetValue(tc, out var talimatlar);
-            talimatlar ??= new List<BankaTalimatSatiri>();
+            DonemYil = donemYil,
+            DonemAy = donemAy,
+            Bordro = bordroKayitlari,
+            Talimatlar = bankaTalimatlari,
+            Personeller = personeller,
+            DonemOdemeleri = oncekiOdemeler,
+            Cikislar = cikislar
+        });
 
-            var bankaToplam = talimatlar.Sum(t => t.Tutar);
-            var bankaIban = talimatlar.FirstOrDefault()?.Iban;
-            var kartIban = personel?.Iban ?? bordro.Iban;
+    public IReadOnlyList<OdemeKontrolSatiri> Karsilastir(OdemeKontrolBaglami b)
+    {
+        var donemBasi = new DateOnly(b.DonemYil, b.DonemAy, 1);
+        var donemSonu = donemBasi.AddMonths(1).AddDays(-1);
 
-            var satir = new OdemeKontrolSatiri
+        var personelById = b.Personeller.ToDictionary(p => p.Id);
+        var personelByTc = b.Personeller.GroupBy(p => p.TcKimlikNo).ToDictionary(g => g.Key, g => g.First());
+        var kartIbanSahipleri = b.Personeller
+            .Where(p => !string.IsNullOrWhiteSpace(p.Iban))
+            .GroupBy(p => IbanKurallari.Normalize(p.Iban)!)
+            .ToDictionary(g => g.Key, g => g.Select(p => p.Id).ToList());
+
+        // 1) Banka satırlarını kişiye bağla: önce TC, TC yoksa kartta tek sahibi olan IBAN.
+        var atanmis = new Dictionary<Guid, List<BankaTalimatSatiri>>();
+        var eslesmeyen = new List<BankaTalimatSatiri>();
+        var ibanIleEslesen = new HashSet<int>();
+        foreach (var t in b.Talimatlar)
+        {
+            var tc = Rakam(t.TcKimlikNo);
+            Personel? p = null;
+            if (tc.Length > 0)
+                personelByTc.TryGetValue(tc, out p);
+            else if (IbanKurallari.Normalize(t.Iban) is { } ib && kartIbanSahipleri.TryGetValue(ib, out var sahipler) && sahipler.Count == 1)
             {
-                PersonelId = bordro.PersonelId,
-                TcKimlikNo = tc,
-                AdSoyad = personel?.AdSoyad,
-                BordroIban = bordro.Iban,
-                BankaIban = bankaIban,
-                KartIban = kartIban,
-                BordroNetIstihkak = bordro.NetIstihkak,
-                BankaOdemeTutari = talimatlar.Count == 0 ? null : bankaToplam
-            };
+                p = personelById[sahipler[0]];
+                ibanIleEslesen.Add(t.SatirNo);
+            }
 
-            Degerlendir(satir, personel, bordro, talimatlar, oncekiOdemeler, cikislar, donemYil, donemAy, ibanGruplari, bankaIbanCift);
+            if (p is null) eslesmeyen.Add(t);
+            else
+            {
+                if (!atanmis.TryGetValue(p.Id, out var l)) atanmis[p.Id] = l = new List<BankaTalimatSatiri>();
+                l.Add(t);
+            }
+        }
+
+        // Banka listesinde aynı IBAN'a farklı kişiler için talimat
+        var bankaIbanKisileri = b.Talimatlar
+            .Where(t => IbanKurallari.Normalize(t.Iban) is not null)
+            .GroupBy(t => IbanKurallari.Normalize(t.Iban)!)
+            .ToDictionary(g => g.Key, g => g.Select(t => Rakam(t.TcKimlikNo) is { Length: > 0 } tc ? tc : $"#{t.SatirNo}:{t.AdSoyad}").Distinct().Count());
+
+        var sonuc = new List<OdemeKontrolSatiri>();
+        var bordroGruplari = b.Bordro.GroupBy(x => x.PersonelId).ToList();
+
+        foreach (var grup in bordroGruplari)
+        {
+            personelById.TryGetValue(grup.Key, out var personel);
+            var bordroListesi = grup.ToList();
+            var bordro = bordroListesi.OrderByDescending(x => x.OlusturmaZamani).First();
+            var talimatlar = atanmis.GetValueOrDefault(grup.Key) ?? new List<BankaTalimatSatiri>();
+            var bulgular = new List<KontrolBulgusu>();
+
+            if (bordroListesi.Count > 1)
+                bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false,
+                    $"Bu dönem için {bordroListesi.Count} ayrı bordro kaydı var (farklı içe aktarmalar). Bordro mükerrer olabilir."));
+
+            var satir = YeniSatir(personel, bordro, talimatlar);
+
+            if (talimatlar.Count == 0)
+            {
+                if (bordro.NetIstihkak <= Tolerans)
+                    bulgular.Add(KontrolBulgusu.Bilgi("Net istihkak sıfır; ödeme beklenmiyor."));
+                else
+                    bulgular.Add(new(OdemeKontrolSonucu.EksikOdemeRiski, true, false,
+                        $"Banka listesinde bulunmayan bordrolu personel. Bordro net istihkak {bordro.NetIstihkak:N2}."));
+            }
+            else
+            {
+                BankaKurallari(b, personel, bordro, talimatlar, kartIbanSahipleri, bankaIbanKisileri, ibanIleEslesen, bulgular);
+            }
+
+            if (personel is not null)
+            {
+                CalismaKurallari(b, personel, bordro, donemBasi, donemSonu, bulgular);
+                GecmisOdemeKurallari(b, personel, bulgular);
+                AvansKurallari(b, personel, bordro, donemSonu, bulgular);
+                KesintiVeGunKurallari(b, personel, bordro, donemBasi, donemSonu, bulgular);
+            }
+            else
+            {
+                bulgular.Add(new(OdemeKontrolSonucu.BordroUyusmazligi, true, true, "Bordro satırının personel kartı bulunamadı."));
+            }
+
+            Uygula(satir, bulgular);
             sonuc.Add(satir);
         }
 
-        // Bordroda yok, banka listesinde var
-        var bordroTcSet = bordroKayitlari
-            .Select(b => personeller.FirstOrDefault(p => p.Id == b.PersonelId)?.TcKimlikNo)
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .Select(t => t!)
-            .ToHashSet();
-
-        foreach (var grp in bankaByTc)
+        // 2) Bordroda olmayan ama bankada olan kişiler
+        var bordroKisileri = bordroGruplari.Select(g => g.Key).ToHashSet();
+        foreach (var (pid, talimatlar) in atanmis.Where(kv => !bordroKisileri.Contains(kv.Key)))
         {
-            if (bordroTcSet.Contains(grp.Key))
-                continue;
+            var p = personelById[pid];
+            var satir = YeniSatir(p, null, talimatlar);
+            var bulgular = new List<KontrolBulgusu>
+            {
+                new(OdemeKontrolSonucu.BordroUyusmazligi, true, false,
+                    $"Bordroda yer almayan kişi banka listesinde var ({talimatlar.Sum(t => t.Tutar):N2} TL).")
+            };
+            if (p.CalismaDurumu == CalismaDurumu.IstenAyrildi)
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+                    $"Personel işten ayrılmış (son çıkış {p.SonCikisTarihi:dd.MM.yyyy})."));
+            if (talimatlar.Count > 1)
+                bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false, $"Aynı kişiye {talimatlar.Count} ayrı ödeme talimatı."));
+            Uygula(satir, bulgular);
+            sonuc.Add(satir);
+        }
 
-            personelByTc.TryGetValue(grp.Key, out var p);
+        // 3) Kimliği belirlenemeyen banka satırları — istisna ile onaylanamaz
+        foreach (var t in eslesmeyen)
+        {
             var satir = new OdemeKontrolSatiri
             {
-                PersonelId = p?.Id,
-                TcKimlikNo = grp.Key,
-                AdSoyad = p?.AdSoyad ?? grp.Value.First().AdSoyad,
-                BankaIban = grp.Value.First().Iban,
-                KartIban = p?.Iban,
-                BankaOdemeTutari = grp.Value.Sum(x => x.Tutar),
-                BordroNetIstihkak = null,
-                Sonuc = OdemeKontrolSonucu.BordroUyusmazligi,
-                KritikMi = true,
-                EslesmeBelirsiz = p is null,
-                Gerekce = p is null
-                    ? "Banka listesinde olup bordroda ve personel kartında bulunamayan kayıt. Kimlik eşleşmesi belirsiz — onay engellenir."
-                    : "Bordroda yer almayan kişi banka listesinde var."
+                TcKimlikNo = Rakam(t.TcKimlikNo) is { Length: > 0 } tc ? tc : null,
+                AdSoyad = t.AdSoyad,
+                BankaAdSoyad = t.AdSoyad,
+                BankaIban = IbanKurallari.Normalize(t.Iban),
+                BankaOdemeTutari = t.Tutar,
+                TalimatSatirNolari = t.SatirNo.ToString()
             };
+            var mesaj = string.IsNullOrWhiteSpace(t.TcKimlikNo)
+                ? "Banka satırında TC yok ve IBAN tek bir personel kartıyla eşleşmiyor. Ödeme sahibi belirsiz — onay engellenir."
+                : "Banka listesinde olup personel kartında bulunamayan TC. Kimlik eşleşmesi belirsiz — onay engellenir.";
+            Uygula(satir, [new(OdemeKontrolSonucu.BordroUyusmazligi, true, true, mesaj)]);
             sonuc.Add(satir);
         }
 
         return sonuc;
     }
 
-    private static void Degerlendir(
-        OdemeKontrolSatiri satir,
-        Personel? personel,
-        MaasDonemKaydi bordro,
-        List<BankaTalimatSatiri> talimatlar,
-        IReadOnlyList<BankaOdemeKaydi> oncekiOdemeler,
-        IReadOnlyList<IstenCikisKaydi> cikislar,
-        int donemYil,
-        int donemAy,
-        HashSet<string> paylasilanIbanlar,
-        HashSet<string> bankaCiftIban)
+    private static OdemeKontrolSatiri YeniSatir(Personel? personel, MaasDonemKaydi? bordro, List<BankaTalimatSatiri> talimatlar) => new()
     {
-        var gerekceler = new List<string>();
+        PersonelId = personel?.Id ?? bordro?.PersonelId,
+        TcKimlikNo = personel?.TcKimlikNo,
+        AdSoyad = personel?.AdSoyad,
+        KartAdSoyad = personel?.AdSoyad,
+        BankaAdSoyad = talimatlar.FirstOrDefault()?.AdSoyad,
+        BordroIban = IbanKurallari.Normalize(bordro?.Iban),
+        BankaIban = IbanKurallari.Normalize(talimatlar.FirstOrDefault()?.Iban),
+        KartIban = IbanKurallari.Normalize(personel?.Iban),
+        BordroNetIstihkak = bordro?.NetIstihkak,
+        BankaOdemeTutari = talimatlar.Count == 0 ? null : talimatlar.Sum(t => t.Tutar),
+        TalimatSatirNolari = talimatlar.Count == 0 ? null : string.Join(",", talimatlar.Select(t => t.SatirNo))
+    };
 
-        if (talimatlar.Count == 0)
+    private static void BankaKurallari(
+        OdemeKontrolBaglami b, Personel? personel, MaasDonemKaydi bordro, List<BankaTalimatSatiri> talimatlar,
+        Dictionary<string, List<Guid>> kartIbanSahipleri, Dictionary<string, int> bankaIbanKisileri,
+        HashSet<int> ibanIleEslesen, List<KontrolBulgusu> bulgular)
+    {
+        if (talimatlar.Count > 1)
+            bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false,
+                $"Aynı kişiye {talimatlar.Count} ayrı ödeme talimatı (satır {string.Join(", ", talimatlar.Select(t => t.SatirNo))})."));
+
+        var kartIban = IbanKurallari.Normalize(personel?.Iban) ?? IbanKurallari.Normalize(bordro.Iban);
+        foreach (var t in talimatlar)
         {
-            satir.Sonuc = OdemeKontrolSonucu.EksikOdemeRiski;
-            satir.KritikMi = true;
-            satir.Gerekce = "Banka listesinde bulunmayan bordrolu personel.";
+            var bankaIban = IbanKurallari.Normalize(t.Iban);
+            if (bankaIban is null)
+            {
+                bulgular.Add(new(OdemeKontrolSonucu.IbanUyusmazligi, true, false, $"Satır {t.SatirNo}: banka talimatında IBAN yok."));
+                continue;
+            }
+            if (!IbanKurallari.GecerliMi(bankaIban))
+                bulgular.Add(new(OdemeKontrolSonucu.IbanUyusmazligi, true, false, $"Satır {t.SatirNo}: IBAN geçersiz (kontrol hanesi/uzunluk hatalı): {bankaIban}."));
+
+            if (kartIban is null)
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, true, false,
+                    "Personel kartında ve bordroda IBAN yok; banka IBAN'ı doğrulanamıyor."));
+            else if (!string.Equals(kartIban, bankaIban, StringComparison.OrdinalIgnoreCase))
+            {
+                var baskasininKarti = kartIbanSahipleri.TryGetValue(bankaIban, out var sahipler) && sahipler.Any(id => id != personel?.Id);
+                bulgular.Add(new(OdemeKontrolSonucu.IbanUyusmazligi, true, baskasininKarti,
+                    baskasininKarti
+                        ? $"Banka IBAN'ı başka bir personelin kartında kayıtlı ({bankaIban}). Ödeme sahibi belirsiz."
+                        : $"IBAN personel kartı ile uyuşmuyor. Kart: {kartIban}, banka: {bankaIban}."));
+            }
+
+            if (kartIbanSahipleri.TryGetValue(bankaIban, out var paylasanlar) && paylasanlar.Count > 1)
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, true, true,
+                    $"Aynı IBAN {paylasanlar.Count} farklı personel kartında tanımlı. Ödeme sahibi belirsiz."));
+
+            if (bankaIbanKisileri.TryGetValue(bankaIban, out var kisi) && kisi > 1)
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, true, true,
+                    $"Banka listesinde aynı IBAN'a {kisi} farklı kişi için ödeme talimatı var."));
+
+            if (!IbanKurallari.AdUyumluMu(t.AdSoyad, personel?.AdSoyad))
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, true, true,
+                    $"Satır {t.SatirNo}: banka listesindeki ad ({t.AdSoyad}) personel kartıyla ({personel?.AdSoyad}) uyuşmuyor."));
+
+            if (ibanIleEslesen.Contains(t.SatirNo))
+                bulgular.Add(KontrolBulgusu.Bilgi($"Satır {t.SatirNo}: TC yok; kişi IBAN ve ad üzerinden eşleştirildi."));
+        }
+
+        var bankaToplam = talimatlar.Sum(t => t.Tutar);
+        var fark = bankaToplam - bordro.NetIstihkak;
+        if (fark > Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.FazlaOdemeRiski, true, false,
+                $"Fazla ödeme riski: banka {bankaToplam:N2}, bordro {bordro.NetIstihkak:N2} (fark {fark:N2})."));
+        else if (fark < -Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.EksikOdemeRiski, true, false,
+                $"Eksik ödeme riski: banka {bankaToplam:N2}, bordro {bordro.NetIstihkak:N2} (fark {-fark:N2})."));
+    }
+
+    private static void CalismaKurallari(
+        OdemeKontrolBaglami b, Personel personel, MaasDonemKaydi bordro, DateOnly donemBasi, DateOnly donemSonu,
+        List<KontrolBulgusu> bulgular)
+    {
+        var donemler = personel.CalismaDonemleri.ToList();
+        var cikislar = b.Cikislar.Where(c => c.PersonelId == personel.Id).OrderByDescending(c => c.IstenCikisTarihi).ToList();
+
+        if (donemler.Count == 0)
+        {
+            var sonCikis = cikislar.FirstOrDefault();
+            if (sonCikis is not null && sonCikis.IstenCikisTarihi < donemBasi)
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+                    $"İşten ayrılmış personele ödeme planlanmış (çıkış {sonCikis.IstenCikisTarihi:dd.MM.yyyy})."));
+            else if (personel.CalismaDurumu == CalismaDurumu.IstenAyrildi && sonCikis is null)
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+                    "Personel kartı 'işten ayrıldı' durumunda ancak çıkış kaydı yok."));
             return;
         }
 
-        if (talimatlar.Count > 1)
+        var ortusen = donemler
+            .Where(d => d.IseGirisTarihi <= donemSonu && (d.IstenCikisTarihi is null || d.IstenCikisTarihi >= donemBasi))
+            .OrderByDescending(d => d.IseGirisTarihi)
+            .ToList();
+
+        if (ortusen.Count == 0)
         {
-            gerekceler.Add($"Aynı kişiye {talimatlar.Count} ayrı ödeme talimatı.");
-            satir.Sonuc = OdemeKontrolSonucu.MukerrerOdemeRiski;
-            satir.KritikMi = true;
+            var sonDonem = donemler.OrderByDescending(d => d.IseGirisTarihi).First();
+            if (donemler.All(d => d.IseGirisTarihi > donemSonu))
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, true, false,
+                    $"Personelin işe girişi ({donemler.Min(d => d.IseGirisTarihi):dd.MM.yyyy}) bu dönemden sonra; döneme ödeme beklenmez."));
+            else
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+                    $"İşten ayrılmış personele ödeme planlanmış: çıkış {sonDonem.IstenCikisTarihi:dd.MM.yyyy}, ödeme dönemi {donemBasi:yyyy-MM}."));
+            return;
         }
 
-        var cikis = cikislar.Where(c => c.PersonelId == bordro.PersonelId)
-            .OrderByDescending(c => c.IstenCikisTarihi)
-            .FirstOrDefault();
+        // Aynı dönemde yeniden girişi olan personel için en güncel dönem esas alınır.
+        var aktif = ortusen.First();
+        var cikisAyi = aktif.IstenCikisTarihi is { } ct && ct <= donemSonu;
+        var girisAyi = aktif.IseGirisTarihi >= donemBasi;
 
-        if (personel?.CalismaDurumu == CalismaDurumu.IstenAyrildi || cikis is not null)
+        if (cikisAyi)
         {
-            gerekceler.Add("İşten ayrılmış personele ödeme planlanmış — çıkış ayı hak edişi kontrol edilmeli.");
-            if (satir.Sonuc == OdemeKontrolSonucu.Uygun || satir.Sonuc == default)
-                satir.Sonuc = OdemeKontrolSonucu.IstenCikisKontrolu;
-            satir.KritikMi = true;
-        }
+            var cikisTarihi = aktif.IstenCikisTarihi!.Value;
+            var bas = girisAyi ? aktif.IseGirisTarihi : donemBasi;
+            var calisilan = cikisTarihi == donemSonu && !girisAyi ? 30m : Math.Min(30m, cikisTarihi.DayNumber - bas.DayNumber + 1);
+            var cikisKaydi = cikislar.FirstOrDefault(c => c.CalismaDonemiId == aktif.Id) ?? cikislar.FirstOrDefault();
 
-        var oncekiAyniDonem = oncekiOdemeler
-            .Where(o => o.PersonelId == bordro.PersonelId &&
-                        o.HakEdisDonemYil == donemYil &&
-                        o.HakEdisDonemAy == donemAy)
-            .Sum(o => o.Tutar);
+            if (bordro.Gun is { } gun && gun > calisilan + 0.5m)
+                bulgular.Add(new(OdemeKontrolSonucu.FazlaOdemeRiski, true, false,
+                    $"Çıkış ayı hak edişi hatalı olabilir: bordroda {G(gun)} gün, çıkış tarihine ({cikisTarihi:dd.MM.yyyy}) göre en fazla {G(calisilan)} gün."));
+            else if (bordro.Gun is null)
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, false, false,
+                    $"Çıkış ayı ({cikisTarihi:dd.MM.yyyy}); bordroda gün bilgisi yok, hak ediş günü doğrulanamadı."));
+            else
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, false, false,
+                    $"Çıkış ayı: {cikisTarihi:dd.MM.yyyy} çıkışlı personelin son hak edişi ({G(bordro.Gun)} gün) — gün sayısı çıkış tarihiyle uyumlu."));
 
-        if (oncekiAyniDonem > 0)
-        {
-            gerekceler.Add($"Bu dönem için daha önce {oncekiAyniDonem:N2} TL ödeme kaydı var — mükerrer ödeme riski.");
-            satir.Sonuc = OdemeKontrolSonucu.MukerrerOdemeRiski;
-            satir.KritikMi = true;
-        }
-
-        var bankaIban = NormalizeIban(talimatlar.First().Iban ?? "");
-        var kartIban = NormalizeIban(personel?.Iban ?? bordro.Iban ?? "");
-        if (!string.IsNullOrEmpty(kartIban) && !string.IsNullOrEmpty(bankaIban) &&
-            !string.Equals(kartIban, bankaIban, StringComparison.OrdinalIgnoreCase))
-        {
-            gerekceler.Add("IBAN personel kartı / bordro kaydı ile uyuşmuyor.");
-            satir.Sonuc = OdemeKontrolSonucu.IbanUyusmazligi;
-            satir.KritikMi = true;
-        }
-
-        if (!string.IsNullOrEmpty(bankaIban) && paylasilanIbanlar.Contains(bankaIban))
-        {
-            gerekceler.Add("Aynı IBAN birden fazla personel kartında tanımlı.");
-            satir.Sonuc = OdemeKontrolSonucu.IncelemeGerekiyor;
-            satir.KritikMi = true;
-            satir.EslesmeBelirsiz = true;
-        }
-
-        if (!string.IsNullOrEmpty(bankaIban) && bankaCiftIban.Contains(bankaIban) && talimatlar.Count == 1)
-        {
-            gerekceler.Add("Aynı IBAN banka listesinde birden fazla satırda.");
-            satir.KritikMi = true;
-            satir.Sonuc = OdemeKontrolSonucu.MukerrerOdemeRiski;
-        }
-
-        var fark = (satir.BankaOdemeTutari ?? 0m) - bordro.NetIstihkak;
-        if (Math.Abs(fark) > 0.01m)
-        {
-            if (fark > 0)
+            // Tam ay net tutarına göre orantı kontrolü (tazminat/izin kalemleri hariç)
+            var onceki = b.OncekiAyBordro.FirstOrDefault(x => x.PersonelId == personel.Id);
+            if (onceki is not null && (onceki.Gun is null or >= 30) && onceki.NetIstihkak > 0)
             {
-                gerekceler.Add($"Fazla ödeme riski: banka {satir.BankaOdemeTutari:N2}, bordro {bordro.NetIstihkak:N2}.");
-                if (!satir.KritikMi || satir.Sonuc == OdemeKontrolSonucu.Uygun)
-                    satir.Sonuc = OdemeKontrolSonucu.FazlaOdemeRiski;
-                satir.KritikMi = true;
+                var ekKalemler = bordro.Kalemler
+                    .Where(k => k.Tur is MaasKalemTuru.IhbarTazminati or MaasKalemTuru.KidemTazminati or MaasKalemTuru.IzinUcreti)
+                    .Sum(k => k.Tutar);
+                var gunBazli = bordro.Gun ?? calisilan;
+                var ust = onceki.NetIstihkak * (gunBazli / 30m) * 1.15m + ekKalemler;
+                if (bordro.NetIstihkak > ust + Tolerans)
+                    bulgular.Add(new(OdemeKontrolSonucu.FazlaOdemeRiski, true, false,
+                        $"Çıkış ayı net istihkakı ({bordro.NetIstihkak:N2}) önceki tam ay netine ({onceki.NetIstihkak:N2}) göre {G(gunBazli)} gün için beklenenden yüksek."));
+            }
+
+            if (cikisKaydi is not null)
+            {
+                if (cikisKaydi.SonBordroDonemYil.HasValue && cikisKaydi.SonBordroDonemAy.HasValue &&
+                    new DateOnly(cikisKaydi.SonBordroDonemYil.Value, cikisKaydi.SonBordroDonemAy.Value, 1) < donemBasi)
+                    bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+                        $"Çıkış kaydında son ücret {cikisKaydi.SonBordroDonemYil}-{cikisKaydi.SonBordroDonemAy:D2} dönemine bağlanmış; bu dönemde ödeme beklenmez."));
+                if (cikisKaydi.SgkCikisDurumu == SgkCikisDurumu.Belirsiz)
+                    bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false, "SGK işten ayrılış bildirgesi durumu belirsiz."));
             }
             else
             {
-                gerekceler.Add($"Eksik ödeme riski: banka {satir.BankaOdemeTutari:N2}, bordro {bordro.NetIstihkak:N2}.");
-                if (satir.Sonuc is OdemeKontrolSonucu.Uygun or 0)
-                    satir.Sonuc = OdemeKontrolSonucu.EksikOdemeRiski;
+                bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, false, false,
+                    "Çalışma döneminde çıkış tarihi var ancak işten çıkış kaydı (SGK/son ücret) oluşturulmamış."));
             }
         }
-
-        if (bordro.Gun is < 30 and > 0)
-            gerekceler.Add($"Eksik çalışma günü: {bordro.Gun}.");
-
-        var avansKalem = bordro.Kalemler.FirstOrDefault(k => k.Tur == MaasKalemTuru.AvansKesinti);
-        if (avansKalem is not null)
-            gerekceler.Add($"Bordroda avans mahsupu: {avansKalem.Tutar:N2} TL (doğrulama gerekli).");
-
-        var icra = bordro.Kalemler.FirstOrDefault(k => k.Tur == MaasKalemTuru.Icra);
-        var bes = bordro.Kalemler.FirstOrDefault(k => k.Tur == MaasKalemTuru.OtoKatBes);
-        if (icra is not null) gerekceler.Add($"İcra: {icra.Tutar:N2}");
-        if (bes is not null) gerekceler.Add($"BES: {bes.Tutar:N2}");
-
-        if (!satir.KritikMi && Math.Abs(fark) <= 0.01m && talimatlar.Count == 1)
+        else if (personel.CalismaDurumu == CalismaDurumu.IstenAyrildi && aktif.IstenCikisTarihi is null)
         {
-            satir.Sonuc = OdemeKontrolSonucu.Uygun;
-            satir.Gerekce = gerekceler.Count == 0 ? "Bordro ve banka talimatı uyumlu." : string.Join(" ", gerekceler);
-            return;
-        }
-
-        if (satir.Sonuc == default)
-            satir.Sonuc = OdemeKontrolSonucu.IncelemeGerekiyor;
-
-        satir.Gerekce = string.Join(" ", gerekceler);
-        if (personel is null)
-        {
-            satir.EslesmeBelirsiz = true;
-            satir.KritikMi = true;
+            bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+                "Personel kartı 'işten ayrıldı' durumunda ancak açık çalışma dönemi var; kayıtlar çelişkili."));
         }
     }
 
-    private static string NormalizeTc(string tc) => new string(tc.Where(char.IsDigit).ToArray());
-    private static string NormalizeIban(string iban) =>
-        new string(iban.Where(c => !char.IsWhiteSpace(c)).ToArray()).ToUpperInvariant();
+    private static void GecmisOdemeKurallari(OdemeKontrolBaglami b, Personel personel, List<KontrolBulgusu> bulgular)
+    {
+        var onceki = b.DonemOdemeleri.Where(o => o.PersonelId == personel.Id).ToList();
+        if (onceki.Count > 0)
+            bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false,
+                $"Bu dönemin maaşı için daha önce {onceki.Sum(o => o.Tutar):N2} TL ödeme kaydı var " +
+                $"({string.Join(", ", onceki.Select(o => $"{o.OdemeTarihi:dd.MM.yyyy} {o.OdemeKanali} {o.Tutar:N2}"))})."));
+
+        var listeler = b.OncekiOnayliOdemeler.Where(o => o.PersonelId == personel.Id).ToList();
+        if (listeler.Count > 0)
+            bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false,
+                $"Bu kişi bu dönem için daha önce onaylı ödeme listesine alınmış: " +
+                string.Join(", ", listeler.Select(l => $"{l.DosyaAdi} v{l.Surum} ({l.Tutar:N2})")) + "."));
+    }
+
+    private static void AvansKurallari(OdemeKontrolBaglami b, Personel personel, MaasDonemKaydi bordro, DateOnly donemSonu,
+        List<KontrolBulgusu> bulgular)
+    {
+        var avanslar = b.Avanslar.Where(a => a.PersonelId == personel.Id && a.AvansTarihi <= donemSonu).ToList();
+        var kesinti = bordro.Kalemler.Where(k => k.Tur == MaasKalemTuru.AvansKesinti).Sum(k => k.Tutar);
+        if (avanslar.Count == 0)
+        {
+            if (kesinti > Tolerans)
+                bulgular.Add(new(OdemeKontrolSonucu.EksikOdemeRiski, true, false,
+                    $"Bordroda {kesinti:N2} TL avans kesintisi var ancak personelin avans kaydı yok."));
+            return;
+        }
+
+        bool OncekiDonem(AvansMahsupKaydi m) => m.DonemYil < b.DonemYil || (m.DonemYil == b.DonemYil && m.DonemAy < b.DonemAy);
+        var acikOnce = avanslar.Sum(a => a.Tutar) -
+                       avanslar.SelectMany(a => a.Mahsuplar).Where(m => m.GerceklesenTutar.HasValue && OncekiDonem(m)).Sum(m => m.GerceklesenTutar!.Value);
+        var planlanan = Math.Min(acikOnce,
+            avanslar.SelectMany(a => a.Mahsuplar).Where(m => m.DonemYil == b.DonemYil && m.DonemAy == b.DonemAy).Sum(m => m.PlanlananTutar));
+
+        if (planlanan > Tolerans && kesinti + Tolerans < planlanan)
+            bulgular.Add(new(OdemeKontrolSonucu.FazlaOdemeRiski, true, false,
+                $"Avans mahsubu eksik: bu dönem planlanan {planlanan:N2}, bordroya yansıyan {kesinti:N2}. Fark kadar fazla ödeme riski."));
+        else if (kesinti > acikOnce + Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.EksikOdemeRiski, true, false,
+                $"Bordrodaki avans kesintisi ({kesinti:N2}) açık avans borcunu ({acikOnce:N2}) aşıyor."));
+        else if (kesinti > 0)
+            bulgular.Add(KontrolBulgusu.Bilgi($"Avans mahsubu {kesinti:N2} (açık borç {acikOnce:N2}, plan {planlanan:N2}) — uyumlu."));
+    }
+
+    private static void KesintiVeGunKurallari(OdemeKontrolBaglami b, Personel personel, MaasDonemKaydi bordro,
+        DateOnly donemBasi, DateOnly donemSonu, List<KontrolBulgusu> bulgular)
+    {
+        var onceki = b.OncekiAyBordro.FirstOrDefault(x => x.PersonelId == personel.Id);
+        foreach (var (tur, ad) in new[] { (MaasKalemTuru.Icra, "İcra"), (MaasKalemTuru.OtoKatBes, "BES") })
+        {
+            var bu = bordro.Kalemler.Where(k => k.Tur == tur).Sum(k => k.Tutar);
+            var once = onceki?.Kalemler.Where(k => k.Tur == tur).Sum(k => k.Tutar) ?? 0m;
+            if (onceki is not null && once > 0 && bu == 0)
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
+                    $"Önceki ay {ad} kesintisi ({once:N2}) vardı, bu ay bordroda yok. Kesinti sona erdiyse belgeyle doğrulayın."));
+            else if (onceki is not null && once == 0 && bu > 0)
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
+                    $"Bu ay yeni {ad} kesintisi başlamış ({bu:N2}). Dayanak belgeyi kontrol edin."));
+            else if (bu > 0)
+                bulgular.Add(KontrolBulgusu.Bilgi($"{ad} kesintisi {bu:N2} (önceki ay {once:N2})."));
+        }
+
+        var girisCikisVar = personel.CalismaDonemleri.Any(d =>
+            (d.IseGirisTarihi >= donemBasi && d.IseGirisTarihi <= donemSonu) ||
+            (d.IstenCikisTarihi is { } c && c >= donemBasi && c <= donemSonu));
+        if (bordro.Gun is { } gun && gun > 0 && gun < 30 && !girisCikisVar)
+            bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
+                $"Eksik çalışma günü: {G(gun)} gün (ay içinde giriş/çıkış yok). Ücretsiz izin / devamsızlık belgesini kontrol edin."));
+
+        if (b.DevredenDuzeltmeler.TryGetValue(personel.Id, out var duzeltme) && Math.Abs(duzeltme) > Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
+                $"Önceki dönemden devreden düzeltme: {duzeltme:N2} TL. Bu ayın bordrosuna/ödemesine yansıdığını doğrulayın."));
+
+        if (b.AcikSupheliBakiyeler.TryGetValue(personel.Id, out var supheli) && supheli > Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
+                $"Personelin inceleme bekleyen fazla ödeme bakiyesi var: {supheli:N2} TL."));
+    }
+
+    private static void Uygula(OdemeKontrolSatiri satir, List<KontrolBulgusu> bulgular)
+    {
+        var kritikler = bulgular.Where(x => x.Kritik).ToList();
+        var uyarilar = bulgular.Where(x => !x.Kritik && x.Sonuc != OdemeKontrolSonucu.Uygun).ToList();
+
+        satir.KritikMi = kritikler.Count > 0;
+        satir.EslesmeBelirsiz = bulgular.Any(x => x.Belirsiz);
+        satir.Sonuc = kritikler.Count > 0
+            ? Oncelik.First(o => kritikler.Any(k => k.Sonuc == o))
+            : uyarilar.Count > 0
+                ? Oncelik.First(o => uyarilar.Any(k => k.Sonuc == o))
+                : OdemeKontrolSonucu.Uygun;
+
+        var metin = bulgular
+            .OrderByDescending(x => x.Kritik)
+            .Select(x => (x.Kritik ? "[KRİTİK] " : x.Sonuc == OdemeKontrolSonucu.Uygun ? "" : "[UYARI] ") + x.Mesaj)
+            .ToList();
+        satir.Gerekce = metin.Count == 0 ? "Bordro, banka talimatı ve personel kartı uyumlu." : string.Join(" ", metin);
+        satir.Onaylandi = !satir.KritikMi;
+    }
+
+    private static string G(decimal? d) => d?.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "-";
+
+    private static string Rakam(string? s) => new((s ?? "").Where(char.IsDigit).ToArray());
 }

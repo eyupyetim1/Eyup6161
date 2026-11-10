@@ -20,6 +20,14 @@ Bağımlılık yönü: Desktop → Application → Domain; Infrastructure → Ap
 - `EnsureCreated` ile şema oluşturulur (V1)
 - Finansal kayıtlar soft-delete ile silinmez; içe aktarma geri alma denetim izi bırakır
 
+## Mali hareket defteri ve veri bütünlüğü (1.2)
+
+- Tüm mali hareketler `IMaliHareketServisi.DeftereEkleAsync` üzerinden yazılır (benzersiz `IslemKimligi`, çalışma dönemi/şirket/tesis ataması, kapalı dönem kontrolü)
+- Hareketin bakiye etkisi `MaliHareketKurallari.Etki` ile hesaplanır; dört bakiye (maaş alacağı, avans, şüpheli fazla, kesin geri ödeme) ayrıdır
+- `VeriButunluguKorumasi` (DbContext `SaveChanges`) son savunma hattıdır: `MaliHareket` ve `DenetimKaydi` değiştirilemez/silinemez; kapalı döneme ait bordro, kalem, ödeme, avans mahsubu, kontrol, liste ve mutabakat kayıtları eklenemez/değişemez. Tek istisna `OncekiDonemDuzeltme` hareketi
+- `MaasDonemKaydi` global sorgu filtresiyle iptal edilenleri gizler (`IgnoreQueryFilters` ile erişilir)
+- Şema değişikliği: entity'ye alan ekleyin; `SemaYukseltici` eski veritabanlarına kolonu ekler. Zorunlu (non-null) alanların varsayılanı entity'nin `new()` değerinden alınır
+
 ## Kritik domain kuralları
 
 1. **Hak ediş dönemi ≠ çıkış tarihi ≠ banka ödeme tarihi**
@@ -34,6 +42,13 @@ WPF Windows’a özgüdür. CI / Cloud Agent:
 
 ```bash
 dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true
+```
+
+Masaüstü projesi Linux'ta yalnızca **derlenebilir** (çalıştırılamaz). Microsoft SDK'sında bulunan
+`Microsoft.NET.Sdk.WindowsDesktop` klasörü gerekir:
+
+```bash
+dotnet build src/PayControl.Desktop/PayControl.Desktop.csproj -p:ExcludeDesktop=false -p:EnableWindowsTargeting=true
 ```
 
 ## Windows’ta derleme ve yayın
@@ -61,4 +76,4 @@ dotnet run --project tools/GenerateSampleExcel -- samples
 
 ## Sonraki aşamalar
 
-Avans taksit motoru, banka dosyası eşleme, uyarı merkezi UI, yönetici paneli, PDF/OCR, şifreli yedek, kurulum paketi (Inno Setup / MSI).
+Kullanıcı yönetimi ekranı, icra/BES dayanak verisi (tutar doğrulaması için), banka ödeme kaydı iptal akışı, şirket bazlı ayrı dönem kapanışı, uyarı merkezi UI, PDF/OCR, şifreli yedek, MSI kurulum paketi.

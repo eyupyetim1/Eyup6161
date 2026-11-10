@@ -15,6 +15,10 @@ public interface IPersonelServisi
     Task<PersonelDetayDto> OlusturAsync(PersonelOlusturDto dto, string kullaniciAdi, CancellationToken ct = default);
 
     Task<PersonelDetayDto> GuncelleAsync(Guid id, PersonelGuncelleDto dto, string kullaniciAdi, string? neden, CancellationToken ct = default);
+
+    /// <summary>İşten ayrılmış personeli aynı kartta yeni çalışma dönemiyle yeniden işe alır; geçmiş silinmez.</summary>
+    Task<PersonelDetayDto> YenidenIseAlAsync(Guid id, DateOnly iseGirisTarihi, string? isyeri, string? gorevi, string? sirket,
+        decimal? maas, string kullaniciAdi, CancellationToken ct = default);
 }
 
 public sealed class PersonelOlusturDto

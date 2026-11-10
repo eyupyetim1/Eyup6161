@@ -29,6 +29,8 @@ public static class ServiceCollectionExtensions
             opt.UseSqlite($"Data Source={dbPath};Pooling=False"));
         services.AddScoped<IPayControlDbContext>(sp => sp.GetRequiredService<PayControlDbContext>());
 
+        services.AddScoped<IYetkiServisi, YetkiServisi>();
+        services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();
         services.AddScoped<IPersonelServisi, PersonelServisi>();
         services.AddScoped<IIstenCikisServisi, IstenCikisAppServisi>();
         services.AddScoped<IBordroIceAktarmaServisi, BordroIceAktarmaServisi>();
@@ -65,7 +67,9 @@ public static class ServiceCollectionExtensions
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PayControlDbContext>();
-        await db.Database.EnsureCreatedAsync();
+        var yeniOlustu = await db.Database.EnsureCreatedAsync();
+        if (!yeniOlustu)
+            await SemaYukseltici.YukseltAsync(db);
         var kimlik = scope.ServiceProvider.GetRequiredService<IKimlikServisi>();
         await kimlik.EnsureAdminAsync();
     }

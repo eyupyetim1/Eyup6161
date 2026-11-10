@@ -13,4 +13,11 @@ public class DonemKontrolMaddesi
     public DateTime? TamamlanmaZamani { get; set; }
     public string? TamamlayanKullanici { get; set; }
     public string? Not { get; set; }
+
+    /// <summary>Son otomatik veri kontrolünün sonucu (null: otomatik kontrolü olmayan madde).</summary>
+    public bool? OtomatikSonuc { get; set; }
+    public string? OtomatikAciklama { get; set; }
+
+    /// <summary>Otomatik kontrol başarısızken gerekçeyle elle onaylandı.</summary>
+    public bool ElleOnaylandi { get; set; }
 }

@@ -16,6 +16,13 @@ public class DonemDuzeltmeKaydi
     public string AlanAdi { get; set; } = string.Empty;
     public string? EskiDeger { get; set; }
     public string? YeniDeger { get; set; }
+    /// <summary>Eski/yeni sayısal ise fark (yeni - eski).</summary>
+    public decimal? FarkTutari { get; set; }
+
+    /// <summary>Farkın uygulanacağı (devredeceği) açık dönem.</summary>
+    public int? UygulanacakDonemYil { get; set; }
+    public int? UygulanacakDonemAy { get; set; }
+
     public string Neden { get; set; } = string.Empty;
     public string KullaniciAdi { get; set; } = string.Empty;
     public DateTime IslemZamani { get; set; } = DateTime.UtcNow;

@@ -29,6 +29,23 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
     public DbSet<OdemeKontrolOturumu> OdemeKontrolOturumlari => Set<OdemeKontrolOturumu>();
     public DbSet<OdemeKontrolSatiri> OdemeKontrolSatirlari => Set<OdemeKontrolSatiri>();
     public DbSet<OnayliOdemeListesi> OnayliOdemeListeleri => Set<OnayliOdemeListesi>();
+    public DbSet<OnayliOdemeListesiSatiri> OnayliOdemeListesiSatirlari => Set<OnayliOdemeListesiSatiri>();
+    public DbSet<OdemeTalimatSatiri> OdemeTalimatSatirlari => Set<OdemeTalimatSatiri>();
+    public DbSet<MutabakatFarki> MutabakatFarklari => Set<MutabakatFarki>();
+    public DbSet<DonemKapanisAnlikGoruntusu> DonemKapanisAnlikGoruntuleri => Set<DonemKapanisAnlikGoruntusu>();
+    public DbSet<DonemKapanisOzeti> DonemKapanisOzetleri => Set<DonemKapanisOzeti>();
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        VeriButunluguKorumasi.Denetle(this);
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        VeriButunluguKorumasi.Denetle(this);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +70,8 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
         {
             e.HasKey(x => x.Id);
             e.HasIndex(x => new { x.PersonelId, x.DonemYil, x.DonemAy, x.IceAktarmaId });
+            // Geri alınmış (iptal) bordro satırları silinmez; varsayılan sorgulardan gizlenir.
+            e.HasQueryFilter(x => !x.IptalEdildi);
             e.Property(x => x.NetIstihkak).HasPrecision(18, 2);
             e.Property(x => x.MaasTutar).HasPrecision(18, 2);
             e.Property(x => x.Gun).HasPrecision(18, 2);
@@ -108,6 +127,7 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.Property(x => x.Tutar).HasPrecision(18, 2);
             e.HasIndex(x => new { x.PersonelId, x.HakEdisDonemYil, x.HakEdisDonemAy });
             e.HasIndex(x => x.ReferansNo);
+            e.HasIndex(x => x.TekillikAnahtari).IsUnique();
         });
 
         modelBuilder.Entity<PersonelBelge>(e =>
@@ -123,6 +143,7 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.HasIndex(x => x.IslemKimligi).IsUnique();
             e.Property(x => x.IslemKimligi).HasMaxLength(200).IsRequired();
             e.Property(x => x.Tutar).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.PersonelId, x.IslemTarihi });
             e.HasOne(x => x.Personel).WithMany(p => p.MaliHareketler)
                 .HasForeignKey(x => x.PersonelId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -170,6 +191,7 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
         modelBuilder.Entity<DonemDuzeltmeKaydi>(e =>
         {
             e.HasKey(x => x.Id);
+            e.Property(x => x.FarkTutari).HasPrecision(18, 2);
             e.HasOne(x => x.MaasDonemKapanisi).WithMany(d => d.Duzeltmeler)
                 .HasForeignKey(x => x.MaasDonemKapanisiId).OnDelete(DeleteBehavior.Cascade);
         });
@@ -187,14 +209,67 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.Property(x => x.BankaOdemeTutari).HasPrecision(18, 2);
             e.HasOne(x => x.OdemeKontrolOturumu).WithMany(o => o.Satirlar)
                 .HasForeignKey(x => x.OdemeKontrolOturumuId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Personel).WithMany()
+                .HasForeignKey(x => x.PersonelId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<OnayliOdemeListesi>(e =>
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.ToplamTutar).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.DonemYil, x.DonemAy, x.Surum });
             e.HasOne(x => x.OdemeKontrolOturumu).WithMany(o => o.OnayliListeler)
-                .HasForeignKey(x => x.OdemeKontrolOturumuId).OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(x => x.OdemeKontrolOturumuId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OnayliOdemeListesiSatiri>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Tutar).HasPrecision(18, 2);
+            e.HasOne(x => x.OnayliOdemeListesi).WithMany(l => l.Satirlar)
+                .HasForeignKey(x => x.OnayliOdemeListesiId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OdemeTalimatSatiri>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Tutar).HasPrecision(18, 2);
+            e.Property(x => x.OrijinalTutar).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.OdemeKontrolOturumuId, x.SatirNo }).IsUnique();
+            e.HasOne(x => x.OdemeKontrolOturumu).WithMany(o => o.Talimatlar)
+                .HasForeignKey(x => x.OdemeKontrolOturumuId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MutabakatFarki>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Beklenen).HasPrecision(18, 2);
+            e.Property(x => x.Odenen).HasPrecision(18, 2);
+            e.Property(x => x.Fark).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.MaasDonemKapanisiId, x.Anahtar }).IsUnique();
+            e.HasOne(x => x.MaasDonemKapanisi).WithMany(d => d.Farklar)
+                .HasForeignKey(x => x.MaasDonemKapanisiId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DonemKapanisAnlikGoruntusu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.MaasTutar).HasPrecision(18, 2);
+            e.Property(x => x.BordroNet).HasPrecision(18, 2);
+            e.Property(x => x.Odenen).HasPrecision(18, 2);
+            e.Property(x => x.Fark).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.MaasDonemKapanisiId, x.KapanisNo });
+        });
+
+        modelBuilder.Entity<DonemKapanisOzeti>(e =>
+        {
+            e.HasKey(x => x.Id);
+            foreach (var prop in new[] { nameof(DonemKapanisOzeti.ToplamBeklenenMaas), nameof(DonemKapanisOzeti.ToplamBankaOdemesi),
+                         nameof(DonemKapanisOzeti.ToplamEksikOdeme), nameof(DonemKapanisOzeti.ToplamFazlaOdeme),
+                         nameof(DonemKapanisOzeti.OdenmemisHakEdisler), nameof(DonemKapanisOzeti.AcikAvanslar),
+                         nameof(DonemKapanisOzeti.CikisSonrasiSupheli) })
+                e.Property(prop).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.MaasDonemKapanisiId, x.KapanisNo }).IsUnique();
         });
     }
 }

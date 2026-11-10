@@ -12,15 +12,18 @@ public sealed class IstenCikisAppServisi : IIstenCikisServisi
     private readonly IPayControlDbContext _db;
     private readonly ICikisDenetimServisi _cikisDenetim;
     private readonly IHakEdisHesaplamaServisi _hakEdis;
+    private readonly IMaliHareketServisi _defter;
 
     public IstenCikisAppServisi(
         IPayControlDbContext db,
         ICikisDenetimServisi cikisDenetim,
-        IHakEdisHesaplamaServisi hakEdis)
+        IHakEdisHesaplamaServisi hakEdis,
+        IMaliHareketServisi defter)
     {
         _db = db;
         _cikisDenetim = cikisDenetim;
         _hakEdis = hakEdis;
+        _defter = defter;
     }
 
     public async Task<IstenCikisDto> OlusturAsync(IstenCikisOlusturDto dto, string kullaniciAdi, CancellationToken ct = default)
@@ -32,6 +35,17 @@ public sealed class IstenCikisAppServisi : IIstenCikisServisi
 
         var aktifDonem = personel.CalismaDonemleri
             .FirstOrDefault(d => d.Durum == CalismaDurumu.Aktif);
+
+        if (dto.IstenCikisTarihi < dto.FiiliSonCalismaTarihi)
+            throw new InvalidOperationException("İşten çıkış tarihi fiilî son çalışma tarihinden önce olamaz.");
+        if (aktifDonem is not null && dto.IstenCikisTarihi < aktifDonem.IseGirisTarihi)
+            throw new InvalidOperationException("Çıkış tarihi aktif çalışma döneminin giriş tarihinden önce olamaz.");
+        if (dto.SonBordroDonemYil.HasValue != dto.SonBordroDonemAy.HasValue)
+            throw new InvalidOperationException("Son bordro dönemi yıl ve ay birlikte girilmelidir.");
+        if (dto.SonBordroDonemYil.HasValue &&
+            new DateOnly(dto.SonBordroDonemYil.Value, dto.SonBordroDonemAy!.Value, 1) >
+            new DateOnly(dto.IstenCikisTarihi.Year, dto.IstenCikisTarihi.Month, 1))
+            throw new InvalidOperationException("Son ücretin bağlandığı bordro dönemi çıkış ayından sonra olamaz.");
 
         // SGK: kullanıcı açıkça onaylamadıysa Belirsiz kalır; otomatik Verildi varsayılmaz.
         var sgkDurum = SgkCikisDurumu.Belirsiz;
@@ -72,6 +86,37 @@ public sealed class IstenCikisAppServisi : IIstenCikisServisi
         }
 
         _db.IstenCikisKayitlari.Add(kayit);
+
+        // Ekstre: çıkış olayı ve beyan edilen tazminat/izin tutarları (bordroya dahil olacakları için bilgi bakiyesinde).
+        var bilgi = new List<(MaliIslemTuru Tur, decimal? Tutar, string Ad)>
+        {
+            (MaliIslemTuru.IstenCikis, 0m, "İşten çıkış"),
+            (MaliIslemTuru.KidemTazminati, dto.KidemTazminati, "Kıdem tazminatı (çıkış kaydında beyan)"),
+            (MaliIslemTuru.IhbarTazminati, dto.IhbarTazminati, "İhbar tazminatı (çıkış kaydında beyan)"),
+            (MaliIslemTuru.IzinUcreti, dto.IzinUcreti, "İzin ücreti (çıkış kaydında beyan)")
+        };
+        foreach (var (tur, tutar, ad) in bilgi.Where(b => b.Tur == MaliIslemTuru.IstenCikis || b.Tutar is > 0))
+        {
+            await _defter.DeftereEkleAsync(new MaliHareket
+            {
+                IslemKimligi = MaliHareketKurallari.IslemKimligi($"Cikis:{tur}", personel.Id, kayit.Id.ToString("N")),
+                PersonelId = personel.Id,
+                CalismaDonemiId = aktifDonem?.Id,
+                IslemTarihi = dto.IstenCikisTarihi,
+                IslemTuru = tur,
+                BakiyeTuru = BakiyeTuru.Bilgi,
+                Tutar = tutar ?? 0m,
+                Aciklama = tur == MaliIslemTuru.IstenCikis
+                    ? $"İşten çıkış. Fiilî son gün {dto.FiiliSonCalismaTarihi:dd.MM.yyyy}. Son ücret dönemi: " +
+                      (dto.SonBordroDonemYil.HasValue ? $"{dto.SonBordroDonemYil}-{dto.SonBordroDonemAy:D2}" : "belirtilmedi") +
+                      (string.IsNullOrWhiteSpace(dto.CikisNedeni) ? "" : $". Neden: {dto.CikisNedeni}")
+                    : $"{ad}. Ödemesi bordro/mutabakat ile izlenir.",
+                KaynakTuru = nameof(IstenCikisKaydi),
+                KaynakReferans = kayit.Id.ToString(),
+                KaynakBelge = dto.BelgeYolu,
+                KullaniciAdi = kullaniciAdi
+            }, false, ct);
+        }
         _db.DenetimKayitlari.Add(new DenetimKaydi
         {
             PersonelId = personel.Id,

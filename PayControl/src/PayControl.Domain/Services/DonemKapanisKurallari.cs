@@ -44,14 +44,33 @@ public static class DonemKapanisKurallari
         if (!tumMaddelerTamam)
             throw new InvalidOperationException("Kontrol listesi tamamlanmadan dönem kapatılamaz.");
 
-        if (cozulmemisUyari > 0 && string.IsNullOrWhiteSpace(not))
-            throw new InvalidOperationException("Çözülmemiş uyarılar varken kapanış notu (gerekçeli istisna) zorunludur.");
+        // Açık fark ve kritik uyarılar not ile geçiştirilemez: her biri çözülmeli veya tek tek gerekçeli istisna olmalı.
+        if (cozulmemisUyari > 0)
+            throw new InvalidOperationException(
+                $"{cozulmemisUyari} çözülmemiş uyarı/fark var. Her biri çözülmeden veya gerekçeli istisna olarak kaydedilmeden dönem kapatılamaz.");
 
         donem.Durum = MaasDonemDurumu.Kapatildi;
         donem.KapanisZamani = DateTime.UtcNow;
         donem.KapatanKullanici = kullanici;
         donem.KapanisNotu = not;
         donem.CozulmemisUyariSayisi = cozulmemisUyari;
+        donem.KapanisSayisi++;
+    }
+
+    /// <summary>
+    /// Durum makinesi: ileri yönde geçişe izin verilir; "İnceleme Bekliyor" ödeme kontrolünden sonraki
+    /// her aşamadan açılabilir. "Kapatıldı" yalnızca kapanış işlemiyle, geri dönüş yalnızca yeniden açma ile olur.
+    /// </summary>
+    public static bool DurumGecisiGecerliMi(MaasDonemDurumu mevcut, MaasDonemDurumu yeni)
+    {
+        if (mevcut == yeni) return true;
+        if (mevcut == MaasDonemDurumu.Kapatildi || yeni == MaasDonemDurumu.Kapatildi) return false;
+        if (yeni == MaasDonemDurumu.IncelemeBekliyor) return mevcut >= MaasDonemDurumu.OdemeOncesiKontrolde;
+        if (mevcut == MaasDonemDurumu.IncelemeBekliyor)
+            return yeni is MaasDonemDurumu.KapanisaHazir or MaasDonemDurumu.BankaMutabakatiYapiliyor;
+        if (mevcut == MaasDonemDurumu.KapanisaHazir)
+            return yeni is MaasDonemDurumu.BankaMutabakatiYapiliyor;
+        return yeni > mevcut;
     }
 
     public static void YenidenAc(MaasDonemKapanisi donem, string kullanici, string neden)
