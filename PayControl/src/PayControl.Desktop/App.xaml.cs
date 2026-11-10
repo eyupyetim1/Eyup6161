@@ -49,7 +49,62 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        if (e.Args.Contains("--zamanlanmis-gorevler"))
+        {
+            // Windows Görev Zamanlayıcısı modu: pencere açmadan arka plan işlerini çalıştırır ve çıkar.
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = ZamanlanmisGorevlerAsync();
+            return;
+        }
+
         _ = BaslatAsync();
+    }
+
+    private System.Windows.Threading.DispatcherTimer? _zamanlayici;
+
+    /// <summary>Uygulama açıkken her 5 dakikada bir otomatik yedek / zamanlanmış bildirim / yeniden deneme çalıştırır.</summary>
+    private void ZamanlayiciyiBaslat()
+    {
+        _zamanlayici = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        async void Calis()
+        {
+            try
+            {
+                var sonuc = await Task.Run(() => Services.GetRequiredService<PayControl.Application.Interfaces.IZamanlanmisGorevServisi>().CalistirAsync(DateTime.Now));
+                if (sonuc.YedekAlindi || sonuc.CalisanKural > 0 || sonuc.YenidenDenenen > 0 || sonuc.Hatalar.Count > 0)
+                    Log.Information("Zamanlanmış görevler: {Sonuc}", sonuc.ToString());
+            }
+            catch (Exception ex) { Log.Warning(ex, "Zamanlanmış görev hatası"); }
+        }
+        _zamanlayici.Tick += (_, _) => Calis();
+        _zamanlayici.Start();
+        Calis();
+    }
+
+    private async Task ZamanlanmisGorevlerAsync()
+    {
+        var kod = 0;
+        try
+        {
+            ServiceCollectionExtensions.ConfigurePayControlLogging();
+            var services = new ServiceCollection();
+            services.AddPayControlInfrastructure();
+            Services = services.BuildServiceProvider();
+            await ServiceCollectionExtensions.InitializeDatabaseAsync(Services);
+            var sonuc = await Services.GetRequiredService<PayControl.Application.Interfaces.IZamanlanmisGorevServisi>().CalistirAsync(DateTime.Now);
+            Log.Information("Zamanlanmış görevler (Görev Zamanlayıcısı): {Sonuc}", sonuc.ToString());
+            kod = sonuc.Hatalar.Count == 0 ? 0 : 2;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Zamanlanmış görevler çalıştırılamadı");
+            kod = 1;
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+            Shutdown(kod);
+        }
     }
 
     private async Task BaslatAsync()
@@ -82,6 +137,7 @@ public partial class App : System.Windows.Application
 
             var login = Services.GetRequiredService<LoginWindow>();
             login.Show();
+            ZamanlayiciyiBaslat();
         }
         catch (Exception ex)
         {

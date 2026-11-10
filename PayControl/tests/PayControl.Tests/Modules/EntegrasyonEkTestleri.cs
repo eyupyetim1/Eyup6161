@@ -340,29 +340,19 @@ public class EntegrasyonEkTestleri : TestOrtami
     {
         var p = await PersonelAsync("Sinan Ok", 30000, 50);
         await S<IAvansServisi>().VerAsync(p.Id, new DateOnly(2026, 9, 1), 1000m, 1, 0, null, Muhasebe);
+        // 1.1 şemasını taklit et: yeni tablo ve kolonları kaldır (SQLite ve PostgreSQL için aynı SQL)
+        var eski = Db;
+        foreach (var sql in new[]
+                 {
+                     "DROP TABLE \"MutabakatFarklari\"", "DROP TABLE \"DonemKapanisOzetleri\"",
+                     "DROP INDEX IF EXISTS \"IX_MaliHareketler_PersonelId_IslemTarihi\"",
+                     "ALTER TABLE \"MaliHareketler\" DROP COLUMN \"Sirket\"", "ALTER TABLE \"MaliHareketler\" DROP COLUMN \"TersKayitMi\""
+                 })
+            await eski.Database.ExecuteSqlRawAsync(sql);
         await Sp.DisposeAsync();
         SqliteConnection.ClearAllPools();
 
-        // 1.1 şemasını taklit et: yeni tablo ve kolonları kaldır
-        await using (var conn = new SqliteConnection($"Data Source={DbYolu};Pooling=False"))
-        {
-            await conn.OpenAsync();
-            foreach (var sql in new[]
-                     {
-                         "DROP TABLE MutabakatFarklari", "DROP TABLE DonemKapanisOzetleri",
-                         "DROP INDEX IF EXISTS IX_MaliHareketler_PersonelId_IslemTarihi",
-                         "ALTER TABLE MaliHareketler DROP COLUMN Sirket", "ALTER TABLE MaliHareketler DROP COLUMN TersKayitMi"
-                     })
-            {
-                await using var cmd = conn.CreateCommand();
-                cmd.CommandText = sql;
-                await cmd.ExecuteNonQueryAsync();
-            }
-        }
-
-        var services = new ServiceCollection();
-        services.AddPayControlInfrastructure(DbYolu);
-        Sp = services.BuildServiceProvider();
+        SaglayiciOlustur();
         await ServiceCollectionExtensions.InitializeDatabaseAsync(Sp);
 
         var db = Sp.GetRequiredService<PayControlDbContext>();

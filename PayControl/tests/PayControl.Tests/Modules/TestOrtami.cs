@@ -29,9 +29,9 @@ public abstract class TestOrtami : IAsyncLifetime
     {
         DbYolu = Path.Combine(Path.GetTempPath(), $"pc-v12-{Guid.NewGuid():N}.db");
         Klasor = Path.Combine(Path.GetTempPath(), $"pc-v12-out-{Guid.NewGuid():N}");
-        var services = new ServiceCollection();
-        services.AddPayControlInfrastructure(DbYolu);
-        Sp = services.BuildServiceProvider();
+        // PAYCONTROL_TEST_PG="Host=localhost;Username=postgres;Password=..." → her test kendi geçici veritabanında
+        if (PgMi) _pgVeritabani = $"pc_test_{Guid.NewGuid():N}";
+        SaglayiciOlustur();
         await ServiceCollectionExtensions.InitializeDatabaseAsync(Sp);
 
         var db = Db;
@@ -42,9 +42,37 @@ public abstract class TestOrtami : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
+    protected static string? PgTemel => Environment.GetEnvironmentVariable("PAYCONTROL_TEST_PG");
+    /// <summary>Testler PostgreSQL üzerinde mi çalışıyor (SQLite'a özgü yedekleme testleri bu durumda atlanır).</summary>
+    protected static bool PgMi => !string.IsNullOrWhiteSpace(PgTemel);
+    private string? _pgVeritabani;
+
+    /// <summary>Aynı veritabanına bağlanan yeni servis sağlayıcısı kurar (uygulamanın yeniden başlatılmasını taklit eder).</summary>
+    protected void SaglayiciOlustur()
+    {
+        var services = new ServiceCollection();
+        if (_pgVeritabani is not null)
+            services.AddPayControlInfrastructure(DbYolu, new VeritabaniYapilandirmasi
+            {
+                Saglayici = "PostgreSql", BaglantiMetni = $"{PgTemel};Database={_pgVeritabani}"
+            });
+        else services.AddPayControlInfrastructure(DbYolu);
+        Sp = services.BuildServiceProvider();
+    }
+
     public async Task DisposeAsync()
     {
-        await TestDbCleanup.DisposeProviderAndDbAsync(Sp, DbYolu);
+        if (_pgVeritabani is not null)
+        {
+            await Sp.DisposeAsync();
+            Npgsql.NpgsqlConnection.ClearAllPools();
+            await using var c = new Npgsql.NpgsqlConnection($"{PgTemel};Database=postgres");
+            await c.OpenAsync();
+            await using var cmd = c.CreateCommand();
+            cmd.CommandText = $"DROP DATABASE IF EXISTS \"{_pgVeritabani}\" WITH (FORCE)";
+            await cmd.ExecuteNonQueryAsync();
+        }
+        else await TestDbCleanup.DisposeProviderAndDbAsync(Sp, DbYolu);
         try { if (Directory.Exists(Klasor)) Directory.Delete(Klasor, true); } catch { /* yoksay */ }
     }
 

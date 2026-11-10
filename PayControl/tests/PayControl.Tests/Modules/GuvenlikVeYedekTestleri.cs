@@ -79,6 +79,7 @@ public class GuvenlikVeYedekTestleri : TestOrtami
     [Fact]
     public async Task Sifreli_yedek_alinir_ve_geri_yuklenince_veri_onceki_haline_doner()
     {
+        if (PgMi) return; // dosya yedeği SQLite'a özgü; PostgreSQL'de sunucu yedeği (pg_dump) kullanılır
         var p = await PersonelAsync("Yedek Test", 30000, 62);
         var yedek = S<IYedekServisi>();
         await Assert.ThrowsAsync<YetkiHatasiException>(() => yedek.YedekSifresiAyarlaAsync("CokGizli2026", Muhasebe));
@@ -109,6 +110,7 @@ public class GuvenlikVeYedekTestleri : TestOrtami
     [Fact]
     public async Task Otomatik_yedek_gunde_bir_kez_alinir_ve_saklama_sayisi_uygulanir()
     {
+        if (PgMi) return; // dosya yedeği SQLite'a özgü; PostgreSQL'de sunucu yedeği (pg_dump) kullanılır
         var yedek = S<IYedekServisi>();
         await S<IAyarServisi>().AyarlaAsync(AyarAnahtarlari.YedekKlasoru, Klasor, Yonetici);
         await S<IAyarServisi>().AyarlaAsync(AyarAnahtarlari.YedekSaklamaSayisi, "2", Yonetici);

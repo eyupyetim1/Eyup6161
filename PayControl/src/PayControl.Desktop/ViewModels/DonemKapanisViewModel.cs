@@ -110,7 +110,7 @@ public partial class DonemKapanisViewModel : ObservableObject
     [RelayCommand]
     private async Task BankaHareketIceAktarAsync()
     {
-        var dlg = new OpenFileDialog { Filter = "Excel|*.xlsx;*.xlsm", Title = "Gerçekleşen banka ödemeleri (hesap hareketi dökümü)" };
+        var dlg = new OpenFileDialog { Filter = "Banka hesap hareketi (Excel, MT940, CAMT.053)|*.xlsx;*.xlsm;*.sta;*.mt940;*.940;*.txt;*.xml|Tüm dosyalar|*.*", Title = "Gerçekleşen banka ödemeleri (Excel / MT940 / CAMT.053)" };
         if (dlg.ShowDialog() != true) return;
         try
         {

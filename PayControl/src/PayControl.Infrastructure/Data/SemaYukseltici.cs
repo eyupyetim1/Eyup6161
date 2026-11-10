@@ -9,7 +9,7 @@ namespace PayControl.Infrastructure.Data;
 
 /// <summary>
 /// EnsureCreated mevcut veritabanını güncellemez. Bu sınıf, önceki sürümle oluşturulmuş
-/// SQLite dosyasına eksik tabloları, kolonları ve indeksleri ekler; hiçbir veriyi silmez.
+/// SQLite dosyasına veya PostgreSQL şemasına eksik tabloları, kolonları ve indeksleri ekler; hiçbir veriyi silmez.
 /// </summary>
 public static class SemaYukseltici
 {
@@ -20,8 +20,13 @@ public static class SemaYukseltici
         if (conn.State != ConnectionState.Open)
             await conn.OpenAsync(ct);
 
-        var mevcutTablolar = await ListeAsync(conn, "SELECT name FROM sqlite_master WHERE type='table'", ct);
-        var mevcutIndeksler = await ListeAsync(conn, "SELECT name FROM sqlite_master WHERE type='index'", ct);
+        var pg = db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+        var mevcutTablolar = await ListeAsync(conn, pg
+            ? "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema()"
+            : "SELECT name FROM sqlite_master WHERE type='table'", ct);
+        var mevcutIndeksler = await ListeAsync(conn, pg
+            ? "SELECT indexname FROM pg_indexes WHERE schemaname = current_schema()"
+            : "SELECT name FROM sqlite_master WHERE type='index'", ct);
 
         var script = db.Database.GenerateCreateScript();
         var ifadeler = script.Split(";", StringSplitOptions.RemoveEmptyEntries)
@@ -46,7 +51,9 @@ public static class SemaYukseltici
             var tablo = entity.GetTableName();
             if (tablo is null) continue;
             var store = StoreObjectIdentifier.Table(tablo, entity.GetSchema());
-            var kolonlar = (await ListeAsync(conn, $"PRAGMA table_info(\"{tablo}\")", ct, kolonIndeksi: 1))
+            var kolonlar = (pg
+                    ? await ListeAsync(conn, $"SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '{tablo.Replace("'", "''")}'", ct)
+                    : await ListeAsync(conn, $"PRAGMA table_info(\"{tablo}\")", ct, kolonIndeksi: 1))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             object? ornek = null;
@@ -64,7 +71,7 @@ public static class SemaYukseltici
                     var varsayilan = prop.PropertyInfo is not null && ornek is not null
                         ? prop.PropertyInfo.GetValue(ornek)
                         : null;
-                    sql += $" NOT NULL DEFAULT {SqlDegeri(varsayilan, prop.ClrType)}";
+                    sql += $" NOT NULL DEFAULT {SqlDegeri(varsayilan, prop.ClrType, pg)}";
                 }
                 await CalistirAsync(conn, sql, ct);
                 yapilan.Add($"Kolon eklendi: {tablo}.{kolon}");
@@ -96,20 +103,23 @@ public static class SemaYukseltici
         return yapilan;
     }
 
-    private static string SqlDegeri(object? deger, Type tip)
+    private static string SqlDegeri(object? deger, Type tip, bool pg)
     {
         var t = Nullable.GetUnderlyingType(tip) ?? tip;
         if (deger is null)
         {
             if (t == typeof(string)) return "''";
             if (t == typeof(Guid)) return "'00000000-0000-0000-0000-000000000000'";
+            if (pg && t == typeof(bool)) return "FALSE";
+            if (pg && t == typeof(DateTime)) return "'0001-01-01 00:00:00'";
+            if (pg && t == typeof(DateOnly)) return "'0001-01-01'";
             return "0";
         }
         return deger switch
         {
-            bool b => b ? "1" : "0",
+            bool b => pg ? (b ? "TRUE" : "FALSE") : b ? "1" : "0",
             string s => "'" + s.Replace("'", "''") + "'",
-            Guid g => "'" + g.ToString().ToUpperInvariant() + "'",
+            Guid g => "'" + (pg ? g.ToString() : g.ToString().ToUpperInvariant()) + "'",
             Enum e => Convert.ToInt32(e, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture),
             decimal d => "'" + d.ToString(CultureInfo.InvariantCulture) + "'",
             DateTime dt => "'" + dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "'",

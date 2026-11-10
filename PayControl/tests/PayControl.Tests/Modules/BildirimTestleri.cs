@@ -221,4 +221,30 @@ public class BildirimTestleri : TestOrtami
         var gunluk = new BildirimKurali { Siklik = BildirimSikligi.Gunluk, Saat = 18 };
         Assert.Equal(new DateTime(2026, 11, 9, 18, 0, 0), BildirimServisi.SonVade(gunluk, new DateTime(2026, 11, 10, 17, 0, 0)));
     }
+
+    [Fact]
+    public async Task Zamanlanmis_gorev_calistiricisi_yedek_alir_ve_adim_hatasinda_digerlerine_devam_eder()
+    {
+        var gorev = S<IZamanlanmisGorevServisi>();
+        var alici = await AliciAsync("Muhasebe", "m@ornek.test", null);
+        await S<IBildirimServisi>().GonderAsync(new BildirimTalebi { AliciIdleri = [alici.Id], Konu = "K", Metin = "M" }, Muhasebe); // SMTP yok → hata
+
+        var ilk = await gorev.CalistirAsync(new DateTime(2026, 11, 10, 10, 0, 0));
+        Assert.Equal(!PgMi, ilk.YedekAlindi);
+        Assert.Equal(0, ilk.YenidenDenenen); // SMTP hâlâ ayarsız
+        Assert.Empty(ilk.Hatalar);
+        var ikinci = await gorev.CalistirAsync(new DateTime(2026, 11, 10, 10, 5, 0));
+        Assert.False(ikinci.YedekAlindi); // 24 saat dolmadı
+        Assert.Equal(PgMi ? 0 : 1, (await S<IYedekServisi>().ListeleAsync()).Count(y => y.Otomatik));
+    }
+
+    [Fact]
+    public void Windows_gorev_zamanlayici_argumanlari()
+    {
+        var a = PayControl.Infrastructure.Platform.WindowsGorevZamanlayici.OlusturmaArgumanlari(@"C:\Program Files\PayControl\PayControl.exe", 15);
+        Assert.Contains("/Create", a);
+        Assert.Equal("15", a[a.ToList().IndexOf("/MO") + 1]);
+        Assert.Equal("\"C:\\Program Files\\PayControl\\PayControl.exe\" --zamanlanmis-gorevler", a[^1]);
+        Assert.Throws<ArgumentOutOfRangeException>(() => PayControl.Infrastructure.Platform.WindowsGorevZamanlayici.OlusturmaArgumanlari("x.exe", 1));
+    }
 }

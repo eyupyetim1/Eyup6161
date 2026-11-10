@@ -14,23 +14,36 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPayControlInfrastructure(
         this IServiceCollection services,
-        string? veritabaniYolu = null)
+        string? veritabaniYolu = null,
+        VeritabaniYapilandirmasi? yapilandirma = null)
     {
-        // v1.1 şema (mali hareket, ödeme kontrol, dönem kapanış)
-        var dbPath = veritabaniYolu ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "PayControl",
-            "paycontrol-v11.db");
+        var veriKlasoru = veritabaniYolu is null ? VeritabaniYapilandirmasi.VarsayilanKlasor : Path.GetDirectoryName(Path.GetFullPath(veritabaniYolu))!;
+        Directory.CreateDirectory(veriKlasoru);
+        var koruyucu = new SifreKoruyucu(veriKlasoru);
+        services.AddSingleton<ISifreKoruyucu>(koruyucu);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-
-        // Pooling=False: test/Windows'ta Dispose sonrası dosya kilidini bırakır
-        services.AddDbContext<PayControlDbContext>(opt =>
-            opt.UseSqlite($"Data Source={dbPath};Pooling=False"));
+        // Testte veya açık yol verildiğinde yapılandırma dosyası okunmaz (yanlışlıkla sunucuya bağlanmayı önler)
+        var yap = yapilandirma ?? (veritabaniYolu is null ? VeritabaniYapilandirmasi.Yukle() : new VeritabaniYapilandirmasi());
+        if (yap.PostgreSqlMi)
+        {
+            var baglanti = !string.IsNullOrWhiteSpace(yap.BaglantiMetniSifreli) ? koruyucu.Coz(yap.BaglantiMetniSifreli!) : yap.BaglantiMetni;
+            if (string.IsNullOrWhiteSpace(baglanti))
+                throw new InvalidOperationException("veritabani.json: PostgreSQL seçili ama bağlantı metni boş.");
+            // Uygulama yerel saat (DateTime.Now) ve UTC değerlerini birlikte kullanır; 'timestamp without time zone' eşlemesi korunur.
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            services.AddDbContext<PayControlDbContext>(opt => opt.UseNpgsql(baglanti));
+            services.AddSingleton(new VeritabaniBilgisi("PostgreSql", baglanti, null));
+        }
+        else
+        {
+            // v1.1 şema (mali hareket, ödeme kontrol, dönem kapanış)
+            var dbPath = veritabaniYolu ?? Path.Combine(veriKlasoru, "paycontrol-v11.db");
+            // Pooling=False: test/Windows'ta Dispose sonrası dosya kilidini bırakır
+            services.AddDbContext<PayControlDbContext>(opt => opt.UseSqlite($"Data Source={dbPath};Pooling=False"));
+            services.AddSingleton(new VeritabaniBilgisi("Sqlite", $"Data Source={dbPath};Pooling=False", dbPath));
+        }
         services.AddScoped<IPayControlDbContext>(sp => sp.GetRequiredService<PayControlDbContext>());
 
-        services.AddSingleton(new VeritabaniBilgisi("Sqlite", $"Data Source={dbPath};Pooling=False", dbPath));
-        services.AddSingleton<ISifreKoruyucu>(new SifreKoruyucu(Path.GetDirectoryName(dbPath)!));
         services.AddScoped<IAyarServisi, AyarServisi>();
         services.AddScoped<IYedekServisi, YedekServisi>();
         services.AddScoped<IYetkiServisi, YetkiServisi>();
@@ -45,6 +58,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEpostaGonderici, Bildirim.EpostaGonderici>();
         services.AddSingleton<IWhatsAppGonderici, Bildirim.WhatsAppGonderici>();
         services.AddScoped<IBildirimServisi, BildirimServisi>();
+        services.AddSingleton<IZamanlanmisGorevServisi, ZamanlanmisGorevServisi>();
+        services.AddScoped<IGuncellemeServisi, Platform.GuncellemeServisi>();
         services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();
         services.AddScoped<IPersonelServisi, PersonelServisi>();
         services.AddScoped<IIstenCikisServisi, IstenCikisAppServisi>();

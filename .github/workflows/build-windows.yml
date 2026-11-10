@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 'cursor/paycontrol-v1-personel-maas-cikis-5f7e'
+    tags:
+      - 'v*'
     paths:
       - 'PayControl/**'
       - '.github/workflows/build-windows.yml'
@@ -14,8 +16,36 @@ permissions:
   contents: read
 
 jobs:
+  test-postgresql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pc_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test (SQLite)
+        working-directory: PayControl
+        run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --verbosity minimal
+      - name: Test (PostgreSQL 16)
+        working-directory: PayControl
+        env:
+          PAYCONTROL_TEST_PG: Host=localhost;Username=postgres;Password=pc_test
+        run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --no-build --verbosity minimal
+
   build-win-x64:
     runs-on: windows-latest
+    env:
+      CODE_SIGN_PFX: ${{ secrets.CODE_SIGN_PFX }}
+      CODE_SIGN_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,6 +68,20 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=false
           -o publish/win-x64
+
+      - name: Kod imzalama (CODE_SIGN_PFX tanımlıysa)
+        if: env.CODE_SIGN_PFX != ''
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'imza.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CODE_SIGN_PFX))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe | Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+          foreach ($f in @('publish/win-x64/PayControl.exe', 'publish/win-x64/PayControl.dll')) {
+            & $signtool.FullName sign /f $pfx /p $env:CODE_SIGN_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $f
+            if ($LASTEXITCODE -ne 0) { throw "İmzalama başarısız: $f" }
+          }
+          Remove-Item $pfx -Force
 
       - name: Ekran görüntüleri (sentetik demo veri)
         continue-on-error: true
@@ -90,10 +134,42 @@ jobs:
           Compress-Archive -Path "PayControl/dist/PayControl-Kurulum/*" -DestinationPath $zip -Force
           Get-Item $zip | Format-List FullName, Length
 
+      - name: Güncelleme bildirimi (guncelleme.json)
+        shell: pwsh
+        run: |
+          $zip = "PayControl/dist/PayControl-Kurulum-win-x64.zip"
+          [xml]$proj = Get-Content PayControl/src/PayControl.Desktop/PayControl.Desktop.csproj
+          $surum = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $sha = (Get-FileHash $zip -Algorithm SHA256).Hash
+          @{ surum = $surum; adres = 'PayControl-Kurulum-win-x64.zip'; sha256 = $sha; tarih = (Get-Date).ToUniversalTime().ToString('o'); notlar = "PayControl $surum" } |
+            ConvertTo-Json | Set-Content PayControl/dist/guncelleme.json -Encoding utf8
+          Get-Content PayControl/dist/guncelleme.json
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: PayControl-Kurulum-win-x64
-          path: PayControl/dist/PayControl-Kurulum-win-x64.zip
+          path: |
+            PayControl/dist/PayControl-Kurulum-win-x64.zip
+            PayControl/dist/guncelleme.json
           if-no-files-found: error
           retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-win-x64, test-postgresql]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: PayControl-Kurulum-win-x64
+          path: paket
+      - name: GitHub sürümü oluştur (otomatik güncelleme bu dosyaları okur)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -R paket
+          gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --title "PayControl ${GITHUB_REF_NAME}" --generate-notes \
+            $(find paket -name 'PayControl-Kurulum-win-x64.zip') $(find paket -name 'guncelleme.json')
