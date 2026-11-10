@@ -50,7 +50,7 @@ public partial class LoginViewModel : ObservableObject
                        ?? new MainWindow(App.Services.GetService(typeof(MainViewModel)) as MainViewModel
                                          ?? throw new InvalidOperationException());
             main.Show();
-            foreach (Window w in Application.Current.Windows)
+            foreach (Window w in System.Windows.Application.Current.Windows)
             {
                 if (w is LoginWindow)
                 {

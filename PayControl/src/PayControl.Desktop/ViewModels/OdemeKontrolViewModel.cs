@@ -13,13 +13,13 @@ namespace PayControl.Desktop.ViewModels;
 public partial class OdemeKontrolViewModel : ObservableObject
 {
     private readonly IOdemeOncesiKontrolServisi _servis;
-    private readonly OturumServisi _oturum;
+    private readonly OturumServisi _oturumServisi;
 
     [ObservableProperty] private int _donemYil = DateTime.Today.Year;
     [ObservableProperty] private int _donemAy = DateTime.Today.Month;
     [ObservableProperty] private string? _bankaDosyaYolu;
     [ObservableProperty] private string? _mesaj;
-    [ObservableProperty] private OdemeKontrolOturumu? _oturum;
+    [ObservableProperty] private OdemeKontrolOturumu? _kontrolOturumu;
     [ObservableProperty] private OdemeKontrolSatiri? _seciliSatir;
     [ObservableProperty] private string? _istisnaGerekce;
 
@@ -28,7 +28,7 @@ public partial class OdemeKontrolViewModel : ObservableObject
     public OdemeKontrolViewModel(IOdemeOncesiKontrolServisi servis, OturumServisi oturum)
     {
         _servis = servis;
-        _oturum = oturum;
+        _oturumServisi = oturum;
     }
 
     [RelayCommand]
@@ -57,13 +57,13 @@ public partial class OdemeKontrolViewModel : ObservableObject
             await using var ms = new MemoryStream(bytes);
             var talimatlar = BankaTalimatOkuyucu.Oku(ms);
 
-            Oturum = await _servis.KontrolBaslatAsync(
+            KontrolOturumu = await _servis.KontrolBaslatAsync(
                 DonemYil, DonemAy, talimatlar,
                 Path.GetFileName(BankaDosyaYolu), hash,
-                _oturum.KullaniciAdi ?? "sistem");
+                _oturumServisi.KullaniciAdi ?? "sistem");
 
             Satirlar.Clear();
-            foreach (var s in Oturum.Satirlar.OrderByDescending(x => x.KritikMi))
+            foreach (var s in KontrolOturumu.Satirlar.OrderByDescending(x => x.KritikMi))
                 Satirlar.Add(s);
 
             var kritik = Satirlar.Count(s => s.KritikMi);
@@ -78,12 +78,12 @@ public partial class OdemeKontrolViewModel : ObservableObject
     [RelayCommand]
     private async Task IstisnaOnaylaAsync()
     {
-        if (SeciliSatir is null || Oturum is null) return;
+        if (SeciliSatir is null || KontrolOturumu is null) return;
         try
         {
-            await _servis.IstisnaOnaylaAsync(SeciliSatir.Id, IstisnaGerekce ?? "", _oturum.KullaniciAdi ?? "sistem");
-            var guncel = await _servis.GetirAsync(Oturum.Id);
-            Oturum = guncel;
+            await _servis.IstisnaOnaylaAsync(SeciliSatir.Id, IstisnaGerekce ?? "", _oturumServisi.KullaniciAdi ?? "sistem");
+            var guncel = await _servis.GetirAsync(KontrolOturumu.Id);
+            KontrolOturumu = guncel;
             Satirlar.Clear();
             foreach (var s in guncel!.Satirlar.OrderByDescending(x => x.KritikMi))
                 Satirlar.Add(s);
@@ -98,13 +98,13 @@ public partial class OdemeKontrolViewModel : ObservableObject
     [RelayCommand]
     private async Task OnayliListeUretAsync()
     {
-        if (Oturum is null) return;
+        if (KontrolOturumu is null) return;
         try
         {
             var klasor = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                 "PayControl", "OnayliOdemeListeleri");
-            var liste = await _servis.OnayliListeUretAsync(Oturum.Id, _oturum.KullaniciAdi ?? "sistem", klasor);
+            var liste = await _servis.OnayliListeUretAsync(KontrolOturumu.Id, _oturumServisi.KullaniciAdi ?? "sistem", klasor);
             Mesaj = $"Onaylı liste oluşturuldu (v{liste.Surum}): {liste.DosyaYolu}";
         }
         catch (Exception ex)
