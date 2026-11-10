@@ -39,6 +39,32 @@ jobs:
           -p:PublishSingleFile=false
           -o publish/win-x64
 
+      - name: Ekran görüntüleri (sentetik demo veri)
+        continue-on-error: true
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          $out = Join-Path $PWD "ekran-goruntuleri"
+          $p = Start-Process -FilePath "publish/win-x64/PayControl.exe" -ArgumentList @("--ekran-goruntusu", "`"$out`"") -PassThru
+          if (-not $p.WaitForExit(300000)) { $p.Kill(); Write-Output "ZAMAN_ASIMI" }
+          Write-Output "Cikis kodu: $($p.ExitCode)"
+          if (Test-Path "$out/HATA.txt") { Get-Content "$out/HATA.txt" }
+          Get-ChildItem $out -Filter *.png | ForEach-Object {
+            $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_.FullName))
+            Write-Output "===PNG-BASLA $($_.Name)==="
+            for ($i = 0; $i -lt $b64.Length; $i += 4000) { Write-Output $b64.Substring($i, [Math]::Min(4000, $b64.Length - $i)) }
+            Write-Output "===PNG-BITIR==="
+          }
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PayControl-Ekran-Goruntuleri
+          path: PayControl/ekran-goruntuleri
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Stage installer package
         shell: pwsh
         run: |

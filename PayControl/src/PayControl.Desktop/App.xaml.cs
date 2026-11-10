@@ -40,6 +40,15 @@ public partial class App : System.Windows.Application
                 KaydetVeGoster(ex);
         };
 
+        var i = Array.IndexOf(e.Args, "--ekran-goruntusu");
+        if (i >= 0)
+        {
+            var klasor = i + 1 < e.Args.Length ? e.Args[i + 1] : Path.Combine(Environment.CurrentDirectory, "ekran-goruntuleri");
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = EkranGoruntusuAsync(klasor);
+            return;
+        }
+
         _ = BaslatAsync();
     }
 
@@ -77,6 +86,37 @@ public partial class App : System.Windows.Application
         catch (Exception ex)
         {
             KaydetVeGoster(ex);
+            Shutdown(1);
+        }
+    }
+
+    /// <summary>Geçici veritabanı + demo veri ile pencerelerin PNG görüntülerini üretir (kullanıcı verisine dokunmaz).</summary>
+    private async Task EkranGoruntusuAsync(string klasor)
+    {
+        try
+        {
+            Directory.CreateDirectory(klasor);
+            var db = Path.Combine(Path.GetTempPath(), $"paycontrol-demo-{Guid.NewGuid():N}.db");
+            var services = new ServiceCollection();
+            services.AddPayControlInfrastructure(db);
+            services.AddSingleton<OturumServisi>();
+            services.AddTransient<LoginViewModel>();
+            services.AddTransient<MainViewModel>();
+            services.AddTransient<PersonelDetayViewModel>();
+            services.AddTransient<IstenCikisViewModel>();
+            services.AddTransient<BordroImportViewModel>();
+            services.AddTransient<OdemeKontrolViewModel>();
+            services.AddTransient<DonemKapanisViewModel>();
+            services.AddTransient<LoginWindow>();
+            Services = services.BuildServiceProvider();
+            await ServiceCollectionExtensions.InitializeDatabaseAsync(Services);
+            await EkranGoruntusuModu.CalistirAsync(Services, klasor);
+            File.WriteAllText(Path.Combine(klasor, "TAMAM.txt"), DateTime.Now.ToString("O"));
+            Shutdown(0);
+        }
+        catch (Exception ex)
+        {
+            try { File.WriteAllText(Path.Combine(klasor, "HATA.txt"), ex.ToString(), Encoding.UTF8); } catch { /* yoksay */ }
             Shutdown(1);
         }
     }
