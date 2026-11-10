@@ -48,6 +48,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
           Copy-Item PayControl/publish/win-x64/* $stage -Recurse -Force
           Copy-Item PayControl/installer/Install-PayControl.ps1 $stage -Force
+          Copy-Item PayControl/installer/KURULUM.cmd $stage -Force
           Copy-Item PayControl/installer/KURULUM.txt $stage -Force
           Copy-Item PayControl/docs/KULLANIM.md $stage -Force
           Copy-Item PayControl/samples/bordro-ornek.xlsx $stage -Force
