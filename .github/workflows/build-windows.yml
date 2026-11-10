@@ -29,16 +29,14 @@ jobs:
         working-directory: PayControl
         run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --verbosity minimal
 
-      - name: Publish self-contained EXE
+      - name: Publish self-contained (folder, more reliable than single-file)
         working-directory: PayControl
         run: >
           dotnet publish src/PayControl.Desktop/PayControl.Desktop.csproj
           -c Release
           -r win-x64
           --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true
+          -p:PublishSingleFile=false
           -o publish/win-x64
 
       - name: Stage installer package
@@ -49,6 +47,8 @@ jobs:
           Copy-Item PayControl/publish/win-x64/* $stage -Recurse -Force
           Copy-Item PayControl/installer/Install-PayControl.ps1 $stage -Force
           Copy-Item PayControl/installer/KURULUM.cmd $stage -Force
+          Copy-Item PayControl/installer/BASLAT.cmd $stage -Force
+          Copy-Item PayControl/installer/OKU-BENO.txt $stage -Force
           Copy-Item PayControl/installer/KURULUM.txt $stage -Force
           Copy-Item PayControl/docs/KULLANIM.md $stage -Force
           Copy-Item PayControl/samples/bordro-ornek.xlsx $stage -Force

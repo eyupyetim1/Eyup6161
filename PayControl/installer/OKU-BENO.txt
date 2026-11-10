@@ -1,0 +1,28 @@
+============================================
+  PayControl NASIL ACILIR?  (cok onemli)
+============================================
+
+1) Bu klasorde PayControl.exe VAR MI bakin.
+   Yoksa yanlis ZIP indirmisiniz.
+
+2) BASLAT.cmd dosyasina CIFT TIKLAYIN.
+   (Install script sart degil; direkt baslatabilirsiniz.)
+
+3) Windows kirmizi/sari uyari verirse:
+   - "Windows PC'nizi korudu" / "Unknown publisher"
+   - "Ek bilgi" (More info) yazisina TIKLAYIN
+   - Sonra "Yine de calistir" (Run anyway) TIKLAYIN
+
+   Bu normaldir. Program henuz dijital imzali degil;
+   sizin bilgisayarinizda yerel calisir, internete veri gondermez.
+
+4) Antivirus engellerse:
+   - Windows Guvenligi > Virus ve tehdit korumasi
+   - Engellenen ogeler / Izin ver
+
+5) Hala acilmazsa:
+   - Masaustunde "PayControl-HATA.txt" var mi bakin
+   - Varsa icindeki yaziyi bize gonderin
+
+Giris: admin / Admin123!
+============================================

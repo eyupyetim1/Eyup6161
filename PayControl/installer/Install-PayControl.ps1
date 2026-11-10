@@ -44,9 +44,17 @@ try {
 
     Get-ChildItem -Path $SourceDir -File | ForEach-Object {
         if ($_.Name -like 'Install-PayControl*') { return }
+        if ($_.Name -like 'KURULUM*') { return }
+        if ($_.Name -like 'BASLAT*') { return }
+        if ($_.Name -like 'OKU*') { return }
         if ($_.Extension -eq '.pdb') { return }
         Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $TargetDir $_.Name) -Force
     }
+    # Alt klasörler (self-contained publish)
+    Get-ChildItem -Path $SourceDir -Directory | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $TargetDir $_.Name) -Recurse -Force
+    }
+    Get-ChildItem -LiteralPath $TargetDir -Recurse -File | Unblock-File
 
     $Desktop = [Environment]::GetFolderPath('Desktop')
     $ShortcutPath = Join-Path $Desktop 'PayControl.lnk'
