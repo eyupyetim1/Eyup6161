@@ -78,7 +78,7 @@
                     <DataGrid ItemsSource="{Binding Satirlar}" SelectedItem="{Binding SeciliSatir}" IsReadOnly="True" BorderThickness="0,1,0,0"
                               RowStyle="{StaticResource TakipSatiri}" MinRowHeight="48">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Durum" Width="190" SortMemberPath="Durum">
+                            <DataGridTemplateColumn Header="Durum" Width="180" SortMemberPath="Durum">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel>
@@ -90,7 +90,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="Personel" Width="1.5*" SortMemberPath="AdSoyad">
+                            <DataGridTemplateColumn Header="Personel" Width="1.3*" SortMemberPath="AdSoyad">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel>
@@ -102,8 +102,8 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Son çalışma günü" Binding="{Binding SonCalismaGunu, StringFormat=dd.MM.yyyy}" Width="115"/>
-                            <DataGridTemplateColumn Header="Talimat" Width="1.3*">
+                            <DataGridTextColumn Header="Son gün" Binding="{Binding SonCalismaGunu, StringFormat=dd.MM.yyyy}" Width="95"/>
+                            <DataGridTemplateColumn Header="Talimat" Width="1.6*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel>
@@ -120,15 +120,15 @@
                                     <DataTemplate>
                                         <StackPanel>
                                             <TextBlock Text="{Binding CikisKaydiTarihi, StringFormat=dd.MM.yyyy, TargetNullValue=Yapılmadı}"/>
-                                            <TextBlock FontSize="11.5" Foreground="{StaticResource MutedBrush}">
+                                            <TextBlock FontSize="11.5" Foreground="{StaticResource MutedBrush}" Visibility="{Binding CikisKaydiTarihi, Converter={StaticResource Gorunurluk}}">
                                                 <Run Text="{Binding CikisiYapan, Mode=OneWay}"/><Run Text=" · SGK "/><Run Text="{Binding SgkDurumu, Mode=OneWay, TargetNullValue=—}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Son gün sonrası ödenen" Binding="{Binding SonGunSonrasiOdenen, StringFormat=N2}" Width="140" ElementStyle="{StaticResource TutarHucre}"/>
-                            <DataGridTemplateColumn Header="Hak edilmemiş (tahmini)" Width="150" SortMemberPath="TahminiFazlaOdeme">
+                            <DataGridTextColumn Header="Sonrası ödenen" Binding="{Binding SonGunSonrasiOdenen, StringFormat=N2}" Width="120" ElementStyle="{StaticResource TutarHucre}"/>
+                            <DataGridTemplateColumn Header="Hak edilmemiş" Width="120" SortMemberPath="TahminiFazlaOdeme">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding TahminiFazlaOdeme, StringFormat=N2}" HorizontalAlignment="Right" FontWeight="SemiBold">
@@ -146,7 +146,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Sonraki bordro" Binding="{Binding SonrakiBordroSayisi}" Width="100" ElementStyle="{StaticResource SagaHizali}"/>
+                            <DataGridTextColumn Header="Sonraki bordro" Binding="{Binding SonrakiBordroSayisi}" Width="110" ElementStyle="{StaticResource SagaHizali}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
