@@ -215,9 +215,9 @@
                         <TabItem Header="Mali hareketler">
                             <DataGrid ItemsSource="{Binding Ekstre.Hareketler}" SelectedItem="{Binding Ekstre.SeciliHareket}">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Tarih" Binding="{Binding IslemTarihi, StringFormat=dd.MM.yyyy}" Width="88"/>
-                                    <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="70" ElementStyle="{StaticResource SolukHucre}"/>
-                                    <DataGridTextColumn Header="İşlem" Binding="{Binding IslemTuruEtiket}" Width="140"/>
+                                    <DataGridTextColumn Header="Tarih" Binding="{Binding IslemTarihi, StringFormat=dd.MM.yyyy}" Width="102"/>
+                                    <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="84" ElementStyle="{StaticResource SolukHucre}"/>
+                                    <DataGridTextColumn Header="İşlem" Binding="{Binding IslemTuruEtiket}" Width="130"/>
                                     <DataGridTemplateColumn Header="Bakiye" Width="140" SortMemberPath="BakiyeTuru">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
