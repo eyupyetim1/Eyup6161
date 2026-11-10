@@ -59,6 +59,16 @@ public class BildirimKurali
     public DateTime? SonCalisma { get; set; }
     public string? OlusturanKullanici { get; set; }
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
+
+    /// <summary>Görüntüleme: "Ayın 5'i 09:00", "Pzt 08:00", "Her gün 18:00"; olay kurallarında "Olay anında". Veritabanına yazılmaz.</summary>
+    public string GunSaatMetni => Tetikleyici is BildirimTetikleyici.ZamanlanmisRapor or BildirimTetikleyici.UyariOzeti
+        ? Siklik switch
+        {
+            BildirimSikligi.Gunluk => $"Her gün {Saat:D2}:00",
+            BildirimSikligi.Haftalik => $"{(new[] { "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz" })[Math.Clamp(Gun, 1, 7) - 1]} {Saat:D2}:00",
+            _ => $"Ayın {Gun}'i {Saat:D2}:00"
+        }
+        : "Olay anında";
 }
 
 public class BildirimKaydi

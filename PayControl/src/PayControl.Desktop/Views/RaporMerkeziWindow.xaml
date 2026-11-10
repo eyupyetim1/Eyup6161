@@ -72,8 +72,8 @@
                     <TextBlock Text="Bitiş" Style="{StaticResource AlanEtiketi}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBox Width="64" Text="{Binding BitisYil}" ToolTip="Yıl"/>
                     <TextBox Width="44" Margin="4,0,14,0" Text="{Binding BitisAy}" ToolTip="Ay"/>
-                    <ComboBox Width="190" ItemsSource="{Binding Tesisler}" SelectedItem="{Binding SeciliTesis}" ToolTip="Tesis filtresi" Margin="0,0,8,0"/>
-                    <TextBox Width="130" Tag="Şirket (isteğe bağlı)" Text="{Binding Sirket}" Margin="0,0,8,0"/>
+                    <ComboBox Width="160" ItemsSource="{Binding Tesisler}" SelectedItem="{Binding SeciliTesis}" ToolTip="Tesis filtresi" Margin="0,0,8,0"/>
+                    <TextBox Width="110" Tag="Şirket" Text="{Binding Sirket}" Margin="0,0,8,0"/>
                     <Button Style="{StaticResource PrimaryButton}" Command="{Binding OlusturCommand}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE72C;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
@@ -133,7 +133,7 @@
                     </ItemsControl>
                     <Grid>
                         <DataGrid ItemsSource="{Binding Tablo}" AutoGenerateColumns="True" IsReadOnly="True" BorderThickness="0,1,0,0"
-                                  ColumnWidth="SizeToHeader" MinColumnWidth="90" EnableRowVirtualization="True"/>
+                                  ColumnWidth="Auto" MinColumnWidth="80" EnableRowVirtualization="True"/>
                         <TextBlock Text="Rapor hazırlanıyor…" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"
                                    Visibility="{Binding Mesgul, Converter={StaticResource BoolGorunur}}"/>
                     </Grid>

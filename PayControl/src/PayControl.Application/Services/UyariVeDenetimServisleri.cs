@@ -29,7 +29,7 @@ public sealed class UyariServisi : IUyariServisi
                 Seviye = f.FarkTuru is MutabakatFarkTuru.FazlaOdeme or MutabakatFarkTuru.BordrosuzOdeme or MutabakatFarkTuru.CikisSonrasiOdeme or MutabakatFarkTuru.EslesmeyenBankaHareketi
                     ? UyariSeviyesi.Kritik : UyariSeviyesi.Uyari,
                 Kategori = "Mutabakat",
-                Baslik = $"{f.AdSoyad ?? "Eşleşmeyen kayıt"}: {f.FarkTuru} {f.Fark:N2}",
+                Baslik = $"{f.AdSoyad ?? "Eşleşmeyen kayıt"}: {FarkAdi(f.FarkTuru)} {Math.Abs(f.Fark):N2} TL",
                 Aciklama = f.Aciklama,
                 Tesis = f.Tesis ?? TesisOf(f.PersonelId),
                 PersonelId = f.PersonelId,
@@ -177,6 +177,17 @@ public sealed class UyariServisi : IUyariServisi
             .OrderBy(u => u.Seviye).ThenBy(u => u.Kategori).ThenBy(u => u.Baslik)
             .ToList();
     }
+
+    private static string FarkAdi(MutabakatFarkTuru t) => t switch
+    {
+        MutabakatFarkTuru.EksikOdeme => "eksik ödeme",
+        MutabakatFarkTuru.FazlaOdeme => "fazla ödeme",
+        MutabakatFarkTuru.BordrosuzOdeme => "bordrosuz ödeme",
+        MutabakatFarkTuru.OnayliListeDisiOdeme => "onaylı liste dışı ödeme",
+        MutabakatFarkTuru.OnayliListedeOdenmedi => "listede var, ödenmedi",
+        MutabakatFarkTuru.CikisSonrasiOdeme => "çıkış sonrası ödeme",
+        _ => "eşleşmeyen banka hareketi"
+    };
 }
 
 public sealed class DenetimServisi : IDenetimServisi

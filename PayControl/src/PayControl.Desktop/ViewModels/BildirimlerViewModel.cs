@@ -41,7 +41,7 @@ public partial class BildirimlerViewModel : ObservableObject
     public IReadOnlyList<Secenek<RaporBicimi>> Bicimler { get; } = ArayuzYardimcisi.EnumSecenekleri(
         (RaporBicimi.Excel, "Excel"), (RaporBicimi.Pdf, "PDF"), (RaporBicimi.Csv, "CSV"));
     public IReadOnlyList<Secenek<RaporTuru?>> RaporTurleri { get; }
-    public IReadOnlyList<string> Roller { get; } = ["Yönetici", "Muhasebe", "Tesis sorumlusu", "İnsan kaynakları", "Denetçi"];
+    public ObservableCollection<string> Roller { get; } = new() { "Yönetici", "Muhasebe", "Tesis sorumlusu", "İnsan kaynakları", "Denetçi" };
 
     public ObservableCollection<string> Tesisler { get; } = new();
     public ObservableCollection<BildirimAlicisi> Alicilar { get; } = new();
@@ -104,6 +104,7 @@ public partial class BildirimlerViewModel : ObservableObject
         SecilebilirAlicilar.Clear();
         foreach (var a in await _servis.AlicilarAsync())
         {
+            if (!string.IsNullOrWhiteSpace(a.Rol) && !Roller.Contains(a.Rol)) Roller.Add(a.Rol);
             Alicilar.Add(a);
             if (a.Aktif) SecilebilirAlicilar.Add(new SecilebilirAlici(a));
         }

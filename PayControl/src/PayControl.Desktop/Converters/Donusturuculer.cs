@@ -129,6 +129,20 @@ public sealed class DurumRozetiConverter : IValueConverter
             BildirimKanali.WhatsApp => (RozetTonu.Basari, "WhatsApp"),
             _ => (RozetTonu.Mor, "E-posta + WhatsApp")
         },
+        BildirimTetikleyici bt => bt switch
+        {
+            BildirimTetikleyici.ZamanlanmisRapor => (RozetTonu.Bilgi, "Zamanlanmış rapor"),
+            BildirimTetikleyici.UyariOzeti => (RozetTonu.Uyari, "Uyarı özeti"),
+            BildirimTetikleyici.DonemKapandi => (RozetTonu.Mor, "Dönem kapandı"),
+            BildirimTetikleyici.MutabakatFarkiOlustu => (RozetTonu.Tehlike, "Mutabakat farkı"),
+            _ => (RozetTonu.Tehlike, "Yedek hatası")
+        },
+        BildirimSikligi bs => bs switch
+        {
+            BildirimSikligi.Gunluk => (RozetTonu.Notr, "Günlük"),
+            BildirimSikligi.Haftalik => (RozetTonu.Notr, "Haftalık"),
+            _ => (RozetTonu.Notr, "Aylık")
+        },
         bool v => v ? (RozetTonu.Basari, "Evet") : (RozetTonu.Notr, "Hayır"),
         null => (RozetTonu.Notr, "—"),
         _ => (RozetTonu.Notr, value.ToString() ?? "")

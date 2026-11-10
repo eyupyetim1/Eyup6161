@@ -519,7 +519,7 @@
                                             <DataGridTextColumn Header="Toplam borç" Binding="{Binding ToplamBorc, StringFormat=N2}" Width="110" ElementStyle="{StaticResource TutarHucre}"/>
                                             <DataGridTextColumn Header="Kesilen" Binding="{Binding Kesilen, StringFormat=N2}" Width="110" ElementStyle="{StaticResource TutarHucre}"/>
                                             <DataGridTextColumn Header="Kalan" Binding="{Binding Kalan, StringFormat=N2}" Width="110" ElementStyle="{StaticResource TutarHucre}"/>
-                                            <DataGridTemplateColumn Header="Aktif" Width="70">
+                                            <DataGridTemplateColumn Header="Aktif" Width="90">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate><ContentControl Content="{Binding Aktif}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -530,8 +530,11 @@
                                         <TextBox Width="120" Text="{Binding IcraDosyaNo}" Tag="Dosya no" Margin="0,0,6,6"/>
                                         <TextBox Width="150" Text="{Binding IcraDairesi}" Tag="İcra dairesi" Margin="0,0,6,6"/>
                                         <TextBox Width="140" Text="{Binding IcraAlacakli}" Tag="Alacaklı" Margin="0,0,6,6"/>
+                                        <TextBlock Text="Borç ₺" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="110" Text="{Binding IcraBorc}" ToolTip="Toplam borç (₺)" Margin="0,0,6,6"/>
+                                        <TextBlock Text="Oran %" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="60" Text="{Binding IcraOraniYuzde}" ToolTip="Kesinti oranı (%)" Margin="0,0,6,6"/>
+                                        <TextBlock Text="Sıra" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="44" Text="{Binding IcraSira}" ToolTip="Sıra" Margin="0,0,6,6"/>
                                         <DatePicker Width="130" SelectedDate="{Binding IcraBaslangic}" ToolTip="Tebliğ / başlangıç" Margin="0,0,6,6"/>
                                         <Button Style="{StaticResource PrimaryButton}" Command="{Binding IcraEkleCommand}" Content="Dosya ekle" Margin="0,0,14,6"/>
@@ -549,7 +552,7 @@
                                             <DataGridTextColumn Header="Oran" Binding="{Binding Oran, StringFormat=P1}" Width="80"/>
                                             <DataGridTextColumn Header="Başlangıç" Binding="{Binding Baslangic, StringFormat=dd.MM.yyyy}" Width="110"/>
                                             <DataGridTextColumn Header="Cayma" Binding="{Binding CaymaTarihi, StringFormat=dd.MM.yyyy}" Width="110"/>
-                                            <DataGridTemplateColumn Header="Aktif" Width="70">
+                                            <DataGridTemplateColumn Header="Aktif" Width="90">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate><ContentControl Content="{Binding Aktif}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -558,9 +561,11 @@
                                         </DataGrid.Columns>
                                     </DataGrid>
                                     <WrapPanel>
+                                        <TextBlock Text="Oran %" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="60" Text="{Binding BesOraniYuzde}" ToolTip="Oran (%)" Margin="0,0,6,6"/>
                                         <DatePicker Width="130" SelectedDate="{Binding BesBaslangic}" ToolTip="Başlangıç" Margin="0,0,6,6"/>
                                         <Button Style="{StaticResource PrimaryButton}" Command="{Binding BesTanimlaCommand}" Content="BES tanımla" Margin="0,0,14,6"/>
+                                        <TextBlock Text="Cayma" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <DatePicker Width="130" SelectedDate="{Binding BesCayma}" ToolTip="Cayma tarihi" Margin="0,0,6,6"/>
                                         <Button Style="{StaticResource SecondaryButton}" Command="{Binding BesCaymaCommand}" Content="Cayma işle" Margin="0,0,0,6"/>
                                     </WrapPanel>
@@ -601,8 +606,11 @@
                                         </DataGrid>
                                     </Grid>
                                     <WrapPanel>
+                                        <TextBlock Text="Tutar ₺" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="110" Text="{Binding TahsilatTutar}" ToolTip="Tahsil edilecek tutar (kesinleşmiş geri ödeme borcundan)" Margin="0,0,6,6"/>
+                                        <TextBlock Text="Taksit" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="50" Text="{Binding TahsilatTaksit}" ToolTip="Taksit sayısı" Margin="0,0,6,6"/>
+                                        <TextBlock Text="İlk ay" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="2,0,6,6"/>
                                         <TextBox Width="64" Text="{Binding TahsilatYil}" ToolTip="İlk kesinti yılı" Margin="0,0,4,6"/>
                                         <TextBox Width="44" Text="{Binding TahsilatAy}" ToolTip="İlk kesinti ayı" Margin="0,0,6,6"/>
                                         <TextBox Width="220" Text="{Binding TahsilatAciklama}" Tag="Açıklama" Margin="0,0,6,6"/>

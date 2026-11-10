@@ -51,7 +51,7 @@
                 <TextBlock DockPanel.Dock="Bottom" Text="Sürüm 1.3 · Bankaya otomatik ödeme göndermez" FontSize="10.5" Foreground="#5F7493"
                            TextWrapping="Wrap" Margin="6,0,0,0"/>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" ClipToBounds="True" Margin="0,0,0,10">
                 <StackPanel>
                     <TextBlock Text="ANA MENÜ" FontSize="10.5" FontWeight="SemiBold" Foreground="#5F7493" Margin="8,0,0,8"/>
                     <Button Style="{StaticResource MenuButon}" Tag="secili" Command="{Binding YenileCommand}" ToolTip="Personel listesi ve hesap ekstreleri">
@@ -169,7 +169,7 @@
                 <ctl:KpiKarti Baslik="Aktif maaş toplamı" Deger="{Binding AylikMaasToplami}" Ikon="&#xE8C7;" Vurgu="{StaticResource MorBrush}"
                               AltBilgi="Kart üzerindeki güncel maaş"/>
                 <ctl:KpiKarti Baslik="Açık uyarı" Deger="{Binding ToplamUyari}" Ikon="&#xE7E7;" Vurgu="{StaticResource TehlikeBrush}"
-                              AltBilgi="{Binding KritikUyari, StringFormat={}{0} kritik · Uyarı merkezi}"/>
+                              AltBilgi="{Binding KritikUyari, StringFormat={}{0} kritik}"/>
             </UniformGrid>
 
             <TabControl Grid.Row="2">

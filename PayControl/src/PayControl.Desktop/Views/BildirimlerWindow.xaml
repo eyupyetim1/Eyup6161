@@ -129,18 +129,17 @@
                             <DataGrid ItemsSource="{Binding Kurallar}" SelectedItem="{Binding SeciliKural}" IsReadOnly="True" BorderThickness="0,1,0,0">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Kural" Binding="{Binding Ad}" Width="1.6*"/>
-                                    <DataGridTextColumn Header="Tetikleyici" Binding="{Binding Tetikleyici}" Width="*"/>
-                                    <DataGridTextColumn Header="Sıklık" Binding="{Binding Siklik}" Width="80"/>
-                                    <DataGridTextColumn Header="Gün" Binding="{Binding Gun}" Width="50"/>
-                                    <DataGridTextColumn Header="Saat" Binding="{Binding Saat}" Width="50"/>
-                                    <DataGridTemplateColumn Header="Kanal" Width="150">
+                                    <DataGridTextColumn Header="Tetikleyici" Binding="{Binding Tetikleyici, Converter={StaticResource Rozet}, ConverterParameter=metin}" Width="1.3*"/>
+                                    <DataGridTextColumn Header="Sıklık" Binding="{Binding Siklik, Converter={StaticResource Rozet}, ConverterParameter=metin}" Width="80"/>
+                                    <DataGridTextColumn Header="Gün/saat" Binding="{Binding GunSaatMetni}" Width="90"/>
+                                    <DataGridTemplateColumn Header="Kanal" Width="170">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate><ContentControl Content="{Binding Kanal}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Alıcı rolü" Binding="{Binding AliciRolu}" Width="*"/>
+                                    <DataGridTextColumn Header="Alıcı rolü" Binding="{Binding AliciRolu}" Width="1.1*"/>
                                     <DataGridTextColumn Header="Tesis" Binding="{Binding Tesis}" Width="*"/>
-                                    <DataGridTextColumn Header="Son çalışma" Binding="{Binding SonCalisma, StringFormat=dd.MM.yyyy HH:mm}" Width="120"/>
+                                    <DataGridTextColumn Header="Son çalışma" Binding="{Binding SonCalisma, StringFormat=dd.MM.yyyy HH:mm}" Width="115"/>
                                     <DataGridTemplateColumn Header="Aktif" Width="80">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate><ContentControl Content="{Binding Aktif}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
@@ -201,7 +200,7 @@
                                 </StackPanel>
                                 <StackPanel Style="{StaticResource FormSatiri}">
                                     <TextBlock Text="Alıcı rolü (bu roldeki tüm alıcılara)" Style="{StaticResource AlanEtiketi}"/>
-                                    <ComboBox IsEditable="True" ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding AliciRolu}" Margin="0,4,0,0"/>
+                                    <ComboBox ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding AliciRolu}" Margin="0,4,0,0"/>
                                 </StackPanel>
                                 <StackPanel Style="{StaticResource FormSatiri}">
                                     <TextBlock Text="Tesis (boş = tüm tesisler)" Style="{StaticResource AlanEtiketi}"/>
@@ -274,7 +273,7 @@
                             </StackPanel>
                             <StackPanel Style="{StaticResource FormSatiri}">
                                 <TextBlock Text="Rol" Style="{StaticResource AlanEtiketi}"/>
-                                <ComboBox IsEditable="True" ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding Rol}" Margin="0,4,0,0"/>
+                                <ComboBox ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Rol}" Margin="0,4,0,0"/>
                             </StackPanel>
                             <StackPanel Style="{StaticResource FormSatiri}">
                                 <TextBlock Text="Tesis (boş = tüm tesisler)" Style="{StaticResource AlanEtiketi}"/>

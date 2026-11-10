@@ -97,7 +97,7 @@ public partial class MainViewModel : ObservableObject
         AktifPersonel = Personeller.Count(p => p.CalismaDurumu == CalismaDurumu.Aktif).ToString("N0", tr);
         AyrilanPersonel = Personeller.Count(p => p.CalismaDurumu == CalismaDurumu.IstenAyrildi).ToString("N0", tr);
         AylikMaasToplami = MaasGorebilir
-            ? Personeller.Where(p => p.CalismaDurumu == CalismaDurumu.Aktif).Sum(p => p.GuncelMaas ?? 0m).ToString("N2", tr) + " ₺"
+            ? Personeller.Where(p => p.CalismaDurumu == CalismaDurumu.Aktif).Sum(p => p.GuncelMaas ?? 0m).ToString("N0", tr) + " ₺"
             : "Yetki yok";
     }
 
