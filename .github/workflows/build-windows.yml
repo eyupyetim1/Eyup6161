@@ -1,0 +1,72 @@
+name: Build Windows Installer Package
+
+on:
+  push:
+    branches:
+      - main
+      - 'cursor/paycontrol-v1-personel-maas-cikis-5f7e'
+    paths:
+      - 'PayControl/**'
+      - '.github/workflows/build-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-win-x64:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test (core)
+        working-directory: PayControl
+        run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --verbosity minimal
+
+      - name: Publish self-contained EXE
+        working-directory: PayControl
+        run: >
+          dotnet publish src/PayControl.Desktop/PayControl.Desktop.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o publish/win-x64
+
+      - name: Stage installer package
+        shell: pwsh
+        run: |
+          $stage = "PayControl/dist/PayControl-Kurulum"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item PayControl/publish/win-x64/* $stage -Recurse -Force
+          Copy-Item PayControl/installer/Install-PayControl.ps1 $stage -Force
+          Copy-Item PayControl/installer/KURULUM.txt $stage -Force
+          Copy-Item PayControl/docs/KULLANIM.md $stage -Force
+          Copy-Item PayControl/samples/bordro-ornek.xlsx $stage -Force
+          if (-not (Test-Path "$stage/PayControl.exe")) {
+            throw "PayControl.exe publish çıktısında yok"
+          }
+
+      - name: Zip package
+        shell: pwsh
+        run: |
+          $zip = "PayControl/dist/PayControl-Kurulum-win-x64.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "PayControl/dist/PayControl-Kurulum/*" -DestinationPath $zip -Force
+          Get-Item $zip | Format-List FullName, Length
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PayControl-Kurulum-win-x64
+          path: PayControl/dist/PayControl-Kurulum-win-x64.zip
+          if-no-files-found: error
+          retention-days: 30
