@@ -296,7 +296,7 @@
                         <Border x:Name="zemin" CornerRadius="10" Background="White" Opacity="0"/>
                         <Border x:Name="serit" Width="3" CornerRadius="2" HorizontalAlignment="Left" Margin="0,9"
                                 Background="{StaticResource MarkaGradyanBrush}" Opacity="0"/>
-                        <ContentPresenter Margin="14,10" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                        <ContentPresenter Margin="14,8" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
