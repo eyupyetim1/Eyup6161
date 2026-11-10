@@ -241,6 +241,7 @@ public static class EkranGoruntusuModu
         // Tasarım boyutu gösterimden önce okunur (küçük ekranda Windows pencereyi daraltır).
         var tasarimGenislik = double.IsNaN(w.Width) ? 1200 : w.Width;
         var tasarimYukseklik = double.IsNaN(w.Height) ? 800 : w.Height;
+        w.WindowState = WindowState.Normal; // arka planda (ShowActivated=false) tam ekran pencere gösterilemez
         w.WindowStartupLocation = WindowStartupLocation.Manual;
         w.Left = 0;
         w.Top = 0;
