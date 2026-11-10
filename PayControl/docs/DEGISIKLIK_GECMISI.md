@@ -31,6 +31,12 @@
 - Düzeltme kaydı farkı sonraki açık döneme devreden alacak olarak yazar
 - Önceki ay karşılaştırması kişi bazında ve kaynak kayıtla; kapanış raporu Excel
 
+### Arayüz (tasarım sistemi)
+- Yeni tema (`Themes/Theme.xaml`): tüm butonlar, metin kutuları, açılır listeler, tarih seçici, tablolar, sekmeler, onay kutuları, kaydırma çubukları ve ipuçları yeniden tasarlandı; hover/basma/odak animasyonları
+- Ana ekran yan menülü kabuk + KPI kartları; personel kartında avatar, durum rozetleri, altı bakiye kartı
+- Ödeme kontrolünde adım göstergesi, kritik satır vurgusu ve seçili satır paneli; kapanışta dönem durum zaman çizelgesi
+- Tutar/tarih biçimi uygulama genelinde Türkçe (1.234,56)
+
 ### Altyapı
 - `SemaYukseltici`: mevcut `paycontrol-v11.db` veritabanına eksik tablo/kolon/indeksleri ekler (veri silinmez)
 - `YetkiServisi`: rol kontrolü (Görüntüleyici < Muhasebe < Yönetici)

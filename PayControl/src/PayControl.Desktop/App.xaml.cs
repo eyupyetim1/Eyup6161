@@ -24,6 +24,9 @@ public partial class App : System.Windows.Application
         System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = tr;
         System.Threading.Thread.CurrentThread.CurrentCulture = tr;
         System.Threading.Thread.CurrentThread.CurrentUICulture = tr;
+        // WPF bağlamaları (StringFormat=N2, tarih) varsayılan en-US yerine Türkçe biçim kullanır.
+        FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
+            new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage(tr.IetfLanguageTag)));
 
         DispatcherUnhandledException += (_, args) =>
         {

@@ -36,6 +36,14 @@ public partial class OdemeKontrolViewModel : ObservableObject
     [ObservableProperty] private bool _duzeltHaric;
     [ObservableProperty] private string? _duzeltGerekce;
 
+    [ObservableProperty] private string _satirSayisi = "—";
+    [ObservableProperty] private string _uygunSayisi = "—";
+    [ObservableProperty] private string _kritikSayisi = "—";
+    [ObservableProperty] private string _istisnaSayisi = "—";
+    [ObservableProperty] private string _bankaToplami = "—";
+    [ObservableProperty] private string? _bankaToplamAlt;
+    [ObservableProperty] private IReadOnlyList<AsamaOgesi> _adimlar = Array.Empty<AsamaOgesi>();
+
     public ObservableCollection<OdemeKontrolSatiri> Satirlar { get; } = new();
     public ObservableCollection<OnayliOdemeListesi> Listeler { get; } = new();
 
@@ -44,6 +52,34 @@ public partial class OdemeKontrolViewModel : ObservableObject
         _servis = servis;
         _bordro = bordro;
         _oturumServisi = oturum;
+        AdimlariGuncelle();
+    }
+
+    partial void OnBordroDosyaYoluChanged(string? value) => AdimlariGuncelle();
+    partial void OnBankaDosyaYoluChanged(string? value) => AdimlariGuncelle();
+
+    private void AdimlariGuncelle()
+    {
+        var oturumVar = KontrolOturumu is not null;
+        var kritik = Satirlar.Count(s => s.KritikMi && !s.OnayliListeyeAlinabilir);
+        var listeVar = Listeler.Any(l => l.Gecerli && KontrolOturumu is not null && l.OdemeKontrolOturumuId == KontrolOturumu.Id);
+        var durumlar = new[]
+        {
+            ("Bordro", !string.IsNullOrWhiteSpace(BordroDosyaYolu) || KontrolOturumu?.BordroDosyaAdi is not null, "Ayın bordro dosyası (boş bırakılırsa dönemin son bordrosu)"),
+            ("Banka dosyası", !string.IsNullOrWhiteSpace(BankaDosyaYolu) || oturumVar, "Bankaya gönderilecek ödeme Excel'i"),
+            ("Kontrol", oturumVar, "Bordro, banka, personel kartı ve geçmiş işlemler karşılaştırılır"),
+            ("İnceleme", oturumVar && kritik == 0, "Kritik satırlar düzeltilir veya gerekçeli istisna verilir"),
+            ("Onaylı liste", listeVar, "Banka formatında onaylı dosya üretilir")
+        };
+        var aktifBulundu = false;
+        Adimlar = durumlar.Select((d, i) =>
+        {
+            string durum;
+            if (d.Item2) durum = "tamam";
+            else if (!aktifBulundu) { durum = "aktif"; aktifBulundu = true; }
+            else durum = "bekliyor";
+            return new AsamaOgesi(i + 1, d.Item1, durum, i == durumlar.Length - 1, d.Item3);
+        }).ToList();
     }
 
     private string Kullanici => _oturumServisi.KullaniciAdi ?? "sistem";
@@ -198,6 +234,14 @@ public partial class OdemeKontrolViewModel : ObservableObject
             Listeler.Add(l);
 
         var kritik = Satirlar.Count(s => s.KritikMi && !s.OnayliListeyeAlinabilir);
+        var tr = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+        SatirSayisi = Satirlar.Count.ToString("N0", tr);
+        UygunSayisi = Satirlar.Count(s => !s.KritikMi).ToString("N0", tr);
+        KritikSayisi = kritik.ToString("N0", tr);
+        IstisnaSayisi = Satirlar.Count(s => s.IstisnaOnayi).ToString("N0", tr);
+        BankaToplami = KontrolOturumu.Talimatlar.Where(t => !t.Haric).Sum(t => t.Tutar).ToString("N2", tr);
+        BankaToplamAlt = $"{KontrolOturumu.Talimatlar.Count(t => !t.Haric)} talimat · bordro {Satirlar.Sum(s => s.BordroNetIstihkak ?? 0).ToString("N2", tr)}";
+        AdimlariGuncelle();
         OzetMetni = $"Bordro: {KontrolOturumu.BordroDosyaAdi ?? "-"} | Banka: {KontrolOturumu.BankaDosyaAdi} | {Satirlar.Count} satır | " +
                     $"uygun {Satirlar.Count(s => !s.KritikMi)} | çözülmemiş kritik {kritik} | istisna {Satirlar.Count(s => s.IstisnaOnayi)} | " +
                     $"belirsiz eşleşme {Satirlar.Count(s => s.EslesmeBelirsiz)}";

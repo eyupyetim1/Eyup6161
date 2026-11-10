@@ -38,6 +38,23 @@ public partial class DonemKapanisViewModel : ObservableObject
     [ObservableProperty] private string? _duzeltmeYeni;
     [ObservableProperty] private string? _duzeltmeNeden;
 
+    [ObservableProperty] private IReadOnlyList<AsamaOgesi> _asamalar = Array.Empty<AsamaOgesi>();
+    [ObservableProperty] private string _acikFarkSayisi = "—";
+    [ObservableProperty] private string _tamamlananMadde = "—";
+
+    private static readonly (MaasDonemDurumu Durum, string Ad)[] DurumSirasi =
+    [
+        (MaasDonemDurumu.Hazirlaniyor, "Hazırlık"),
+        (MaasDonemDurumu.BordroYuklendi, "Bordro"),
+        (MaasDonemDurumu.OdemeOncesiKontrolde, "Kontrol"),
+        (MaasDonemDurumu.OdemeListesiOnaylandi, "Liste onayı"),
+        (MaasDonemDurumu.BankaOdemesiBekleniyor, "Banka ödemesi"),
+        (MaasDonemDurumu.BankaMutabakatiYapiliyor, "Mutabakat"),
+        (MaasDonemDurumu.IncelemeBekliyor, "İnceleme"),
+        (MaasDonemDurumu.KapanisaHazir, "Kapanışa hazır"),
+        (MaasDonemDurumu.Kapatildi, "Kapatıldı")
+    ];
+
     public ObservableCollection<DonemKontrolMaddesi> Maddeler { get; } = new();
     public ObservableCollection<MutabakatFarki> Farklar { get; } = new();
     public ObservableCollection<DonemDegisiklikDetayi> Degisiklikler { get; } = new();
@@ -70,6 +87,12 @@ public partial class DonemKapanisViewModel : ObservableObject
             Doldur(Duzeltmeler, Rapor.Duzeltmeler);
             Doldur(Degisiklikler, Rapor.Karsilastirma?.Detaylar ?? []);
             KarsilastirmaMetni = string.Join(Environment.NewLine, Rapor.Karsilastirma?.Nedenler ?? []);
+            var mevcut = Array.FindIndex(DurumSirasi, d => d.Durum == Rapor.Durum);
+            Asamalar = DurumSirasi.Select((d, i) => new AsamaOgesi(i + 1, d.Ad,
+                i < mevcut || Rapor.Durum == MaasDonemDurumu.Kapatildi ? "tamam" : i == mevcut ? "aktif" : "bekliyor",
+                i == DurumSirasi.Length - 1)).ToList();
+            AcikFarkSayisi = Rapor.Farklar.Count(f => f.Durum == FarkDurumu.Acik).ToString();
+            TamamlananMadde = $"{Rapor.KontrolMaddeleri.Count(m => m.Tamamlandi)} / {Rapor.KontrolMaddeleri.Count}";
             Mesaj = $"Durum: {Rapor.Durum}" + (Rapor.DondurulmusVeri ? " — kapanış anındaki dondurulmuş değerler gösteriliyor." : "");
         }
         catch (Exception ex) { Mesaj = ex.Message; }
