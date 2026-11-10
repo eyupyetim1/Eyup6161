@@ -48,7 +48,7 @@ public partial class LoginViewModel : ObservableObject
             if (sonuc.SifreDegistirmeGerekli)
             {
                 var svm = new SifreDegistirViewModel(_kimlik) { KullaniciAdi = sonuc.KullaniciAdi!, Zorunlu = true, EskiSifre = Sifre };
-                var dlg = new SifreDegistirWindow(svm) { Owner = System.Windows.Application.Current.Windows.OfType<LoginWindow>().FirstOrDefault() };
+                var dlg = ArayuzYardimcisi.SahipAta(new SifreDegistirWindow(svm));
                 if (dlg.ShowDialog() != true)
                 {
                     HataMesaji = "Devam etmek için yeni şifre belirlemelisiniz.";
@@ -61,6 +61,8 @@ public partial class LoginViewModel : ObservableObject
             var main = App.Services.GetService(typeof(MainWindow)) as MainWindow
                        ?? new MainWindow(App.Services.GetService(typeof(MainViewModel)) as MainViewModel
                                          ?? throw new InvalidOperationException());
+            // Giriş penceresi kapanınca ana pencere kaydı boş kalmasın (aksi hâlde açılan ilk pencere kendini sahip yapmaya çalışır)
+            System.Windows.Application.Current.MainWindow = main;
             main.Show();
             foreach (Window w in System.Windows.Application.Current.Windows)
             {

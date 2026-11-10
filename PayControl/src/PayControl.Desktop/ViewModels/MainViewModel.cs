@@ -108,7 +108,7 @@ public partial class MainViewModel : ObservableObject
         var vm = (PersonelDetayViewModel)App.Services.GetService(typeof(PersonelDetayViewModel))!;
         var win = new PersonelDetayWindow(vm);
         _ = vm.YukleAsync(SeciliPersonel.Id);
-        win.Owner = System.Windows.Application.Current.MainWindow;
+        ArayuzYardimcisi.SahipAta(win);
         win.ShowDialog();
         _ = YenileAsync();
     }
@@ -118,7 +118,7 @@ public partial class MainViewModel : ObservableObject
     {
         var vm = (BordroImportViewModel)App.Services.GetService(typeof(BordroImportViewModel))!;
         var win = new BordroImportWindow(vm);
-        win.Owner = System.Windows.Application.Current.MainWindow;
+        ArayuzYardimcisi.SahipAta(win);
         win.ShowDialog();
         _ = YenileAsync();
     }
@@ -128,7 +128,7 @@ public partial class MainViewModel : ObservableObject
     {
         var vm = (OdemeKontrolViewModel)App.Services.GetService(typeof(OdemeKontrolViewModel))!;
         var win = new OdemeKontrolWindow(vm);
-        win.Owner = System.Windows.Application.Current.MainWindow;
+        ArayuzYardimcisi.SahipAta(win);
         win.ShowDialog();
     }
 
@@ -137,7 +137,7 @@ public partial class MainViewModel : ObservableObject
     {
         var vm = (DonemKapanisViewModel)App.Services.GetService(typeof(DonemKapanisViewModel))!;
         var win = new DonemKapanisWindow(vm);
-        win.Owner = System.Windows.Application.Current.MainWindow;
+        ArayuzYardimcisi.SahipAta(win);
         win.ShowDialog();
     }
 
@@ -209,7 +209,7 @@ public partial class MainViewModel : ObservableObject
     {
         var vm = (SifreDegistirViewModel)App.Services.GetService(typeof(SifreDegistirViewModel))!;
         vm.KullaniciAdi = _oturum.KullaniciAdi ?? "";
-        var w = new SifreDegistirWindow(vm) { Owner = System.Windows.Application.Current.MainWindow };
+        var w = ArayuzYardimcisi.SahipAta(new SifreDegistirWindow(vm));
         if (w.ShowDialog() == true) DurumMetni = "Şifreniz değiştirildi.";
     }
 }

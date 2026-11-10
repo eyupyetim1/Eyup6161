@@ -5,6 +5,7 @@
         Title="PayControl — Personel Mali Denetim"
         Height="800" Width="1320" MinHeight="620" MinWidth="1080"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         FontFamily="{StaticResource AnaFont}"
         Background="{StaticResource ZeminBrush}"
         Loaded="MainWindow_OnLoaded">
@@ -24,7 +25,7 @@
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="PayControl" FontFamily="{StaticResource BaslikFont}" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Text="Personel Mali Denetim · 1.3.2" FontSize="11.5" Foreground="#8EA0BC" ToolTip="Sürüm 1.3.2 · Bankaya otomatik ödeme göndermez"/>
+                        <TextBlock Text="Personel Mali Denetim · 1.3.3" FontSize="11.5" Foreground="#8EA0BC" ToolTip="Sürüm 1.3.3 · Bankaya otomatik ödeme göndermez"/>
                     </StackPanel>
                 </StackPanel>
 

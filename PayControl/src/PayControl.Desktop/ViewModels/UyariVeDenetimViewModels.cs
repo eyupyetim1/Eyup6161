@@ -81,7 +81,7 @@ public partial class UyariMerkeziViewModel : ObservableObject
     {
         if (SeciliUyari?.PersonelId is not { } id) { Mesaj = "Seçili uyarı bir personele bağlı değil."; return; }
         var vm = (PersonelDetayViewModel)App.Services.GetService(typeof(PersonelDetayViewModel))!;
-        var win = new PersonelDetayWindow(vm) { Owner = ArayuzYardimcisi.AktifPencere };
+        var win = ArayuzYardimcisi.SahipAta(new PersonelDetayWindow(vm));
         _ = vm.YukleAsync(id);
         win.ShowDialog();
         _ = YenileAsync();

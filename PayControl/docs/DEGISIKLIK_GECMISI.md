@@ -1,5 +1,12 @@
 # Değişiklik Geçmişi
 
+## 1.3.3 — 2026-11-11 (düzeltme)
+
+- Girişten sonra menü düğmelerine basınca "Owner özelliği kendisine ayarlanamaz" hatasıyla programın kapanması düzeltildi (giriş penceresi kapanınca ana pencere kaydı boş kalıyordu). Tüm pencereler artık güvenli biçimde ana pencereye bağlanır.
+- Ana pencere tam ekran açılır; ekrana sığmayan pencereler (küçük ekran, %125–150 ölçekleme) ekranı kaplayarak açılır.
+- Windows üzerinde gerçek giriş akışını ve alt pencerelerin açılmasını doğrulayan otomatik denetim eklendi.
+
+
 ## 1.3.2 — 2026-11-10 (düzeltme)
 
 - Şifre değiştirme penceresinde şifreler aynı olduğu hâlde "aynı değil" hatası verip açılmaması düzeltildi (şifre kutuları forma aktarılmıyordu). Aynı düzeltme kullanıcı oluşturma, geçici şifre, yedek şifresi ve veritabanı şifresi kutularını da kapsar.

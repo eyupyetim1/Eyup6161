@@ -167,7 +167,7 @@ public partial class CikisTakibiViewModel : ObservableObject
         vm.CikisNedeni = SeciliSatir.Neden;
         vm.SonBordroYil = son.Year;
         vm.SonBordroAy = son.Month;
-        var w = new IstenCikisWindow(vm) { Owner = ArayuzYardimcisi.AktifPencere };
+        var w = ArayuzYardimcisi.SahipAta(new IstenCikisWindow(vm));
         if (w.ShowDialog() == true)
         {
             Mesaj = $"{SeciliSatir.AdSoyad} için işten çıkış kaydı yapıldı; talimat tamamlandı.";
@@ -206,7 +206,7 @@ public partial class CikisTakibiViewModel : ObservableObject
     {
         if (SeciliSatir is null) return;
         var vm = (PersonelDetayViewModel)App.Services.GetService(typeof(PersonelDetayViewModel))!;
-        var win = new PersonelDetayWindow(vm) { Owner = ArayuzYardimcisi.AktifPencere };
+        var win = ArayuzYardimcisi.SahipAta(new PersonelDetayWindow(vm));
         _ = vm.YukleAsync(SeciliSatir.PersonelId);
         win.ShowDialog();
         await YenileAsync();

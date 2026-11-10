@@ -57,6 +57,10 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // Ekrana sığmayan pencereler (küçük dizüstü ekranı, %125-150 ölçekleme) ekranı kaplayarak açılır
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler((s, _) => { if (s is Window w) ArayuzYardimcisi.EkranaSigdir(w); }));
+
         _ = BaslatAsync();
     }
 

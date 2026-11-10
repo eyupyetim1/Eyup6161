@@ -99,7 +99,7 @@ public partial class PersonelDetayViewModel : ObservableObject
         vm.PersonelId = Detay.Id;
         vm.PersonelAd = Detay.AdSoyad;
         var win = new IstenCikisWindow(vm);
-        win.Owner = System.Windows.Application.Current.Windows.OfType<PersonelDetayWindow>().FirstOrDefault();
+        ArayuzYardimcisi.SahipAta(win);
         if (win.ShowDialog() == true)
             await YukleAsync(Detay.Id);
     }

@@ -136,7 +136,48 @@ public static class EkranGoruntusuModu
         await KaydetAsync(new PersonelDetayWindow(detayVm2), Path.Combine(klasor, "14-personel-icra-bes-tahsilat.png"),
             () => detayVm2.YukleAsync(demo.IcraPersonelId), sekme: -3);
 
+        // Öz-denetim: gerçek giriş akışı → ana pencere → alt pencere açma (Owner hatası regresyonu)
+        await GirisAkisiDenetimiAsync(sp, klasor);
+
         try { Directory.Delete(gecici, true); } catch { /* yoksay */ }
+    }
+
+    private static async Task GirisAkisiDenetimiAsync(IServiceProvider sp, string klasor)
+    {
+        var app = System.Windows.Application.Current;
+        var login = sp.GetRequiredService<LoginWindow>();
+        app.MainWindow = login; // gerçek uygulamada ilk pencere giriş penceresidir
+        login.ShowActivated = false;
+        login.Show();
+        var lvm = (LoginViewModel)login.DataContext;
+        lvm.KullaniciAdi = "admin";
+        lvm.Sifre = "Kontrol2026x";
+        await lvm.GirisCommand.ExecuteAsync(null);
+        if (lvm.HataMesaji is not null) throw new InvalidOperationException($"Giriş başarısız: {lvm.HataMesaji}");
+        if (login.IsVisible) throw new InvalidOperationException("Giriş penceresi kapanmadı.");
+        if (app.MainWindow is not MainWindow main || !main.IsVisible) throw new InvalidOperationException("Girişten sonra ana pencere uygulamanın ana penceresi olarak ayarlanmadı.");
+        await Task.Delay(500);
+
+        // Ana menüdeki düğmelerin yaptığı gibi alt pencereleri aç
+        foreach (var w in new Window[]
+                 {
+                     new BordroImportWindow(sp.GetRequiredService<BordroImportViewModel>()),
+                     new OdemeKontrolWindow(sp.GetRequiredService<OdemeKontrolViewModel>()),
+                     new DonemKapanisWindow(sp.GetRequiredService<DonemKapanisViewModel>()),
+                     new CikisTakibiWindow(sp.GetRequiredService<CikisTakibiViewModel>()),
+                     new RaporMerkeziWindow(sp.GetRequiredService<RaporMerkeziViewModel>())
+                 })
+        {
+            ArayuzYardimcisi.SahipAta(w);
+            if (!ReferenceEquals(w.Owner, main)) throw new InvalidOperationException($"{w.GetType().Name} sahibi ana pencere değil.");
+            w.ShowActivated = false;
+            w.Show();
+            await Task.Delay(300);
+            w.Close();
+        }
+        if (app.MainWindow is not MainWindow) throw new InvalidOperationException("Alt pencere açılınca ana pencere kaydı bozuldu.");
+        main.Close();
+        File.WriteAllText(Path.Combine(klasor, "GIRIS-AKISI-TAMAM.txt"), "Giriş → ana pencere → alt pencereler doğrulandı.");
     }
 
     private static async Task SifreDegistirmeDenetimiAsync(IServiceProvider sp, string klasor)
