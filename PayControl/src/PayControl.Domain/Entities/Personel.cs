@@ -39,4 +39,6 @@ public class Personel
     public ICollection<IstenCikisKaydi> IstenCikisKayitlari { get; set; } = new List<IstenCikisKaydi>();
     public ICollection<DenetimKaydi> DenetimKayitlari { get; set; } = new List<DenetimKaydi>();
     public ICollection<PersonelBelge> Belgeler { get; set; } = new List<PersonelBelge>();
+    public ICollection<MaliHareket> MaliHareketler { get; set; } = new List<MaliHareket>();
+    public ICollection<AvansKaydi> Avanslar { get; set; } = new List<AvansKaydi>();
 }

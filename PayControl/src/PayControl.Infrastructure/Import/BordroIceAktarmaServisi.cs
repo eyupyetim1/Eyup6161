@@ -68,9 +68,11 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
             };
         }
 
-        // Stream OnizleAsync ile tüketildi; yeniden hash/bytes için çağıran seek edebilmeli.
-        // Aktar içinde yeniden okuma: dosyaAkisi başa sarılmış olmalı — Onizle kopya aldı.
-        // Yeniden parse için onizleme satırlarını kullanıyoruz.
+        var kapanis = await _db.MaasDonemKapanislari
+            .FirstOrDefaultAsync(d => d.DonemYil == donemYil && d.DonemAy == donemAy, ct);
+        DonemKapanisKurallari.DogrudanDegisikligiEngelle(kapanis);
+
+        // Stream OnizleAsync ile tüketildi; yeniden parse için onizleme satırlarını kullanıyoruz.
         var iceAktarma = new IceAktarmaKaydi
         {
             DosyaAdi = dosyaAdi,
@@ -185,11 +187,62 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
                 EkleKalem(donemKaydi, MaasKalemTuru.Maas, "MAAŞ", satir.Maas, kesinti: false, dahil: true);
 
             _db.MaasDonemKayitlari.Add(donemKaydi);
+
+            // Mali hareket defteri — hak ediş (çift kayıt islem kimliği ile engellenir)
+            var hakKimlik = MaliHareketKurallari.IslemKimligi(
+                "BordroHakEdis", personel.Id, $"{donemYil}-{donemAy:D2}:{iceAktarma.Id:N}");
+            if (!await _db.MaliHareketler.AnyAsync(h => h.IslemKimligi == hakKimlik, ct))
+            {
+                var aktifDonemId = personel.CalismaDonemleri
+                    .OrderByDescending(d => d.IseGirisTarihi)
+                    .FirstOrDefault()?.Id;
+                _db.MaliHareketler.Add(MaliHareketKurallari.Olustur(
+                    personel.Id, hakKimlik,
+                    new DateOnly(donemYil, donemAy, DateTime.DaysInMonth(donemYil, donemAy)),
+                    donemYil, donemAy, MaliIslemTuru.MaasHakEdis, BakiyeTuru.MaasAlacagi,
+                    donemKaydi.NetIstihkak,
+                    $"Bordro net istihkak {donemYil}-{donemAy:D2}",
+                    nameof(MaasDonemKaydi), null, dosyaAdi, kullaniciAdi, aktifDonemId));
+            }
+
+            foreach (var kalem in donemKaydi.Kalemler.Where(k => k.KesintiMi && k.Tutar != 0))
+            {
+                var tur = kalem.Tur switch
+                {
+                    MaasKalemTuru.AvansKesinti => MaliIslemTuru.AvansMahsup,
+                    MaasKalemTuru.Icra => MaliIslemTuru.IcraKesinti,
+                    MaasKalemTuru.OtoKatBes => MaliIslemTuru.BesKesinti,
+                    _ => MaliIslemTuru.DigerKesinti
+                };
+                var bakiye = kalem.Tur == MaasKalemTuru.AvansKesinti ? BakiyeTuru.AvansBorcu : BakiyeTuru.Bilgi;
+                var kKimlik = MaliHareketKurallari.IslemKimligi(
+                    $"BordroKalem:{kalem.Tur}", personel.Id, $"{donemYil}-{donemAy:D2}:{iceAktarma.Id:N}");
+                if (!await _db.MaliHareketler.AnyAsync(h => h.IslemKimligi == kKimlik, ct))
+                {
+                    _db.MaliHareketler.Add(MaliHareketKurallari.Olustur(
+                        personel.Id, kKimlik,
+                        new DateOnly(donemYil, donemAy, DateTime.DaysInMonth(donemYil, donemAy)),
+                        donemYil, donemAy, tur, bakiye, kalem.Tutar,
+                        $"Bordro kalemi: {kalem.Ad}", nameof(MaasKalemi), null, dosyaAdi, kullaniciAdi));
+                }
+            }
+
             basarili++;
         }
 
         iceAktarma.BasariliSatir = basarili;
         iceAktarma.HataliSatir = hatali;
+
+        if (kapanis is null)
+        {
+            kapanis = DonemKapanisKurallari.YeniDonem(donemYil, donemAy);
+            kapanis.Durum = MaasDonemDurumu.BordroYuklendi;
+            _db.MaasDonemKapanislari.Add(kapanis);
+        }
+        else if (kapanis.Durum == MaasDonemDurumu.Hazirlaniyor)
+        {
+            kapanis.Durum = MaasDonemDurumu.BordroYuklendi;
+        }
 
         _db.DenetimKayitlari.Add(new DenetimKaydi
         {

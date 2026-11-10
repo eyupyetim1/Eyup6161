@@ -77,13 +77,58 @@
                 </DataGrid>
             </TabItem>
 
+            <TabItem Header="Hesap Ekstresi">
+                <DockPanel Margin="12">
+                    <Border DockPanel.Dock="Top" Background="#EEF2F7" Padding="12" Margin="0,0,0,12">
+                        <UniformGrid Columns="3" Rows="2">
+                            <TextBlock Text="{Binding Ekstre.Ozet.ToplamHakEdis, StringFormat=Toplam hak ediş: {0:N2}}"/>
+                            <TextBlock Text="{Binding Ekstre.Ozet.GerceklesenToplamOdeme, StringFormat=Gerçekleşen ödeme: {0:N2}}"/>
+                            <TextBlock Text="{Binding Ekstre.Ozet.OdenmemisHakEdis, StringFormat=Ödenmemiş hak ediş: {0:N2}}"/>
+                            <TextBlock Text="{Binding Ekstre.Ozet.AcikAvansBorcu, StringFormat=Açık avans: {0:N2}}"/>
+                            <TextBlock Text="{Binding Ekstre.Ozet.IncelemeBekleyenFazlaOdeme, StringFormat=İnceleme bekleyen fazla: {0:N2}}"/>
+                            <TextBlock Text="{Binding Ekstre.Ozet.KesinlesmisGeriOdemeBorcu, StringFormat=Kesinleşmiş geri ödeme: {0:N2}}"/>
+                        </UniformGrid>
+                    </Border>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Excel" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding Ekstre.ExcelAktarCommand}" Margin="0,0,8,0"/>
+                        <Button Content="PDF" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding Ekstre.PdfAktarCommand}"/>
+                        <TextBlock Text="{Binding Ekstre.Mesaj}" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{StaticResource NavyBrush}"/>
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Ekstre.Hareketler}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding IslemTarihi}" Width="100"/>
+                            <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="80"/>
+                            <DataGridTextColumn Header="Tür" Binding="{Binding IslemTuru}" Width="120"/>
+                            <DataGridTextColumn Header="Bakiye" Binding="{Binding BakiyeTuru}" Width="120"/>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding Tutar, StringFormat=N2}" Width="100"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="2*"/>
+                            <DataGridTextColumn Header="Belge" Binding="{Binding KaynakBelge}" Width="*"/>
+                            <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdi}" Width="100"/>
+                            <DataGridTextColumn Header="İşlem Kimliği" Binding="{Binding IslemKimligi}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
             <TabItem Header="Avans Geçmişi">
-                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}"
-                           Text="Avans modülü sonraki sürümde etkinleştirilecek. Veri modeli hazırlanmaktadır."/>
+                <DataGrid ItemsSource="{Binding Avanslar}" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding AvansTarihi}" Width="100"/>
+                        <DataGridTextColumn Header="Tür" Binding="{Binding AvansTuru}" Width="140"/>
+                        <DataGridTextColumn Header="Tutar" Binding="{Binding Tutar, StringFormat=N2}" Width="100"/>
+                        <DataGridTextColumn Header="Taksit" Binding="{Binding TaksitSayisi}" Width="70"/>
+                        <DataGridTextColumn Header="Aylık Mahsup" Binding="{Binding AylikMahsupTutari, StringFormat=N2}" Width="110"/>
+                        <DataGridTextColumn Header="Kalan Borç" Binding="{Binding KalanBorc, StringFormat=N2}" Width="100"/>
+                        <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
             </TabItem>
             <TabItem Header="Banka Ödemeleri">
                 <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}"
-                           Text="Banka ödeme eşleme sonraki sürümde. Hak ediş dönemi ile ödeme tarihi ayrı tutulacaktır."/>
+                           Text="Banka ödemeleri Hesap Ekstresi ve Ödeme Öncesi Kontrol ekranından yönetilir. Hak ediş dönemi ile ödeme tarihi ayrı tutulur."/>
             </TabItem>
             <TabItem Header="Kesintiler">
                 <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}" Text="Kesinti detayları maaş kalemlerinden sonraki sürümde genişletilecek."/>

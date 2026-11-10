@@ -29,6 +29,25 @@ Veriler bilgisayarınızda saklanır:
 9. Evraklar (sonraki sürüm)  
 10. Kontrol ve Denetim Geçmişi  
 
+## Hesap ekstresi
+
+Personel kartında **Hesap Ekstresi** sekmesi: toplam hak ediş, ödemeler, açık avans ve şüpheli fazla ödemeler ayrı gösterilir. Excel/PDF dışa aktarma butonları vardır.
+
+## Ödeme öncesi kontrol (kritik)
+
+1. Ana ekranda **Ödeme Öncesi Kontrol**
+2. Dönem seçin, bankaya göndereceğiniz Excel’i yükleyin (önce ilgili ay bordrosu içe aktarılmış olmalı)
+3. Kritik uyarıları inceleyin; gerekirse gerekçeli istisna onaylayın
+4. **Onaylı Liste Oluştur** — dosya `Belgelerim\PayControl\OnayliOdemeListeleri` altına yazılır
+5. Program bankaya kendiliğinden ödeme **göndermez**
+
+## Dönem kapanış
+
+1. Ana ekranda **Dönem Kapanış**
+2. Kontrol listesi maddelerini tamamlayın
+3. Özet tutarları kontrol edin, dönemi kapatın
+4. Kapatılmış döneme doğrudan müdahale engellenir; düzeltme kaydı veya yeniden açma gerekir
+
 ## Bordro içe aktarma
 
 1. Ana ekranda **Bordro İçe Aktar**  

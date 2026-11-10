@@ -73,5 +73,23 @@ public partial class MainViewModel : ObservableObject
         _ = YenileAsync();
     }
 
+    [RelayCommand]
+    private void OdemeKontrol()
+    {
+        var vm = (OdemeKontrolViewModel)App.Services.GetService(typeof(OdemeKontrolViewModel))!;
+        var win = new OdemeKontrolWindow(vm);
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void DonemKapanis()
+    {
+        var vm = (DonemKapanisViewModel)App.Services.GetService(typeof(DonemKapanisViewModel))!;
+        var win = new DonemKapanisWindow(vm);
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.ShowDialog();
+    }
+
     public async Task IlkYukleAsync() => await YenileAsync();
 }

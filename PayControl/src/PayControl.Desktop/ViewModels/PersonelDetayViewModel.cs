@@ -13,31 +13,33 @@ public partial class PersonelDetayViewModel : ObservableObject
 {
     private readonly IPersonelServisi _personelServisi;
     private readonly IIstenCikisServisi _cikisServisi;
+    private readonly IAvansServisi _avansServisi;
     private readonly OturumServisi _oturum;
 
-    [ObservableProperty]
-    private PersonelDetayDto? _detay;
+    [ObservableProperty] private PersonelDetayDto? _detay;
+    [ObservableProperty] private string _baslik = "Personel Detayı";
+    [ObservableProperty] private string? _kontrolOzeti;
 
-    [ObservableProperty]
-    private string _baslik = "Personel Detayı";
-
-    [ObservableProperty]
-    private string? _kontrolOzeti;
-
+    public HesapEkstresiPanelModel Ekstre { get; }
     public ObservableCollection<MaasDonemDto> MaasGecmisi { get; } = new();
     public ObservableCollection<CalismaDonemiDto> CalismaDonemleri { get; } = new();
     public ObservableCollection<IstenCikisDto> CikisKayitlari { get; } = new();
+    public ObservableCollection<Domain.Entities.AvansKaydi> Avanslar { get; } = new();
 
     public bool MaasGorebilir => _oturum.MaasGorebilir;
 
     public PersonelDetayViewModel(
         IPersonelServisi personelServisi,
         IIstenCikisServisi cikisServisi,
+        IAvansServisi avansServisi,
+        IHesapEkstresiServisi ekstreServisi,
         OturumServisi oturum)
     {
         _personelServisi = personelServisi;
         _cikisServisi = cikisServisi;
+        _avansServisi = avansServisi;
         _oturum = oturum;
+        Ekstre = new HesapEkstresiPanelModel(ekstreServisi);
     }
 
     public async Task YukleAsync(Guid personelId)
@@ -57,6 +59,12 @@ public partial class PersonelDetayViewModel : ObservableObject
         CikisKayitlari.Clear();
         foreach (var c in Detay.CikisKayitlari)
             CikisKayitlari.Add(c);
+
+        Avanslar.Clear();
+        foreach (var a in await _avansServisi.ListeleAsync(personelId))
+            Avanslar.Add(a);
+
+        await Ekstre.YukleAsync(personelId);
 
         KontrolOzeti = Detay.CalismaDurumu == CalismaDurumu.IstenAyrildi
             ? "Personel işten ayrılmış. SGK ve ödeme denetimini Kontrol sekmesinden inceleyin."

@@ -1,0 +1,55 @@
+<Window x:Class="PayControl.Desktop.Views.DonemKapanisWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Aylık Maaş Kapanış ve Mutabakat"
+        Height="720" Width="960"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgBrush}">
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <TextBlock Text="Dönem kapanış" FontSize="18" FontWeight="SemiBold"
+                       Foreground="{StaticResource NavyBrush}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                <TextBlock Text="Dönem" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox Width="70" Text="{Binding DonemYil}" Margin="0,0,6,0"/>
+                <TextBox Width="40" Text="{Binding DonemAy}" Margin="0,0,12,0"/>
+                <Button Content="Yükle" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding YukleCommand}" Margin="0,0,8,0"/>
+                <Button Content="Maddeyi Tamamla" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding MaddeTamamlaCommand}" Margin="0,0,8,0"/>
+                <Button Content="Dönemi Kapat" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding KapatCommand}" Margin="0,0,8,0"/>
+                <Button Content="Yeniden Aç" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding YenidenAcCommand}"/>
+            </StackPanel>
+            <TextBox Text="{Binding KapanisNotu, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Kapanış notu / gerekçeli istisna" Margin="0,0,0,6"/>
+            <TextBox Text="{Binding YenidenAcmaNedeni, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Yeniden açma gerekçesi" Margin="0,0,0,6"/>
+            <TextBlock Text="{Binding Mesaj}" Foreground="{StaticResource NavyBrush}" Margin="0,0,0,8"/>
+            <Border Background="#EEF2F7" Padding="10" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Donem.Durum, StringFormat=Durum: {0}}"/>
+                    <TextBlock Text="{Binding Donem.ToplamBeklenenMaas, StringFormat=Beklenen maaş: {0:N2}}"/>
+                    <TextBlock Text="{Binding Donem.ToplamBankaOdemesi, StringFormat=Banka ödemesi: {0:N2}}"/>
+                    <TextBlock Text="{Binding Donem.ToplamEksikOdeme, StringFormat=Eksik: {0:N2}}"/>
+                    <TextBlock Text="{Binding Donem.ToplamFazlaOdeme, StringFormat=Fazla: {0:N2}}"/>
+                    <TextBlock Text="{Binding Donem.AcikAvanslar, StringFormat=Açık avans: {0:N2}}"/>
+                </StackPanel>
+            </Border>
+            <TextBlock Text="Önceki ay karşılaştırması" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding KarsilastirmaMetni}" TextWrapping="Wrap" Margin="0,4,0,8"
+                       Foreground="{StaticResource MutedBrush}"/>
+        </StackPanel>
+
+        <DataGrid ItemsSource="{Binding Maddeler}" SelectedItem="{Binding SeciliMadde}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Binding="{Binding Sira}" Width="40"/>
+                <DataGridTextColumn Header="Kod" Binding="{Binding MaddeKodu}" Width="100"/>
+                <DataGridTextColumn Header="Kontrol maddesi" Binding="{Binding Aciklama}" Width="2*"/>
+                <DataGridCheckBoxColumn Header="Tamam" Binding="{Binding Tamamlandi}" Width="70"/>
+                <DataGridTextColumn Header="Kullanıcı" Binding="{Binding TamamlayanKullanici}" Width="120"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

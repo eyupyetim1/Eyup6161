@@ -18,6 +18,15 @@ public interface IPayControlDbContext
     DbSet<PersonelBelge> PersonelBelgeler { get; }
     DbSet<Kullanici> Kullanicilar { get; }
     DbSet<BankaOdemeKaydi> BankaOdemeleri { get; }
+    DbSet<MaliHareket> MaliHareketler { get; }
+    DbSet<AvansKaydi> Avanslar { get; }
+    DbSet<AvansMahsupKaydi> AvansMahsuplari { get; }
+    DbSet<MaasDonemKapanisi> MaasDonemKapanislari { get; }
+    DbSet<DonemKontrolMaddesi> DonemKontrolMaddeleri { get; }
+    DbSet<DonemDuzeltmeKaydi> DonemDuzeltmeler { get; }
+    DbSet<OdemeKontrolOturumu> OdemeKontrolOturumlari { get; }
+    DbSet<OdemeKontrolSatiri> OdemeKontrolSatirlari { get; }
+    DbSet<OnayliOdemeListesi> OnayliOdemeListeleri { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

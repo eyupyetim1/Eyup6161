@@ -38,6 +38,10 @@
 
             <DockPanel Margin="0,0,0,12">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button Content="Ödeme Öncesi Kontrol" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding OdemeKontrolCommand}" Margin="0,0,8,0"/>
+                    <Button Content="Dönem Kapanış" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding DonemKapanisCommand}" Margin="0,0,8,0"/>
                     <Button Content="Bordro İçe Aktar" Style="{StaticResource SecondaryButton}"
                             Command="{Binding BordroAktarCommand}" Margin="0,0,8,0"/>
                     <Button Content="Yenile" Style="{StaticResource PrimaryButton}"

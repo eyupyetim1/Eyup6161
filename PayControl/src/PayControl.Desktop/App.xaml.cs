@@ -27,11 +27,15 @@ public partial class App : Application
         services.AddTransient<PersonelDetayViewModel>();
         services.AddTransient<IstenCikisViewModel>();
         services.AddTransient<BordroImportViewModel>();
+        services.AddTransient<OdemeKontrolViewModel>();
+        services.AddTransient<DonemKapanisViewModel>();
         services.AddTransient<LoginWindow>();
         services.AddTransient<MainWindow>();
         services.AddTransient<PersonelDetayWindow>();
         services.AddTransient<IstenCikisWindow>();
         services.AddTransient<BordroImportWindow>();
+        services.AddTransient<OdemeKontrolWindow>();
+        services.AddTransient<DonemKapanisWindow>();
 
         Services = services.BuildServiceProvider();
         await ServiceCollectionExtensions.InitializeDatabaseAsync(Services);

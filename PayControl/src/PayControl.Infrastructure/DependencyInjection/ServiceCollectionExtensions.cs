@@ -16,10 +16,11 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string? veritabaniYolu = null)
     {
+        // v1.1 şema (mali hareket, ödeme kontrol, dönem kapanış)
         var dbPath = veritabaniYolu ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "PayControl",
-            "paycontrol.db");
+            "paycontrol-v11.db");
 
         Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
 
@@ -31,6 +32,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIstenCikisServisi, IstenCikisAppServisi>();
         services.AddScoped<IBordroIceAktarmaServisi, BordroIceAktarmaServisi>();
         services.AddScoped<IKimlikServisi, KimlikServisi>();
+        services.AddScoped<IHesapEkstresiServisi, HesapEkstresiServisi>();
+        services.AddScoped<IAvansServisi, AvansServisi>();
+        services.AddScoped<IDonemKapanisServisi, DonemKapanisServisi>();
+        services.AddScoped<IOdemeOncesiKontrolServisi, OdemeOncesiKontrolServisi>();
+        services.AddScoped<IBankaOdemeServisi, BankaOdemeServisi>();
         services.AddSingleton<ICikisDenetimServisi, CikisDenetimServisi>();
         services.AddSingleton<IHakEdisHesaplamaServisi, HakEdisHesaplamaServisi>();
 
