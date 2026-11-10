@@ -20,9 +20,11 @@ public sealed class YedekServisi : IYedekServisi
     private readonly IAyarServisi _ayar;
     private readonly ISifreKoruyucu _koruyucu;
     private readonly IYetkiServisi _yetki;
+    private readonly IServiceProvider? _sp;
 
-    public YedekServisi(PayControlDbContext db, VeritabaniBilgisi vt, IAyarServisi ayar, ISifreKoruyucu koruyucu, IYetkiServisi yetki)
+    public YedekServisi(PayControlDbContext db, VeritabaniBilgisi vt, IAyarServisi ayar, ISifreKoruyucu koruyucu, IYetkiServisi yetki, IServiceProvider? sp = null)
     {
+        _sp = sp;
         _db = db;
         _vt = vt;
         _ayar = ayar;
@@ -112,6 +114,15 @@ public sealed class YedekServisi : IYedekServisi
             KullaniciAdi = kullanici
         });
         await _db.SaveChangesAsync(ct);
+        if (!kayit.Basarili && _sp?.GetService(typeof(IBildirimServisi)) is IBildirimServisi b)
+        {
+            try
+            {
+                await b.OlayBildirAsync(BildirimTetikleyici.YedekHatasi, kayit.Id.ToString("N"), "PayControl: yedekleme başarısız",
+                    $"{DateTime.Now:dd.MM.yyyy HH:mm} yedekleme başarısız oldu: {kayit.Hata}", null, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException) { /* bildirim hatası yedek kaydını etkilemez */ }
+        }
         return kayit;
     }
 

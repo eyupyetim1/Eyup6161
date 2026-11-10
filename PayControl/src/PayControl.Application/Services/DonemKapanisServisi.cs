@@ -17,12 +17,28 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
     private readonly IPayControlDbContext _db;
     private readonly IYetkiServisi _yetki;
     private readonly IMaliHareketServisi _defter;
+    private readonly IServiceProvider? _sp;
 
-    public DonemKapanisServisi(IPayControlDbContext db, IYetkiServisi yetki, IMaliHareketServisi defter)
+    public DonemKapanisServisi(IPayControlDbContext db, IYetkiServisi yetki, IMaliHareketServisi defter, IServiceProvider? sp = null)
     {
         _db = db;
         _yetki = yetki;
         _defter = defter;
+        _sp = sp;
+    }
+
+    /// <summary>Olay bildirimi; bildirim hatası asıl işlemi asla bozmaz.</summary>
+    private async Task OlayBildirAsync(BildirimTetikleyici olay, string anahtar, string konu, string metin, CancellationToken ct)
+    {
+        try
+        {
+            if (_sp?.GetService(typeof(IBildirimServisi)) is IBildirimServisi b)
+                await b.OlayBildirAsync(olay, anahtar, konu, metin, null, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            System.Diagnostics.Trace.TraceWarning($"Olay bildirimi gönderilemedi: {ex.Message}");
+        }
     }
 
     public async Task<MaasDonemKapanisi> GetOrCreateAsync(int yil, int ay, string? sirket = null, CancellationToken ct = default)
@@ -439,6 +455,11 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         });
         await _db.SaveChangesAsync(ct);
         await OzetHesaplaAsync(donem.Id, ct);
+        if (acik > 0)
+            await OlayBildirAsync(BildirimTetikleyici.MutabakatFarkiOlustu, $"{yil}-{ay:D2}:{acik}:{bulunan.Sum(b => b.Fark):F2}",
+                $"PayControl: {yil}-{ay:D2} mutabakatında {acik} açık fark",
+                string.Join("\n", mevcutFarklar.Where(f => f.Durum == FarkDurumu.Acik).Take(20)
+                    .Select(f => $"• {f.AdSoyad ?? "Eşleşmeyen"} ({f.Tesis}): {f.FarkTuru} {f.Fark:N2} — {f.Aciklama}")), ct);
         return mevcutFarklar.OrderBy(f => f.Durum).ThenBy(f => f.AdSoyad).ToList();
     }
 
@@ -631,6 +652,10 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         });
 
         await _db.SaveChangesAsync(ct);
+        await OlayBildirAsync(BildirimTetikleyici.DonemKapandi, $"{donem.DonemYil}-{donem.DonemAy:D2}:{donem.KapanisSayisi}",
+            $"PayControl: {donem.DonemYil}-{donem.DonemAy:D2} maaş dönemi kapatıldı",
+            $"Kapatan: {kullanici}\nBeklenen maaş: {o.Beklenen:N2}\nBanka/kasa ödemesi: {o.Odenen:N2}\nEksik: {o.Eksik:N2}  Fazla: {o.Fazla:N2}\n" +
+            $"Açık avans: {o.AcikAvans:N2}\nGerekçeli istisna: {o.Istisna}\nNot: {not}", ct);
     }
 
     public async Task YenidenAcAsync(Guid donemId, string kullanici, string neden, CancellationToken ct = default)

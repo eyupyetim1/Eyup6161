@@ -39,6 +39,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUyariServisi, UyariServisi>();
         services.AddScoped<IDenetimServisi, DenetimServisi>();
         services.AddScoped<IBelgeServisi, BelgeServisi>();
+        services.AddScoped<IRaporServisi, RaporServisi>();
+        services.AddScoped<IGostergeServisi, GostergeServisi>();
+        services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(60) });
+        services.AddSingleton<IEpostaGonderici, Bildirim.EpostaGonderici>();
+        services.AddSingleton<IWhatsAppGonderici, Bildirim.WhatsAppGonderici>();
+        services.AddScoped<IBildirimServisi, BildirimServisi>();
         services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();
         services.AddScoped<IPersonelServisi, PersonelServisi>();
         services.AddScoped<IIstenCikisServisi, IstenCikisAppServisi>();
