@@ -1,0 +1,76 @@
+<Window x:Class="PayControl.Desktop.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PayControl"
+        Height="720" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        Loaded="MainWindow_OnLoaded">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="{StaticResource NavyBrush}" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="PayControl" Foreground="White" FontSize="20" FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="  |  Personel Mali Denetim" Foreground="#B8C7D9"
+                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding KullaniciEtiketi}" Foreground="White"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <StatusBar DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}">
+            <StatusBarItem>
+                <TextBlock Text="{Binding DurumMetni}" Foreground="{StaticResource MutedBrush}"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button Content="Bordro İçe Aktar" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding BordroAktarCommand}" Margin="0,0,8,0"/>
+                    <Button Content="Yenile" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding YenileCommand}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Width="260" Text="{Binding Arama, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Ad, TC veya sicil ara"/>
+                    <TextBox Width="140" Margin="8,0,0,0"
+                             Text="{Binding FiltreSirket, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Şirket"/>
+                    <TextBox Width="140" Margin="8,0,0,0"
+                             Text="{Binding FiltreIsyeri, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="İşyeri/tesis"/>
+                    <Button Content="Ara" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                            Command="{Binding YenileCommand}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Personeller}"
+                      SelectedItem="{Binding SeciliPersonel}"
+                      MouseDoubleClick="PersonelGrid_OnMouseDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Ad Soyad" Binding="{Binding AdSoyad}" Width="2*"/>
+                    <DataGridTextColumn Header="TC" Binding="{Binding TcKimlikNo}" Width="*"/>
+                    <DataGridTextColumn Header="Sicil" Binding="{Binding SicilNo}" Width="*"/>
+                    <DataGridTextColumn Header="Şirket" Binding="{Binding Sirket}" Width="*"/>
+                    <DataGridTextColumn Header="İşyeri" Binding="{Binding Isyeri}" Width="*"/>
+                    <DataGridTextColumn Header="Görevi" Binding="{Binding Gorevi}" Width="*"/>
+                    <DataGridTextColumn Header="Durum" Binding="{Binding CalismaDurumu}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -1,0 +1,142 @@
+<Window x:Class="PayControl.Desktop.Views.PersonelDetayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Baslik}"
+        Height="680" Width="920"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgBrush}">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="İşten Çıkış Kaydı Oluştur"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding IstenCikisOlusturCommand}"/>
+                <StackPanel>
+                    <TextBlock Text="{Binding Baslik}" FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource NavyBrush}"/>
+                    <TextBlock Text="{Binding Detay.CalismaDurumu, StringFormat=Durum: {0}}"
+                               Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <TabControl Margin="12" Background="{StaticResource SurfaceBrush}">
+            <TabItem Header="Genel Bilgiler">
+                <ScrollViewer Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="TC" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding Detay.TcKimlikNo}" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Column="2" Text="Ad Soyad" FontWeight="SemiBold"/><TextBlock Grid.Column="3" Text="{Binding Detay.AdSoyad}" Margin="0,0,0,10"/>
+
+                        <TextBlock Grid.Row="1" Text="Sicil" FontWeight="SemiBold"/><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Detay.SicilNo}" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="Şirket" FontWeight="SemiBold"/><TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding Detay.Sirket}" Margin="0,0,0,10"/>
+
+                        <TextBlock Grid.Row="2" Text="İşyeri" FontWeight="SemiBold"/><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Detay.Isyeri}" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="Görevi" FontWeight="SemiBold"/><TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding Detay.Gorevi}" Margin="0,0,0,10"/>
+
+                        <TextBlock Grid.Row="3" Text="İşe Giriş" FontWeight="SemiBold"/><TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Detay.IlkIseGirisTarihi}" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="Çıkış" FontWeight="SemiBold"/><TextBlock Grid.Row="3" Grid.Column="3" Text="{Binding Detay.SonCikisTarihi}" Margin="0,0,0,10"/>
+
+                        <TextBlock Grid.Row="4" Text="Güncel Maaş" FontWeight="SemiBold"/><TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Detay.GuncelMaas, StringFormat=N2}" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="Maaş Türü" FontWeight="SemiBold"/><TextBlock Grid.Row="4" Grid.Column="3" Text="{Binding Detay.GuncelMaasTuru}" Margin="0,0,0,10"/>
+
+                        <TextBlock Grid.Row="5" Text="Banka" FontWeight="SemiBold"/><TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Detay.BankaAdi}" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Row="5" Grid.Column="2" Text="IBAN" FontWeight="SemiBold"/><TextBlock Grid.Row="5" Grid.Column="3" Text="{Binding Detay.Iban}" Margin="0,0,0,10"/>
+
+                        <TextBlock Grid.Row="6" Text="Notlar" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Detay.Notlar}" TextWrapping="Wrap"/>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Maaş Geçmişi">
+                <DataGrid ItemsSource="{Binding MaasGecmisi}" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Dönem" Binding="{Binding DonemEtiket}" Width="90"/>
+                        <DataGridTextColumn Header="Maaş" Binding="{Binding MaasTutar, StringFormat=N2}" Width="100"/>
+                        <DataGridTextColumn Header="Tür" Binding="{Binding MaasTuru}" Width="70"/>
+                        <DataGridTextColumn Header="Gün" Binding="{Binding Gun}" Width="60"/>
+                        <DataGridTextColumn Header="Net İstihkak" Binding="{Binding NetIstihkak, StringFormat=N2}" Width="120"/>
+                        <DataGridTextColumn Header="İşyeri" Binding="{Binding Isyeri}" Width="*"/>
+                        <DataGridTextColumn Header="Giriş" Binding="{Binding GirisTarihi}" Width="100"/>
+                        <DataGridTextColumn Header="Çıkış" Binding="{Binding CikisTarihi}" Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="Avans Geçmişi">
+                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}"
+                           Text="Avans modülü sonraki sürümde etkinleştirilecek. Veri modeli hazırlanmaktadır."/>
+            </TabItem>
+            <TabItem Header="Banka Ödemeleri">
+                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}"
+                           Text="Banka ödeme eşleme sonraki sürümde. Hak ediş dönemi ile ödeme tarihi ayrı tutulacaktır."/>
+            </TabItem>
+            <TabItem Header="Kesintiler">
+                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}" Text="Kesinti detayları maaş kalemlerinden sonraki sürümde genişletilecek."/>
+            </TabItem>
+            <TabItem Header="Fazla Mesai ve Ek Ödemeler">
+                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}" Text="Placeholder — sonraki aşama."/>
+            </TabItem>
+            <TabItem Header="İzin ve Devamsızlık">
+                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}" Text="Placeholder — sonraki aşama."/>
+            </TabItem>
+
+            <TabItem Header="İşe Giriş/Çıkış Geçmişi">
+                <DataGrid ItemsSource="{Binding CalismaDonemleri}" Margin="8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Giriş" Binding="{Binding IseGirisTarihi}" Width="120"/>
+                        <DataGridTextColumn Header="Çıkış" Binding="{Binding IstenCikisTarihi}" Width="120"/>
+                        <DataGridTextColumn Header="Şirket" Binding="{Binding Sirket}" Width="*"/>
+                        <DataGridTextColumn Header="İşyeri" Binding="{Binding Isyeri}" Width="*"/>
+                        <DataGridTextColumn Header="Görev" Binding="{Binding Gorevi}" Width="*"/>
+                        <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="Evraklar">
+                <TextBlock Margin="16" Foreground="{StaticResource MutedBrush}" Text="Belge ekleri sonraki sürümde."/>
+            </TabItem>
+
+            <TabItem Header="Kontrol ve Denetim Geçmişi">
+                <DockPanel Margin="12">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Content="Çıkış Ödemelerini İncele" Style="{StaticResource PrimaryButton}"
+                                Command="{Binding CikisOdemeInceleCommand}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{Binding KontrolOzeti}" TextWrapping="Wrap"
+                                   Foreground="{StaticResource NavyBrush}" Margin="0,0,0,12"/>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding CikisKayitlari}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Çıkış Tarihi" Binding="{Binding IstenCikisTarihi}" Width="110"/>
+                                <DataGridTextColumn Header="Fiilî Son Gün" Binding="{Binding FiiliSonCalismaTarihi}" Width="110"/>
+                                <DataGridTextColumn Header="SGK" Binding="{Binding SgkCikisDurumu}" Width="100"/>
+                                <DataGridTextColumn Header="Neden" Binding="{Binding CikisNedeni}" Width="*"/>
+                                <DataGridTextColumn Header="Kalan Avans" Binding="{Binding KalanAvans, StringFormat=N2}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
