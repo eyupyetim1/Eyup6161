@@ -1,5 +1,12 @@
 # Değişiklik Geçmişi
 
+## 1.3.2 — 2026-11-10 (düzeltme)
+
+- Şifre değiştirme penceresinde şifreler aynı olduğu hâlde "aynı değil" hatası verip açılmaması düzeltildi (şifre kutuları forma aktarılmıyordu). Aynı düzeltme kullanıcı oluşturma, geçici şifre, yedek şifresi ve veritabanı şifresi kutularını da kapsar.
+- Giriş ekranındaki "İlk kurulumda kullanıcı: admin" yazısı kaldırıldı.
+- Şifre penceresi için Windows üzerinde otomatik doğrulama eklendi.
+
+
 ## 1.3.1 — 2026-11-10 (Çıkış takibi)
 
 İK'ya verilen "şu kişiyi çıkar" talimatı unutulduğunda personele çalışmadığı hâlde maaş yatmasını önlemek için:

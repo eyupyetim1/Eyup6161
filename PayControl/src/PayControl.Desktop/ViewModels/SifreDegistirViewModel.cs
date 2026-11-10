@@ -28,7 +28,9 @@ public partial class SifreDegistirViewModel : ObservableObject
     private async Task KaydetAsync()
     {
         Hata = null;
-        if (string.IsNullOrEmpty(YeniSifre) || YeniSifre != YeniSifreTekrar) { Hata = "Yeni şifreler aynı değil."; return; }
+        if (!Zorunlu && string.IsNullOrEmpty(EskiSifre)) { Hata = "Mevcut şifrenizi girin."; return; }
+        if (string.IsNullOrEmpty(YeniSifre)) { Hata = "Yeni şifreyi girin."; return; }
+        if (YeniSifre != YeniSifreTekrar) { Hata = "Yeni şifre ile tekrarı aynı değil."; return; }
         try
         {
             await _kimlik.SifreDegistirAsync(KullaniciAdi, EskiSifre ?? "", YeniSifre);

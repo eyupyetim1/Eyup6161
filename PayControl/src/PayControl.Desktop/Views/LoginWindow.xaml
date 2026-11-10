@@ -67,8 +67,6 @@
 
                 <Button Content="Giriş yap" Style="{StaticResource PrimaryButton}" Command="{Binding GirisCommand}" IsDefault="True"
                         HorizontalAlignment="Stretch" MinHeight="42" FontSize="14" Margin="0,18,0,0"/>
-                <TextBlock Text="İlk kurulumda kullanıcı: admin" FontSize="11.5" Foreground="{StaticResource SolukYaziBrush}"
-                           HorizontalAlignment="Center" Margin="0,16,0,0"/>
             </StackPanel>
         </Grid>
     </Grid>

@@ -44,6 +44,9 @@ public static class EkranGoruntusuModu
         var login = sp.GetRequiredService<LoginWindow>();
         await KaydetAsync(login, Path.Combine(klasor, "01-giris.png"));
 
+        // Öz-denetim: şifre değiştirme penceresinde PasswordBox → form bağlaması gerçekten çalışıyor mu?
+        await SifreDegistirmeDenetimiAsync(sp, klasor);
+
         // 2) Ana ekran
         var mainVm = sp.GetRequiredService<MainViewModel>();
         var main = new MainWindow(mainVm);
@@ -134,6 +137,41 @@ public static class EkranGoruntusuModu
             () => detayVm2.YukleAsync(demo.IcraPersonelId), sekme: -3);
 
         try { Directory.Delete(gecici, true); } catch { /* yoksay */ }
+    }
+
+    private static async Task SifreDegistirmeDenetimiAsync(IServiceProvider sp, string klasor)
+    {
+        var vm = sp.GetRequiredService<SifreDegistirViewModel>();
+        vm.KullaniciAdi = "admin";
+        vm.Zorunlu = false;
+        var tamam = false;
+        vm.Tamamlandi += () => tamam = true;
+        var w = new SifreDegistirWindow(vm) { ShowActivated = false, ShowInTaskbar = false, WindowStartupLocation = WindowStartupLocation.Manual, Left = 0, Top = 0 };
+        w.Show();
+        await w.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+        var kutular = new List<System.Windows.Controls.PasswordBox>();
+        void Topla(DependencyObject d)
+        {
+            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+            {
+                var c = VisualTreeHelper.GetChild(d, i);
+                if (c is System.Windows.Controls.PasswordBox pb && pb.IsVisible) kutular.Add(pb);
+                Topla(c);
+            }
+        }
+        Topla(w);
+        if (kutular.Count != 3) throw new InvalidOperationException($"Şifre penceresinde 3 kutu bekleniyordu, {kutular.Count} bulundu.");
+        kutular[0].Password = "Admin123!";
+        kutular[1].Password = "YeniSifre2026";
+        kutular[2].Password = "YeniSifre2026";
+        if (vm.YeniSifre != "YeniSifre2026" || vm.YeniSifreTekrar != "YeniSifre2026" || vm.EskiSifre != "Admin123!")
+            throw new InvalidOperationException("Şifre kutuları forma aktarılmıyor (SifreBaglama).");
+        await vm.KaydetCommand.ExecuteAsync(null);
+        if (!tamam) throw new InvalidOperationException($"Şifre değiştirilemedi: {vm.Hata}");
+        if (w.IsVisible) w.Close();
+        File.WriteAllText(Path.Combine(klasor, "SIFRE-DENETIMI-TAMAM.txt"), "Şifre değiştirme penceresi doğrulandı.");
+        // Sonraki adımlar için şifre geri alınır
+        await sp.GetRequiredService<IKimlikServisi>().SifreDegistirAsync("admin", "YeniSifre2026", "Admin123!x", default);
     }
 
     /// <summary>Penceredeki ilk TabControl'de sekme seçer (negatif: sondan).</summary>

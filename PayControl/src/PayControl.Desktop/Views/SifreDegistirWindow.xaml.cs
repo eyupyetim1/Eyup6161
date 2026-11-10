@@ -9,6 +9,10 @@ public partial class SifreDegistirWindow : Window
     {
         InitializeComponent();
         DataContext = vm;
-        vm.Tamamlandi += () => { DialogResult = true; Close(); };
+        vm.Tamamlandi += () =>
+        {
+            if (System.Windows.Interop.ComponentDispatcher.IsThreadModal) DialogResult = true;
+            Close();
+        };
     }
 }
