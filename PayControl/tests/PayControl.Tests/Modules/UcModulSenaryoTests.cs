@@ -26,11 +26,7 @@ public class UcModulSenaryoTests : IAsyncLifetime
         await ServiceCollectionExtensions.InitializeDatabaseAsync(_sp);
     }
 
-    public async Task DisposeAsync()
-    {
-        await _sp.DisposeAsync();
-        if (File.Exists(_dbPath)) File.Delete(_dbPath);
-    }
+    public Task DisposeAsync() => TestDbCleanup.DisposeProviderAndDbAsync(_sp, _dbPath);
 
     private async Task<Personel> PersonelOlustur(string tc, string ad, decimal maas = 30000)
     {

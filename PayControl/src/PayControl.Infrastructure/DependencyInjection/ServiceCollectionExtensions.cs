@@ -24,8 +24,9 @@ public static class ServiceCollectionExtensions
 
         Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
 
+        // Pooling=False: test/Windows'ta Dispose sonrası dosya kilidini bırakır
         services.AddDbContext<PayControlDbContext>(opt =>
-            opt.UseSqlite($"Data Source={dbPath}"));
+            opt.UseSqlite($"Data Source={dbPath};Pooling=False"));
         services.AddScoped<IPayControlDbContext>(sp => sp.GetRequiredService<PayControlDbContext>());
 
         services.AddScoped<IPersonelServisi, PersonelServisi>();

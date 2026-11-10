@@ -23,12 +23,7 @@ public class IstenCikisAppTests : IAsyncLifetime
         await ServiceCollectionExtensions.InitializeDatabaseAsync(_sp);
     }
 
-    public async Task DisposeAsync()
-    {
-        await _sp.DisposeAsync();
-        if (File.Exists(_dbPath))
-            File.Delete(_dbPath);
-    }
+    public Task DisposeAsync() => TestDbCleanup.DisposeProviderAndDbAsync(_sp, _dbPath);
 
     [Fact]
     public async Task Cikis_kaydi_sgk_otomatik_verildi_yapmaz()
