@@ -97,6 +97,9 @@ public static class EkranGoruntusuModu
     {
         // Pencere önce gerçekten açılır (bağlamalar, Loaded); ardından içerik ekran boyutundan bağımsız
         // olarak pencerenin tasarım boyutunda yeniden yerleştirilip çizilir.
+        // Tasarım boyutu gösterimden önce okunur (küçük ekranda Windows pencereyi daraltır).
+        var tasarimGenislik = double.IsNaN(w.Width) ? 1200 : w.Width;
+        var tasarimYukseklik = double.IsNaN(w.Height) ? 800 : w.Height;
         w.WindowStartupLocation = WindowStartupLocation.Manual;
         w.Left = 0;
         w.Top = 0;
@@ -107,8 +110,8 @@ public static class EkranGoruntusuModu
             await hazirla();
         await Task.Delay(400);
 
-        var genislik = (double.IsNaN(w.Width) ? 1200 : w.Width) - 16;   // pencere kenarlığı
-        var yukseklik = (double.IsNaN(w.Height) ? 800 : w.Height) - 39; // başlık çubuğu
+        var genislik = tasarimGenislik - 16;   // pencere kenarlığı
+        var yukseklik = tasarimYukseklik - 39; // başlık çubuğu
         var icerik = (FrameworkElement)w.Content;
         var dataContext = w.DataContext;
         w.Content = null;
