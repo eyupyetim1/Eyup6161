@@ -17,12 +17,14 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
     private readonly PayControlDbContext _db;
     private readonly IAvansServisi _avans;
     private readonly IMaliHareketServisi _defter;
+    private readonly IKesintiServisi _kesinti;
 
-    public BordroIceAktarmaServisi(PayControlDbContext db, IAvansServisi avans, IMaliHareketServisi defter)
+    public BordroIceAktarmaServisi(PayControlDbContext db, IAvansServisi avans, IMaliHareketServisi defter, IKesintiServisi kesinti)
     {
         _db = db;
         _avans = avans;
         _defter = defter;
+        _kesinti = kesinti;
     }
 
     public async Task<IceAktarmaOnizlemeSonucu> OnizleAsync(
@@ -199,6 +201,7 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
 
             EkleKalem(donemKaydi, MaasKalemTuru.AvansKesinti, "AVANS", satir.Avans, kesinti: true, dahil: false);
             EkleKalem(donemKaydi, MaasKalemTuru.Icra, "İCRA", satir.Icra, kesinti: true, dahil: false);
+            EkleKalem(donemKaydi, MaasKalemTuru.GeriOdemeKesinti, "FAZLA ÖDEME KESİNTİSİ", satir.GeriOdeme, kesinti: true, dahil: false);
             EkleKalem(donemKaydi, MaasKalemTuru.OtoKatBes, "OTO.KAT.BES", satir.OtoKatBes, kesinti: true, dahil: false);
             EkleKalem(donemKaydi, MaasKalemTuru.TrafikCezasi, "TRAFİK CEZASI", satir.TrafikCezasi, kesinti: true, dahil: false);
             // Aile/Yemek/Yol/İhbar: Net olarak işaretli — Net İstihkak'a dahil kabul (çift sayım yok)
@@ -224,6 +227,15 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
 
             foreach (var kalem in donemKaydi.Kalemler.Where(k => k.Tutar != 0 && k.Tur != MaasKalemTuru.Maas))
             {
+                if (kalem.Tur == MaasKalemTuru.GeriOdemeKesinti)
+                {
+                    var t = await _kesinti.BordroTahsilatIsleAsync(personel.Id, donemYil, donemAy, kalem.Tutar, iceAktarma.Id, dosyaAdi, kullaniciAdi, ct);
+                    uyarilar.AddRange(t.Select(u => $"{personel.AdSoyad}: {u}"));
+                    continue;
+                }
+                if (kalem.Tur == MaasKalemTuru.Icra)
+                    await _kesinti.BordroIcraIsleAsync(personel.Id, donemYil, donemAy, kalem.Tutar, iceAktarma.Id, ct);
+
                 if (kalem.Tur == MaasKalemTuru.AvansKesinti)
                 {
                     var mahsup = await _avans.BordroMahsupuUygulaAsync(
@@ -250,6 +262,20 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
             }
 
             basarili++;
+        }
+
+        // Bordroda geçen yeni işyerleri için tesis tanımı aç
+        var tanimliTesisler = (await _db.Tesisler.Select(t => t.Ad).ToListAsync(ct)).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+        var kodlar = (await _db.Tesisler.Select(t => t.Kod).ToListAsync(ct)).ToHashSet();
+        var sira = kodlar.Count;
+        foreach (var ad in onizleme.Satirlar.Where(s => s.Gecerli && !string.IsNullOrWhiteSpace(s.Isyeri)).Select(s => s.Isyeri!.Trim())
+                     .Distinct(StringComparer.CurrentCultureIgnoreCase).Where(a => !tanimliTesisler.Contains(a)))
+        {
+            string kod;
+            do kod = $"T{++sira:D3}"; while (kodlar.Contains(kod));
+            kodlar.Add(kod);
+            _db.Tesisler.Add(new Tesis { Ad = ad, Kod = kod });
+            uyarilar.Add($"Yeni tesis tanımlandı: {ad} ({kod}).");
         }
 
         iceAktarma.BasariliSatir = basarili;
@@ -328,6 +354,8 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
             await _defter.DeftereEkleAsync(MaliHareketKurallari.TersKayit(h, "Bordro içe aktarma geri alındı", kullaniciAdi, bugun), false, ct);
 
         await _avans.BordroMahsupuGeriAlAsync(kayit.Id, kullaniciAdi, ct);
+        await _kesinti.BordroIcraGeriAlAsync(kayit.Id, ct);
+        await _kesinti.BordroTahsilatGeriAlAsync(kayit.Id, kullaniciAdi, ct);
 
         kayit.GeriAlindi = true;
         kayit.GeriAlmaZamani = simdi;
@@ -550,6 +578,7 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
                 NetIstihkak = net,
                 Iban = Get("Iban"),
                 Avans = ParseDecimal(Get("Avans")),
+                GeriOdeme = ParseDecimal(Get("GeriOdeme")),
                 Icra = ParseDecimal(Get("Icra")),
                 OtoKatBes = ParseDecimal(Get("OtoKatBes")),
                 TrafikCezasi = ParseDecimal(Get("TrafikCezasi")),

@@ -41,6 +41,14 @@ public interface IBankaOdemeServisi
         string kullanici,
         CancellationToken ct = default);
 
+    /// <summary>
+    /// Yanlış girilmiş banka/kasa ödemesini gerekçeyle iptal eder: kayıt silinmez, mali hareketi ters kayıtla kapanır,
+    /// tekillik anahtarı serbest bırakılır (doğru kayıt yeniden girilebilir). Kapalı dönemde yapılamaz.
+    /// </summary>
+    Task IptalEtAsync(Guid odemeId, string neden, string kullanici, CancellationToken ct = default);
+
+    Task<IReadOnlyList<BankaOdemeKaydi>> PersonelOdemeleriAsync(Guid personelId, CancellationToken ct = default);
+
     Task<IReadOnlyList<BankaOdemeKaydi>> DonemOdemeleriAsync(int hakEdisYil, int hakEdisAy, CancellationToken ct = default);
 }
 

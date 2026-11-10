@@ -158,6 +158,7 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         public List<BankaOdemeKaydi> Odemeler { get; init; } = new();
         public bool GecerliListeVar { get; init; }
         public int AcikFark { get; init; }
+        public List<string> OnayliTesisler { get; init; } = new();
         public DateOnly Basi { get; init; }
         public DateOnly Sonu { get; init; }
     }
@@ -175,7 +176,8 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
             Avanslar = await _db.Avanslar.AsNoTracking().Include(a => a.Mahsuplar).ToListAsync(ct),
             Odemeler = await _db.BankaOdemeleri.AsNoTracking().Where(o => o.HakEdisDonemYil == d.DonemYil && o.HakEdisDonemAy == d.DonemAy).ToListAsync(ct),
             GecerliListeVar = await _db.OnayliOdemeListeleri.AnyAsync(l => l.DonemYil == d.DonemYil && l.DonemAy == d.DonemAy && l.Gecerli, ct),
-            AcikFark = await _db.MutabakatFarklari.CountAsync(f => f.MaasDonemKapanisiId == d.Id && f.Durum == FarkDurumu.Acik, ct)
+            AcikFark = await _db.MutabakatFarklari.CountAsync(f => f.MaasDonemKapanisiId == d.Id && f.Durum == FarkDurumu.Acik, ct),
+            OnayliTesisler = await _db.DonemTesisOnaylari.Where(o => o.MaasDonemKapanisiId == d.Id).Select(o => o.TesisAd).ToListAsync(ct)
         };
     }
 
@@ -256,6 +258,15 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
             case "ACIK_FARK":
                 if (!d.MutabakatZamani.HasValue) return (false, "Mutabakat yapılmadı.");
                 return v.AcikFark == 0 ? (true, "Açık mutabakat farkı yok.") : (false, $"{v.AcikFark} açık fark çözülmedi / istisna verilmedi.");
+            case "TESIS":
+            {
+                var tesisler = v.Bordro.Select(b => b.Isyeri ?? "(Tesis belirtilmemiş)").Distinct().ToList();
+                if (tesisler.Count <= 1) return (true, tesisler.Count == 0 ? "Bordro yok." : $"Tek tesis ({tesisler[0]}); ayrı tesis onayı gerekmez.");
+                var eksik = tesisler.Where(t => !v.OnayliTesisler.Contains(t)).ToList();
+                return eksik.Count == 0
+                    ? (true, $"{tesisler.Count} tesisin tamamı onaylandı.")
+                    : (false, $"Onay bekleyen tesis: {string.Join(", ", eksik)}.");
+            }
             default:
                 return (null, "Bu madde için otomatik kontrol yok; yetkili onayı gerekir.");
         }
@@ -276,9 +287,14 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         var bordro = await _db.MaasDonemKayitlari.AsNoTracking().Where(m => m.DonemYil == yil && m.DonemAy == ay).ToListAsync(ct);
         var odemeler = await _db.BankaOdemeleri.AsNoTracking().Where(o => o.HakEdisDonemYil == yil && o.HakEdisDonemAy == ay).ToListAsync(ct);
         var personeller = await _db.Personeller.AsNoTracking().Include(p => p.CalismaDonemleri).ToDictionaryAsync(p => p.Id, ct);
-        var gecerliListe = await _db.OnayliOdemeListeleri.AsNoTracking().Include(l => l.Satirlar)
-            .Where(l => l.DonemYil == yil && l.DonemAy == ay && l.Gecerli)
-            .OrderByDescending(l => l.Surum).FirstOrDefaultAsync(ct);
+        // Tesis bazlı listeler dahil, dönemin tüm geçerli onaylı listeleri
+        var gecerliListeler = await _db.OnayliOdemeListeleri.AsNoTracking().Include(l => l.Satirlar)
+            .Where(l => l.DonemYil == yil && l.DonemAy == ay && l.Gecerli).ToListAsync(ct);
+        var gecerliListe = gecerliListeler.Count == 0 ? null : new OnayliOdemeListesi
+        {
+            Surum = gecerliListeler.Max(l => l.Surum),
+            Satirlar = gecerliListeler.SelectMany(l => l.Satirlar).ToList()
+        };
         var mevcutFarklar = await _db.MutabakatFarklari.Where(f => f.MaasDonemKapanisiId == donem.Id).ToListAsync(ct);
         var mutabakatHareketleri = await _db.MaliHareketler.AsNoTracking()
             .Where(h => h.KaynakTuru == "Mutabakat" && h.DonemYil == yil && h.DonemAy == ay && h.BakiyeTuru == BakiyeTuru.SupheliFazlaOdeme)
@@ -288,8 +304,10 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         void Fark(Guid? pid, MutabakatFarkTuru tur, decimal beklenen, decimal odenen, string aciklama, string? anahtarEk = null)
         {
             personeller.TryGetValue(pid ?? Guid.Empty, out var p);
+            var bordroTesis = pid.HasValue ? bordro.FirstOrDefault(b => b.PersonelId == pid)?.Isyeri : null;
             bulunan.Add(new MutabakatFarki
             {
+                Tesis = bordroTesis ?? p?.Isyeri,
                 MaasDonemKapanisiId = donem.Id,
                 DonemYil = yil,
                 DonemAy = ay,
@@ -576,6 +594,7 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
                 PersonelId = pid,
                 TcKimlikNo = p.TcKimlikNo,
                 AdSoyad = p.AdSoyad,
+                Tesis = b?.Isyeri ?? p.Isyeri,
                 Iban = b?.Iban ?? p.Iban,
                 MaasTutar = b?.MaasTutar,
                 BordroNet = beklenen,

@@ -42,13 +42,15 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
         string? bankaHash,
         string kullanici,
         Guid? bordroIceAktarmaId = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        string? tesis = null)
     {
+        tesis = string.IsNullOrWhiteSpace(tesis) ? null : tesis.Trim();
         await _donem.EnsureDonemAcikAsync(donemYil, donemAy, ct);
 
-        if (!await _db.MaasDonemKayitlari.AnyAsync(m => m.DonemYil == donemYil && m.DonemAy == donemAy, ct))
+        if (!await _db.MaasDonemKayitlari.AnyAsync(m => m.DonemYil == donemYil && m.DonemAy == donemAy && (tesis == null || m.Isyeri == tesis), ct))
             throw new InvalidOperationException(
-                $"{donemYil}-{donemAy:D2} dönemi için içe aktarılmış bordro yok. Önce bordro dosyasını yükleyin.");
+                $"{donemYil}-{donemAy:D2} dönemi için {(tesis is null ? "" : tesis + " tesisine ait ")}içe aktarılmış bordro yok. Önce bordro dosyasını yükleyin.");
 
         if (bankaDosyasi.Satirlar.Count == 0)
             throw new InvalidOperationException("Banka ödeme dosyasında okunabilir talimat satırı yok.");
@@ -70,6 +72,7 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
         {
             DonemYil = donemYil,
             DonemAy = donemAy,
+            Tesis = tesis,
             BankaDosyaAdi = bankaDosyaAdi,
             BankaDosyaHash = bankaHash,
             BordroIceAktarmaId = bordroAktarma?.Id,
@@ -279,12 +282,13 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
         listeSatirlari = listeSatirlari.OrderBy(x => x.Talimat.SatirNo).ToList();
 
         var oncekiSurum = await _db.OnayliOdemeListeleri
-            .Where(l => l.DonemYil == oturum.DonemYil && l.DonemAy == oturum.DonemAy)
+            .Where(l => l.DonemYil == oturum.DonemYil && l.DonemAy == oturum.DonemAy && l.Tesis == oturum.Tesis)
             .Select(l => (int?)l.Surum).MaxAsync(ct) ?? 0;
         var surum = oncekiSurum + 1;
 
         Directory.CreateDirectory(hedefKlasor);
-        var dosyaAdi = $"OnayliOdeme_{oturum.DonemYil}-{oturum.DonemAy:D2}_v{surum}.xlsx";
+        var tesisEki = oturum.Tesis is null ? "" : "_" + new string(oturum.Tesis.Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray());
+        var dosyaAdi = $"OnayliOdeme_{oturum.DonemYil}-{oturum.DonemAy:D2}{tesisEki}_v{surum}.xlsx";
         var yol = Path.Combine(hedefKlasor, dosyaAdi);
         var sablon = string.IsNullOrWhiteSpace(oturum.BankaSablonJson)
             ? null
@@ -298,6 +302,7 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
             Surum = surum,
             DonemYil = oturum.DonemYil,
             DonemAy = oturum.DonemAy,
+            Tesis = oturum.Tesis,
             DosyaAdi = dosyaAdi,
             DosyaYolu = yol,
             DosyaHashSha256 = Convert.ToHexString(SHA256.HashData(bytes)),
@@ -330,7 +335,7 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
 
         // Aynı dönemin önceki geçerli listeleri yeni sürümle geçersiz olur (dosyalar silinmez).
         var oncekiler = await _db.OnayliOdemeListeleri
-            .Where(l => l.DonemYil == oturum.DonemYil && l.DonemAy == oturum.DonemAy && l.Gecerli)
+            .Where(l => l.DonemYil == oturum.DonemYil && l.DonemAy == oturum.DonemAy && l.Gecerli && l.Tesis == oturum.Tesis)
             .ToListAsync(ct);
         foreach (var o in oncekiler)
         {
@@ -444,7 +449,7 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
         var onceki = new DateOnly(yil, ay, 1).AddMonths(-1);
 
         var bordro = await _db.MaasDonemKayitlari.AsNoTracking().Include(m => m.Kalemler)
-            .Where(m => m.DonemYil == yil && m.DonemAy == ay).ToListAsync(ct);
+            .Where(m => m.DonemYil == yil && m.DonemAy == ay && (oturum.Tesis == null || m.Isyeri == oturum.Tesis)).ToListAsync(ct);
         var oncekiBordro = await _db.MaasDonemKayitlari.AsNoTracking().Include(m => m.Kalemler)
             .Where(m => m.DonemYil == onceki.Year && m.DonemAy == onceki.Month).ToListAsync(ct);
         var personeller = await _db.Personeller.AsNoTracking().Include(p => p.CalismaDonemleri).ToListAsync(ct);
@@ -492,7 +497,10 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
             OncekiAyBordro = oncekiBordro,
             DevredenDuzeltmeler = duzeltmeler,
             AcikSupheliBakiyeler = supheli,
-            OncekiOnayliOdemeler = oncekiListeler
+            OncekiOnayliOdemeler = oncekiListeler,
+            IcraDosyalari = await _db.IcraDosyalari.AsNoTracking().Include(d => d.Kesintiler).ToListAsync(ct),
+            BesTanimlari = await _db.BesTanimlari.AsNoTracking().ToListAsync(ct),
+            TahsilatPlanlari = await _db.TahsilatPlanlari.AsNoTracking().Include(t => t.Taksitler).ToListAsync(ct)
         });
 
         // Listeden çıkarılan talimatlar ilgili kişinin satırında görünür kalsın

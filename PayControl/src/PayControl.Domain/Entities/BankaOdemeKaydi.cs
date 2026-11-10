@@ -41,5 +41,11 @@ public class BankaOdemeKaydi
     public string? AdSoyad { get; set; }
     public string? KullaniciAdi { get; set; }
 
+    /// <summary>Yanlış girilen ödeme silinmez; gerekçeyle iptal edilir ve mali hareketi ters kayıtla kapanır.</summary>
+    public bool IptalEdildi { get; set; }
+    public DateTime? IptalZamani { get; set; }
+    public string? IptalEden { get; set; }
+    public string? IptalNedeni { get; set; }
+
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
 }

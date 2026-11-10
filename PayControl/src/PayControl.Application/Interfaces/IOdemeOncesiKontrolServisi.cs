@@ -28,7 +28,8 @@ public interface IOdemeOncesiKontrolServisi
         string? bankaHash,
         string kullanici,
         Guid? bordroIceAktarmaId = null,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        string? tesis = null);
 
     /// <summary>Kullanıcı banka talimatını düzeltir veya listeden çıkarır; oturum yeniden değerlendirilir.</summary>
     Task<OdemeKontrolOturumu> TalimatDuzeltAsync(

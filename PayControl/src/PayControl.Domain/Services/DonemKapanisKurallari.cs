@@ -18,6 +18,7 @@ public static class DonemKapanisKurallari
         ("BANKA_ICE", "Gerçekleşen banka ödemeleri içe aktarıldı."),
         ("MUTABAKAT", "Bordro ve banka mutabakatı tamamlandı."),
         ("ACIK_FARK", "Açık ödeme farkları çözüldü veya gerekçeli istisna olarak kayıt altına alındı."),
+        ("TESIS", "Tesis onayları tamamlandı."),
         ("YONETICI", "Yönetici kapanış onayı verildi.")
     ];
 

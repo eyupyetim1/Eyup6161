@@ -15,6 +15,7 @@ public sealed class BordroSatirOnizlemeDto
     public decimal? NetIstihkak { get; init; }
     public string? Iban { get; init; }
     public decimal? Avans { get; init; }
+    public decimal? GeriOdeme { get; init; }
     public decimal? Icra { get; init; }
     public decimal? OtoKatBes { get; init; }
     public decimal? TrafikCezasi { get; init; }

@@ -32,6 +32,20 @@ public interface IPayControlDbContext
     DbSet<MutabakatFarki> MutabakatFarklari { get; }
     DbSet<DonemKapanisAnlikGoruntusu> DonemKapanisAnlikGoruntuleri { get; }
     DbSet<DonemKapanisOzeti> DonemKapanisOzetleri { get; }
+    DbSet<Tesis> Tesisler { get; }
+    DbSet<DonemTesisOnayi> DonemTesisOnaylari { get; }
+    DbSet<IcraDosyasi> IcraDosyalari { get; }
+    DbSet<IcraKesintiKaydi> IcraKesintileri { get; }
+    DbSet<BesTanimi> BesTanimlari { get; }
+    DbSet<Belge> Belgeler { get; }
+    DbSet<TahsilatPlani> TahsilatPlanlari { get; }
+    DbSet<TahsilatTaksiti> TahsilatTaksitleri { get; }
+    DbSet<BildirimAyari> BildirimAyarlari { get; }
+    DbSet<BildirimAlicisi> BildirimAlicilari { get; }
+    DbSet<BildirimKurali> BildirimKurallari { get; }
+    DbSet<BildirimKaydi> BildirimKayitlari { get; }
+    DbSet<YedekKaydi> YedekKayitlari { get; }
+    DbSet<UygulamaAyari> UygulamaAyarlari { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

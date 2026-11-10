@@ -10,7 +10,7 @@ namespace PayControl.Application.Services;
 public sealed class MaliHareketServisi : IMaliHareketServisi
 {
     private static readonly string[] KaynakModulTurleri =
-        [nameof(AvansKaydi), nameof(AvansMahsupKaydi), nameof(MaasDonemKaydi), nameof(MaasKalemi), nameof(BankaOdemeKaydi)];
+        [nameof(AvansKaydi), nameof(AvansMahsupKaydi), nameof(MaasDonemKaydi), nameof(MaasKalemi), nameof(BankaOdemeKaydi), nameof(TahsilatTaksiti)];
 
     private static readonly MaliIslemTuru[] BordroDisiHakEdisTurleri =
     [

@@ -29,7 +29,16 @@ public static class ServiceCollectionExtensions
             opt.UseSqlite($"Data Source={dbPath};Pooling=False"));
         services.AddScoped<IPayControlDbContext>(sp => sp.GetRequiredService<PayControlDbContext>());
 
+        services.AddSingleton(new VeritabaniBilgisi("Sqlite", $"Data Source={dbPath};Pooling=False", dbPath));
+        services.AddSingleton<ISifreKoruyucu>(new SifreKoruyucu(Path.GetDirectoryName(dbPath)!));
+        services.AddScoped<IAyarServisi, AyarServisi>();
+        services.AddScoped<IYedekServisi, YedekServisi>();
         services.AddScoped<IYetkiServisi, YetkiServisi>();
+        services.AddScoped<ITesisServisi, TesisServisi>();
+        services.AddScoped<IKesintiServisi, KesintiServisi>();
+        services.AddScoped<IUyariServisi, UyariServisi>();
+        services.AddScoped<IDenetimServisi, DenetimServisi>();
+        services.AddScoped<IBelgeServisi, BelgeServisi>();
         services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();
         services.AddScoped<IPersonelServisi, PersonelServisi>();
         services.AddScoped<IIstenCikisServisi, IstenCikisAppServisi>();

@@ -30,6 +30,9 @@ public sealed class OdemeKontrolBaglami
     public IReadOnlyDictionary<Guid, decimal> DevredenDuzeltmeler { get; init; } = new Dictionary<Guid, decimal>();
     public IReadOnlyDictionary<Guid, decimal> AcikSupheliBakiyeler { get; init; } = new Dictionary<Guid, decimal>();
     public IReadOnlyList<OncekiOnayliOdeme> OncekiOnayliOdemeler { get; init; } = Array.Empty<OncekiOnayliOdeme>();
+    public IReadOnlyList<IcraDosyasi> IcraDosyalari { get; init; } = Array.Empty<IcraDosyasi>();
+    public IReadOnlyList<BesTanimi> BesTanimlari { get; init; } = Array.Empty<BesTanimi>();
+    public IReadOnlyList<TahsilatPlani> TahsilatPlanlari { get; init; } = Array.Empty<TahsilatPlani>();
 }
 
 /// <summary>Tek bir kontrol kuralının bulgusu.</summary>
@@ -155,6 +158,7 @@ public sealed class OdemeOncesiKontrolMotoru
                 GecmisOdemeKurallari(b, personel, bulgular);
                 AvansKurallari(b, personel, bordro, donemSonu, bulgular);
                 KesintiVeGunKurallari(b, personel, bordro, donemBasi, donemSonu, bulgular);
+                IcraBesTahsilatKurallari(b, personel, bordro, donemBasi, donemSonu, bulgular);
             }
             else
             {
@@ -181,6 +185,7 @@ public sealed class OdemeOncesiKontrolMotoru
                     $"Personel işten ayrılmış (son çıkış {p.SonCikisTarihi:dd.MM.yyyy})."));
             if (talimatlar.Count > 1)
                 bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false, $"Aynı kişiye {talimatlar.Count} ayrı ödeme talimatı."));
+            GecmisOdemeKurallari(b, p, bulgular);
             Uygula(satir, bulgular);
             sonuc.Add(satir);
         }
@@ -451,6 +456,62 @@ public sealed class OdemeOncesiKontrolMotoru
         if (b.AcikSupheliBakiyeler.TryGetValue(personel.Id, out var supheli) && supheli > Tolerans)
             bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
                 $"Personelin inceleme bekleyen fazla ödeme bakiyesi var: {supheli:N2} TL."));
+    }
+
+    private static void IcraBesTahsilatKurallari(OdemeKontrolBaglami b, Personel personel, MaasDonemKaydi bordro,
+        DateOnly donemBasi, DateOnly donemSonu, List<KontrolBulgusu> bulgular)
+    {
+        // İcra: dayanak dosyaya göre kesinti var mı, tutar makul mü, borcu aşıyor mu
+        var icraKesinti = bordro.Kalemler.Where(k => k.Tur == MaasKalemTuru.Icra).Sum(k => k.Tutar);
+        var dosyalar = b.IcraDosyalari.Where(d => d.PersonelId == personel.Id && d.Baslangic <= donemSonu).ToList();
+        if (dosyalar.Count > 0)
+        {
+            // Bu dönem için zaten işlenmiş kesintiler (bordro içe aktarılırken) önceki bakiyeye geri eklenir
+            decimal BuDonem(IcraDosyasi d) => d.Kesintiler.Where(k => !k.IptalEdildi && k.DonemYil == b.DonemYil && k.DonemAy == b.DonemAy).Sum(k => k.Tutar);
+            var acik = dosyalar.Where(d => d.Aktif || BuDonem(d) > 0).ToList();
+            var kalanOnce = acik.Sum(d => d.ToplamBorc - d.Kesilen + BuDonem(d));
+            if (kalanOnce > Tolerans && icraKesinti <= Tolerans)
+                bulgular.Add(new(OdemeKontrolSonucu.FazlaOdemeRiski, true, false,
+                    $"Aktif icra dosyası var ({string.Join(", ", acik.Select(d => d.DosyaNo))}, kalan {kalanOnce:N2}) ancak bordroda icra kesintisi yok. Kesilmeyen icra işverenin sorumluluğundadır."));
+            else if (icraKesinti > kalanOnce + Tolerans)
+                bulgular.Add(new(OdemeKontrolSonucu.EksikOdemeRiski, true, false,
+                    $"İcra kesintisi ({icraKesinti:N2}) dosyalardaki kalan borcu ({kalanOnce:N2}) aşıyor."));
+            else if (icraKesinti > 0)
+            {
+                var oran = acik.OrderBy(d => d.Sira).First().KesintiOrani;
+                var beklenen = Math.Min(kalanOnce, Math.Round((bordro.NetIstihkak + icraKesinti) * oran, 2));
+                if (Math.Abs(icraKesinti - beklenen) > Math.Max(1m, beklenen * 0.05m))
+                    bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false,
+                        $"İcra kesintisi {icraKesinti:N2}; dosya oranına ({oran:P0}) göre beklenen yaklaşık {beklenen:N2}."));
+                else
+                    bulgular.Add(KontrolBulgusu.Bilgi($"İcra kesintisi dosya oranıyla uyumlu ({icraKesinti:N2}, kalan borç {kalanOnce - icraKesinti:N2})."));
+            }
+        }
+        else if (icraKesinti > Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false, $"Bordroda {icraKesinti:N2} icra kesintisi var ancak tanımlı icra dosyası yok."));
+
+        // BES: otomatik katılım tanımına göre kesinti
+        var bes = b.BesTanimlari.FirstOrDefault(t => t.PersonelId == personel.Id && t.Baslangic <= donemSonu &&
+                                                     (t.CaymaTarihi is null || t.CaymaTarihi > donemBasi));
+        var besKesinti = bordro.Kalemler.Where(k => k.Tur == MaasKalemTuru.OtoKatBes).Sum(k => k.Tutar);
+        if (bes is not null && besKesinti <= Tolerans)
+            bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false, $"BES tanımı var (oran {bes.Oran:P1}) ancak bordroda BES kesintisi yok."));
+        else if (bes is not null && bordro.MaasTuru == MaasTuru.Brut && bordro.MaasTutar is { } brut && brut > 0)
+        {
+            var beklenen = Math.Round(brut * ((bordro.Gun ?? 30m) / 30m) * bes.Oran, 2);
+            if (Math.Abs(besKesinti - beklenen) > Math.Max(1m, beklenen * 0.02m))
+                bulgular.Add(new(OdemeKontrolSonucu.IncelemeGerekiyor, false, false, $"BES kesintisi {besKesinti:N2}; brüt ücrete göre beklenen {beklenen:N2}."));
+        }
+        else if (bes is null && besKesinti > Tolerans && b.BesTanimlari.Any(t => t.PersonelId == personel.Id && t.CaymaTarihi <= donemBasi))
+            bulgular.Add(new(OdemeKontrolSonucu.EksikOdemeRiski, true, false, $"Personel BES'ten caymış ancak bordroda {besKesinti:N2} BES kesintisi var."));
+
+        // Fazla ödeme tahsilat planı
+        var planli = b.TahsilatPlanlari.Where(p => p.PersonelId == personel.Id)
+            .SelectMany(p => p.Taksitler).Where(t => t.DonemYil == b.DonemYil && t.DonemAy == b.DonemAy).Sum(t => t.Planlanan);
+        var tahsilat = bordro.Kalemler.Where(k => k.Tur == MaasKalemTuru.GeriOdemeKesinti).Sum(k => k.Tutar);
+        if (planli > Tolerans && tahsilat + Tolerans < planli)
+            bulgular.Add(new(OdemeKontrolSonucu.FazlaOdemeRiski, true, false,
+                $"Fazla ödeme tahsilat taksiti ({planli:N2}) bordroya yansımamış (bordroda {tahsilat:N2})."));
     }
 
     private static void Uygula(OdemeKontrolSatiri satir, List<KontrolBulgusu> bulgular)

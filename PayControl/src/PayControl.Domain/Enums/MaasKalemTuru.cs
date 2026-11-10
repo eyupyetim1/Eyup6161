@@ -21,5 +21,7 @@ public enum MaasKalemTuru
     FazlaMesai = 13,
     DigerOdeme = 14,
     DigerKesinti = 15,
-    NetIstihkak = 16
+    NetIstihkak = 16,
+    /// <summary>Kesinleşmiş fazla ödemenin bordrodan geri alınan taksiti.</summary>
+    GeriOdemeKesinti = 17
 }

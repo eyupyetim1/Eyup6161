@@ -32,6 +32,8 @@ internal static class VeriButunluguKorumasi
                     "Mali hareket kayıtları değiştirilemez veya silinemez. Hatalı kayıt için ters kayıt oluşturun.");
             if (e.Entity is DenetimKaydi && e.State != EntityState.Added)
                 throw new KapaliDonemIhlaliException("Denetim geçmişi değiştirilemez veya silinemez.");
+            if (e.Entity is Belge && e.State == EntityState.Deleted)
+                throw new KapaliDonemIhlaliException("Belgeler silinemez; gerekirse geçersiz işaretleyin.");
         }
 
         var kapaliDonemler = db.MaasDonemKapanislari.AsNoTracking()
@@ -59,6 +61,8 @@ internal static class VeriButunluguKorumasi
                 OdemeTalimatSatiri t => OturumDonemi(db, t.OdemeKontrolOturumuId),
                 OnayliOdemeListesi l => (l.DonemYil, l.DonemAy),
                 MutabakatFarki f => (f.DonemYil, f.DonemAy),
+                IcraKesintiKaydi ik => (ik.DonemYil, ik.DonemAy),
+                TahsilatTaksiti tt when e.State != EntityState.Added || tt.Gerceklesen.HasValue => (tt.DonemYil, tt.DonemAy),
                 MaliHareket h when h.IslemTuru != MaliIslemTuru.OncekiDonemDuzeltme => (h.DonemYil, h.DonemAy),
                 _ => null
             };
@@ -77,6 +81,9 @@ internal static class VeriButunluguKorumasi
                     throw new KapaliDonemIhlaliException(
                         "Kapatılmış dönemin toplamları değiştirilemez. Yalnızca yetkili yönetici gerekçeli yeniden açma yapabilir.");
             }
+
+            if (e.Entity is DonemTesisOnayi onay && kapaliIdler.Contains(onay.MaasDonemKapanisiId))
+                throw new KapaliDonemIhlaliException("Kapatılmış dönemin tesis onayları değiştirilemez.");
 
             if (e.Entity is MaasDonemKapanisi silinen && e.State == EntityState.Deleted)
                 throw new KapaliDonemIhlaliException("Maaş dönemi kayıtları silinemez.");

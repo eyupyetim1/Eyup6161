@@ -12,13 +12,59 @@ public sealed class BankaOdemeServisi : IBankaOdemeServisi
     private readonly IPayControlDbContext _db;
     private readonly IDonemKapanisServisi _donem;
     private readonly IMaliHareketServisi _defter;
+    private readonly IYetkiServisi _yetki;
 
-    public BankaOdemeServisi(IPayControlDbContext db, IDonemKapanisServisi donem, IMaliHareketServisi defter)
+    public BankaOdemeServisi(IPayControlDbContext db, IDonemKapanisServisi donem, IMaliHareketServisi defter, IYetkiServisi yetki)
     {
         _db = db;
         _donem = donem;
         _defter = defter;
+        _yetki = yetki;
     }
+
+    public async Task IptalEtAsync(Guid odemeId, string neden, string kullanici, CancellationToken ct = default)
+    {
+        await _yetki.DogrulaAsync(kullanici, KullaniciRolu.Muhasebe, "Banka/kasa ödemesi iptali", ct);
+        if (string.IsNullOrWhiteSpace(neden) || neden.Trim().Length < 10)
+            throw new InvalidOperationException("İptal gerekçesi zorunludur (en az 10 karakter).");
+
+        var odeme = await _db.BankaOdemeleri.FirstOrDefaultAsync(o => o.Id == odemeId, ct)
+                    ?? throw new InvalidOperationException("Ödeme bulunamadı veya zaten iptal edilmiş.");
+        if (odeme.HakEdisDonemYil is { } y && odeme.HakEdisDonemAy is { } a)
+            await _donem.EnsureDonemAcikAsync(y, a, ct);
+
+        odeme.IptalEdildi = true;
+        odeme.IptalZamani = DateTime.UtcNow;
+        odeme.IptalEden = kullanici;
+        odeme.IptalNedeni = neden.Trim();
+        // Aynı banka hareketi doğru kişiyle yeniden girilebilsin
+        odeme.TekillikAnahtari = $"IPTAL:{odeme.Id:N}:{odeme.TekillikAnahtari}";
+
+        var hareketler = await _db.MaliHareketler.AsNoTracking()
+            .Where(h => h.KaynakTuru == nameof(BankaOdemeKaydi) && h.KaynakReferans == odeme.Id.ToString() && !h.TersKayitMi)
+            .ToListAsync(ct);
+        foreach (var h in hareketler)
+            await _defter.DeftereEkleAsync(MaliHareketKurallari.TersKayit(h, $"Ödeme iptali: {neden}", kullanici,
+                DateOnly.FromDateTime(DateTime.Today)), true, ct);
+
+        _db.DenetimKayitlari.Add(new DenetimKaydi
+        {
+            PersonelId = odeme.PersonelId,
+            VarlikTuru = nameof(BankaOdemeKaydi),
+            VarlikId = odeme.Id,
+            Islem = "OdemeIptal",
+            EskiDeger = $"{odeme.OdemeKanali} {odeme.Tutar:N2} ({odeme.HakEdisDonemYil}-{odeme.HakEdisDonemAy:D2}) ref {odeme.ReferansNo}",
+            DegisiklikNedeni = neden,
+            KullaniciAdi = kullanici
+        });
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<BankaOdemeKaydi>> PersonelOdemeleriAsync(Guid personelId, CancellationToken ct = default) =>
+        await _db.BankaOdemeleri.AsNoTracking().IgnoreQueryFilters()
+            .Where(o => o.PersonelId == personelId)
+            .OrderByDescending(o => o.OdemeTarihi)
+            .ToListAsync(ct);
 
     public async Task<BankaOdemeKaydi> KaydetAsync(
         Guid personelId,

@@ -15,6 +15,8 @@ public class MutabakatFarki
     public Guid? PersonelId { get; set; }
     public string? TcKimlikNo { get; set; }
     public string? AdSoyad { get; set; }
+    /// <summary>Tesis / işyeri (boş: tüm tesisler).</summary>
+    public string? Tesis { get; set; }
 
     /// <summary>Aynı farkın tekrar mutabakatta güncellenmesi için anahtar.</summary>
     public string Anahtar { get; set; } = string.Empty;

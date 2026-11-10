@@ -9,6 +9,8 @@ public class OdemeKontrolOturumu
     public int DonemYil { get; set; }
     public int DonemAy { get; set; }
     public string? Sirket { get; set; }
+    /// <summary>Tesis / işyeri (boş: tüm tesisler).</summary>
+    public string? Tesis { get; set; }
 
     public string? BordroDosyaAdi { get; set; }
     public string? BankaDosyaAdi { get; set; }

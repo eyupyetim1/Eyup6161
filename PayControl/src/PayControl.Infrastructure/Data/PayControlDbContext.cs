@@ -34,6 +34,20 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
     public DbSet<MutabakatFarki> MutabakatFarklari => Set<MutabakatFarki>();
     public DbSet<DonemKapanisAnlikGoruntusu> DonemKapanisAnlikGoruntuleri => Set<DonemKapanisAnlikGoruntusu>();
     public DbSet<DonemKapanisOzeti> DonemKapanisOzetleri => Set<DonemKapanisOzeti>();
+    public DbSet<Tesis> Tesisler => Set<Tesis>();
+    public DbSet<DonemTesisOnayi> DonemTesisOnaylari => Set<DonemTesisOnayi>();
+    public DbSet<IcraDosyasi> IcraDosyalari => Set<IcraDosyasi>();
+    public DbSet<IcraKesintiKaydi> IcraKesintileri => Set<IcraKesintiKaydi>();
+    public DbSet<BesTanimi> BesTanimlari => Set<BesTanimi>();
+    public DbSet<Belge> Belgeler => Set<Belge>();
+    public DbSet<TahsilatPlani> TahsilatPlanlari => Set<TahsilatPlani>();
+    public DbSet<TahsilatTaksiti> TahsilatTaksitleri => Set<TahsilatTaksiti>();
+    public DbSet<BildirimAyari> BildirimAyarlari => Set<BildirimAyari>();
+    public DbSet<BildirimAlicisi> BildirimAlicilari => Set<BildirimAlicisi>();
+    public DbSet<BildirimKurali> BildirimKurallari => Set<BildirimKurali>();
+    public DbSet<BildirimKaydi> BildirimKayitlari => Set<BildirimKaydi>();
+    public DbSet<YedekKaydi> YedekKayitlari => Set<YedekKaydi>();
+    public DbSet<UygulamaAyari> UygulamaAyarlari => Set<UygulamaAyari>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -128,6 +142,78 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.HasIndex(x => new { x.PersonelId, x.HakEdisDonemYil, x.HakEdisDonemAy });
             e.HasIndex(x => x.ReferansNo);
             e.HasIndex(x => x.TekillikAnahtari).IsUnique();
+            // İptal edilen ödemeler silinmez; varsayılan sorgulardan gizlenir.
+            e.HasQueryFilter(x => !x.IptalEdildi);
+        });
+
+        modelBuilder.Entity<Tesis>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.Ad).IsUnique();
+            e.HasIndex(x => x.Kod).IsUnique();
+            e.Property(x => x.Ad).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Kod).HasMaxLength(50).IsRequired();
+        });
+        modelBuilder.Entity<DonemTesisOnayi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.MaasDonemKapanisiId, x.TesisAd }).IsUnique();
+        });
+        modelBuilder.Entity<IcraDosyasi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.ToplamBorc).HasPrecision(18, 2);
+            e.Property(x => x.Kesilen).HasPrecision(18, 2);
+            e.Property(x => x.KesintiOrani).HasPrecision(9, 4);
+            e.Ignore(x => x.Kalan);
+            e.HasIndex(x => new { x.PersonelId, x.Sira });
+        });
+        modelBuilder.Entity<IcraKesintiKaydi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Tutar).HasPrecision(18, 2);
+            e.HasOne(x => x.IcraDosyasi).WithMany(d => d.Kesintiler).HasForeignKey(x => x.IcraDosyasiId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<BesTanimi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Oran).HasPrecision(9, 4);
+        });
+        modelBuilder.Entity<Belge>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.VarlikTuru, x.VarlikId });
+            e.HasIndex(x => x.PersonelId);
+        });
+        modelBuilder.Entity<TahsilatPlani>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Tutar).HasPrecision(18, 2);
+            e.Property(x => x.AylikTutar).HasPrecision(18, 2);
+            e.Property(x => x.KalanBorc).HasPrecision(18, 2);
+        });
+        modelBuilder.Entity<TahsilatTaksiti>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Planlanan).HasPrecision(18, 2);
+            e.Property(x => x.Gerceklesen).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.TahsilatPlaniId, x.DonemYil, x.DonemAy }).IsUnique();
+            e.HasOne(x => x.TahsilatPlani).WithMany(p => p.Taksitler).HasForeignKey(x => x.TahsilatPlaniId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<BildirimAyari>(e => e.HasKey(x => x.Id));
+        modelBuilder.Entity<BildirimAlicisi>(e => e.HasKey(x => x.Id));
+        modelBuilder.Entity<BildirimKurali>(e => e.HasKey(x => x.Id));
+        modelBuilder.Entity<BildirimKaydi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.OlayAnahtari).IsUnique();
+            e.HasIndex(x => x.OlusturmaZamani);
+        });
+        modelBuilder.Entity<YedekKaydi>(e => e.HasKey(x => x.Id));
+        modelBuilder.Entity<UygulamaAyari>(e =>
+        {
+            e.HasKey(x => x.Anahtar);
+            e.Property(x => x.Anahtar).HasMaxLength(100);
         });
 
         modelBuilder.Entity<PersonelBelge>(e =>

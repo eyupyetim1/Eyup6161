@@ -14,6 +14,8 @@ public class DonemKapanisAnlikGoruntusu
     public string TcKimlikNo { get; set; } = string.Empty;
     public string AdSoyad { get; set; } = string.Empty;
     public string? Iban { get; set; }
+    /// <summary>Tesis / işyeri (boş: tüm tesisler).</summary>
+    public string? Tesis { get; set; }
     public decimal? MaasTutar { get; set; }
     public decimal BordroNet { get; set; }
     public decimal Odenen { get; set; }

@@ -13,6 +13,8 @@ public class OnayliOdemeListesi
     public int Surum { get; set; } = 1;
     public int DonemYil { get; set; }
     public int DonemAy { get; set; }
+    /// <summary>Tesis / işyeri (boş: tüm tesisler).</summary>
+    public string? Tesis { get; set; }
 
     public string DosyaAdi { get; set; } = string.Empty;
     public string? DosyaYolu { get; set; }

@@ -80,14 +80,14 @@ public abstract class TestOrtami : IAsyncLifetime
     }
 
     protected sealed record BordroSatir(Personel P, decimal Net, decimal? Maas = null, decimal? Gun = 30, decimal? Avans = null,
-        decimal? Icra = null, decimal? Bes = null, DateOnly? Giris = null, DateOnly? Cikis = null, string? Iban = null);
+        decimal? Icra = null, decimal? Bes = null, DateOnly? Giris = null, DateOnly? Cikis = null, string? Iban = null, decimal? GeriOdeme = null);
 
     protected static byte[] BordroExcel(IEnumerable<BordroSatir> satirlar)
     {
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Bordro");
         string[] b = ["T.C. KİMLİK NO", "ADI SOYADI", "İŞYERİ", "GÖREVİ", "MAAŞ", "GİRİŞ TARİHİ", "ÇIKIŞ TARİHİ", "GÜN",
-            "NET İSTİHKAK", "IBAN NO", "AVANS", "İCRA", "OTO.KAT.BES"];
+            "NET İSTİHKAK", "IBAN NO", "AVANS", "İCRA", "OTO.KAT.BES", "FAZLA ÖDEME KESİNTİSİ"];
         for (var i = 0; i < b.Length; i++) ws.Cell(1, i + 1).Value = b[i];
         var r = 2;
         foreach (var s in satirlar)
@@ -105,6 +105,7 @@ public abstract class TestOrtami : IAsyncLifetime
             if (s.Avans is { } a) ws.Cell(r, 11).Value = a;
             if (s.Icra is { } ic) ws.Cell(r, 12).Value = ic;
             if (s.Bes is { } be) ws.Cell(r, 13).Value = be;
+            if (s.GeriOdeme is { } go) ws.Cell(r, 14).Value = go;
             r++;
         }
         using var ms = new MemoryStream();
