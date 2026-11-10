@@ -171,7 +171,7 @@ public static class EkranGoruntusuModu
         if (w.IsVisible) w.Close();
         File.WriteAllText(Path.Combine(klasor, "SIFRE-DENETIMI-TAMAM.txt"), "Şifre değiştirme penceresi doğrulandı.");
         // Sonraki adımlar için şifre geri alınır
-        await sp.GetRequiredService<IKimlikServisi>().SifreDegistirAsync("admin", "YeniSifre2026", "Admin123!x", default);
+        await sp.GetRequiredService<IKimlikServisi>().SifreDegistirAsync("admin", "YeniSifre2026", "Kontrol2026x", default);
     }
 
     /// <summary>Penceredeki ilk TabControl'de sekme seçer (negatif: sondan).</summary>
