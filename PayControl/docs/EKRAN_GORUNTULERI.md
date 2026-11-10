@@ -24,3 +24,4 @@ Bu mod geçici bir veritabanı kullanır, kullanıcının verisine dokunmaz. Git
 | Denetim geçmişi | ![](ekran-goruntuleri/12-denetim-gecmisi.png) |
 | Ayarlar ve yönetim — kullanıcılar | ![](ekran-goruntuleri/13-ayarlar-yonetim.png) |
 | Personel kartı — icra / BES / tahsilat | ![](ekran-goruntuleri/14-personel-icra-bes-tahsilat.png) |
+| Çıkış takibi (İK çıkışı unutursa) | ![](ekran-goruntuleri/15-cikis-takibi.png) |

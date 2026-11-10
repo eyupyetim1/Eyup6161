@@ -129,12 +129,21 @@ public sealed class DurumRozetiConverter : IValueConverter
             BildirimKanali.WhatsApp => (RozetTonu.Basari, "WhatsApp"),
             _ => (RozetTonu.Mor, "E-posta + WhatsApp")
         },
+        PayControl.Application.Interfaces.CikisTakipDurumu cd => cd switch
+        {
+            PayControl.Application.Interfaces.CikisTakipDurumu.Gecikti => (RozetTonu.Tehlike, "Gecikti — çıkış yapılmadı"),
+            PayControl.Application.Interfaces.CikisTakipDurumu.Bekliyor => (RozetTonu.Uyari, "Bekliyor"),
+            PayControl.Application.Interfaces.CikisTakipDurumu.CikisYapildi => (RozetTonu.Basari, "Çıkış yapıldı"),
+            _ => (RozetTonu.Notr, "İptal")
+        },
         BildirimTetikleyici bt => bt switch
         {
             BildirimTetikleyici.ZamanlanmisRapor => (RozetTonu.Bilgi, "Zamanlanmış rapor"),
             BildirimTetikleyici.UyariOzeti => (RozetTonu.Uyari, "Uyarı özeti"),
             BildirimTetikleyici.DonemKapandi => (RozetTonu.Mor, "Dönem kapandı"),
             BildirimTetikleyici.MutabakatFarkiOlustu => (RozetTonu.Tehlike, "Mutabakat farkı"),
+            BildirimTetikleyici.CikisTalimatiVerildi => (RozetTonu.Mor, "Çıkış talimatı verildi"),
+            BildirimTetikleyici.CikisTalimatiGecikti => (RozetTonu.Tehlike, "Çıkış talimatı gecikti"),
             _ => (RozetTonu.Tehlike, "Yedek hatası")
         },
         BildirimSikligi bs => bs switch

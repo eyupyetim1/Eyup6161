@@ -5,9 +5,10 @@ public sealed class GorevCalismaSonucu
     public bool YedekAlindi { get; init; }
     public int CalisanKural { get; init; }
     public int YenidenDenenen { get; init; }
+    public int CikisHatirlatma { get; init; }
     public IReadOnlyList<string> Hatalar { get; init; } = Array.Empty<string>();
     public override string ToString() =>
-        $"Yedek: {(YedekAlindi ? "alındı" : "gerekmedi")}, zamanlanmış kural: {CalisanKural}, yeniden denenen bildirim: {YenidenDenenen}" +
+        $"Yedek: {(YedekAlindi ? "alındı" : "gerekmedi")}, zamanlanmış kural: {CalisanKural}, yeniden denenen bildirim: {YenidenDenenen}, çıkış hatırlatması: {CikisHatirlatma}" +
         (Hatalar.Count == 0 ? "" : $", hata: {string.Join(" | ", Hatalar)}");
 }
 

@@ -70,6 +70,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<TesislerViewModel>();
         services.AddTransient<YonetimViewModel>();
         services.AddTransient<SifreDegistirViewModel>();
+        services.AddTransient<CikisTakibiViewModel>();
+        services.AddTransient<CikisTakibiWindow>();
         services.AddTransient<RaporMerkeziWindow>();
         services.AddTransient<BildirimlerWindow>();
         services.AddTransient<UyariMerkeziWindow>();
@@ -89,7 +91,7 @@ public partial class App : System.Windows.Application
             try
             {
                 var sonuc = await Task.Run(() => Services.GetRequiredService<PayControl.Application.Interfaces.IZamanlanmisGorevServisi>().CalistirAsync(DateTime.Now));
-                if (sonuc.YedekAlindi || sonuc.CalisanKural > 0 || sonuc.YenidenDenenen > 0 || sonuc.Hatalar.Count > 0)
+                if (sonuc.YedekAlindi || sonuc.CalisanKural > 0 || sonuc.YenidenDenenen > 0 || sonuc.CikisHatirlatma > 0 || sonuc.Hatalar.Count > 0)
                     Log.Information("Zamanlanmış görevler: {Sonuc}", sonuc.ToString());
             }
             catch (Exception ex) { Log.Warning(ex, "Zamanlanmış görev hatası"); }

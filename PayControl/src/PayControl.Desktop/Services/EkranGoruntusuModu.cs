@@ -124,6 +124,10 @@ public static class EkranGoruntusuModu
         // 13) Ayarlar ve yönetim — kullanıcılar
         await KaydetAsync(sp.GetRequiredService<YonetimWindow>(), Path.Combine(klasor, "13-ayarlar-yonetim.png"));
 
+        // 15) Çıkış takibi
+        var takipVm = sp.GetRequiredService<CikisTakibiViewModel>();
+        await KaydetAsync(new CikisTakibiWindow(takipVm), Path.Combine(klasor, "15-cikis-takibi.png"));
+
         // 14) Personel kartı — icra / BES / tahsilat
         var detayVm2 = sp.GetRequiredService<PersonelDetayViewModel>();
         await KaydetAsync(new PersonelDetayWindow(detayVm2), Path.Combine(klasor, "14-personel-icra-bes-tahsilat.png"),
@@ -362,6 +366,20 @@ public static class EkranGoruntusuModu
             Ad = "Dönem kapandığında bildir", Tetikleyici = BildirimTetikleyici.DonemKapandi, Kanal = BildirimKanali.Eposta, AliciRolu = "Yönetici"
         }, k);
         await bildirim.WhatsAppBaglantisiAsync("05321112233", "Eylül 2026 bordro özeti hazır.", k);
+
+        // Çıkış talimatları: İK'ya verildi; biri unutuldu ve maaş yatmaya devam etti
+        var ik = await bildirim.AliciKaydetAsync(new BildirimAlicisi { AdSoyad = "Ece Kara", Eposta = "ik@ornek.test", Telefon = "05351112233", Rol = "İnsan kaynakları" }, k);
+        var cikisSrv2 = sp.GetRequiredService<ICikisTalimatServisi>();
+        await cikisSrv2.OlusturAsync(new CikisTalimatiOlusturDto
+        {
+            PersonelId = idler["10000000004"], SonCalismaGunu = new DateOnly(2026, 9, 18), Neden = "Devamsızlık", SorumluAliciId = ik.Id,
+            Aciklama = "3 gün üst üste gelmedi, tutanak tutuldu."
+        }, k);
+        await bankaSrv.KaydetAsync(idler["10000000004"], new DateOnly(2026, 11, 5), NetHesapla(28500), 2026, 10, Iban(4), "DKT-2610-004", k);
+        await cikisSrv2.OlusturAsync(new CikisTalimatiOlusturDto
+        {
+            PersonelId = idler["10000000007"], SonCalismaGunu = new DateOnly(2026, 11, 30), Neden = "İstifa", SorumluAliciId = ik.Id
+        }, k);
 
         var kimlik = sp.GetRequiredService<IKimlikServisi>();
         await kimlik.OlusturAsync(new KullaniciOlusturDto { KullaniciAdi = "muhasebe1", Sifre = "Muhasebe2026", Rol = KullaniciRolu.Muhasebe, AdSoyad = "Seda Uçar", Eposta = "seda@ornek.test" }, k);

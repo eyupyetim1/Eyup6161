@@ -197,6 +197,7 @@ public partial class MainViewModel : ObservableObject
     private static void Ac<TPencere>() where TPencere : System.Windows.Window => ArayuzYardimcisi.PencereAc<TPencere>();
 
     [RelayCommand] private void RaporMerkezi() => Ac<RaporMerkeziWindow>();
+    [RelayCommand] private void CikisTakibi() { Ac<CikisTakibiWindow>(); _ = YenileAsync(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void Bildirimler() => Ac<BildirimlerWindow>();
     [RelayCommand] private void Tesisler() { Ac<TesislerWindow>(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void DenetimGecmisi() => Ac<DenetimGecmisiWindow>();

@@ -14,7 +14,11 @@ public enum BildirimTetikleyici
     UyariOzeti = 1,
     DonemKapandi = 2,
     MutabakatFarkiOlustu = 3,
-    YedekHatasi = 4
+    YedekHatasi = 4,
+    /// <summary>Yeni çıkış talimatı verildi (İK'ya iş ataması).</summary>
+    CikisTalimatiVerildi = 5,
+    /// <summary>Çıkış talimatının son günü geçti, çıkış kaydı hâlâ yok (günlük hatırlatma).</summary>
+    CikisTalimatiGecikti = 6
 }
 
 public enum RaporBicimi { Excel = 0, Pdf = 1, Csv = 2 }
@@ -38,5 +42,6 @@ public enum RaporTuru
     KapanisOzetleri = 14,
     PersonelBakiyeListesi = 15,
     IcraDosyalari = 16,
-    TesisPersonelListesi = 17
+    TesisPersonelListesi = 17,
+    CikisTalimatTakibi = 18
 }

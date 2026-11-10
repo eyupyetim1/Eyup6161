@@ -35,7 +35,8 @@ public partial class BildirimlerViewModel : ObservableObject
     public IReadOnlyList<Secenek<BildirimTetikleyici>> Tetikleyiciler { get; } = ArayuzYardimcisi.EnumSecenekleri(
         (BildirimTetikleyici.ZamanlanmisRapor, "Zamanlanmış rapor"), (BildirimTetikleyici.UyariOzeti, "Uyarı özeti (zamanlanmış)"),
         (BildirimTetikleyici.DonemKapandi, "Olay: dönem kapandı"), (BildirimTetikleyici.MutabakatFarkiOlustu, "Olay: mutabakat farkı"),
-        (BildirimTetikleyici.YedekHatasi, "Olay: yedekleme hatası"));
+        (BildirimTetikleyici.YedekHatasi, "Olay: yedekleme hatası"),
+        (BildirimTetikleyici.CikisTalimatiVerildi, "Olay: çıkış talimatı verildi"), (BildirimTetikleyici.CikisTalimatiGecikti, "Olay: çıkış talimatı gecikti (günlük)"));
     public IReadOnlyList<Secenek<BildirimSikligi>> Sikliklar { get; } = ArayuzYardimcisi.EnumSecenekleri(
         (BildirimSikligi.Gunluk, "Her gün"), (BildirimSikligi.Haftalik, "Her hafta (gün: 1=Pzt … 7=Paz)"), (BildirimSikligi.Aylik, "Her ay (gün: 1–28)"));
     public IReadOnlyList<Secenek<RaporBicimi>> Bicimler { get; } = ArayuzYardimcisi.EnumSecenekleri(

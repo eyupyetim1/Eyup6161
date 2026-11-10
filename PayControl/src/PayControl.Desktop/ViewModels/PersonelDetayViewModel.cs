@@ -151,4 +151,12 @@ public partial class PersonelDetayViewModel : ObservableObject
         var sonuc = await _cikisServisi.OdemeleriInceleAsync(son.Id);
         KontrolOzeti = $"{sonuc.Siniflandirma}: {sonuc.Gerekce}";
     }
+
+    [RelayCommand]
+    private async Task CikisTalimatiVerAsync()
+    {
+        if (Detay is null) return;
+        ArayuzYardimcisi.PencereAc<CikisTakibiWindow>(w => w.Vm.PersoneleOdaklan(Detay.Id));
+        await YukleAsync(Detay.Id);
+    }
 }

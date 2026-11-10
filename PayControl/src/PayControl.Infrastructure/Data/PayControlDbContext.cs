@@ -41,6 +41,7 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
     public DbSet<BesTanimi> BesTanimlari => Set<BesTanimi>();
     public DbSet<Belge> Belgeler => Set<Belge>();
     public DbSet<TahsilatPlani> TahsilatPlanlari => Set<TahsilatPlani>();
+    public DbSet<CikisTalimati> CikisTalimatlari => Set<CikisTalimati>();
     public DbSet<TahsilatTaksiti> TahsilatTaksitleri => Set<TahsilatTaksiti>();
     public DbSet<BildirimAyari> BildirimAyarlari => Set<BildirimAyari>();
     public DbSet<BildirimAlicisi> BildirimAlicilari => Set<BildirimAlicisi>();
@@ -184,6 +185,13 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.HasKey(x => x.Id);
             e.HasIndex(x => new { x.VarlikTuru, x.VarlikId });
             e.HasIndex(x => x.PersonelId);
+        });
+        modelBuilder.Entity<CikisTalimati>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.PersonelId, x.Durum });
+            e.HasOne(x => x.Personel).WithMany().HasForeignKey(x => x.PersonelId).OnDelete(DeleteBehavior.Restrict);
+            e.Property(x => x.Neden).HasMaxLength(500);
         });
         modelBuilder.Entity<TahsilatPlani>(e =>
         {

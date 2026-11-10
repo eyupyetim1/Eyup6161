@@ -58,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEpostaGonderici, Bildirim.EpostaGonderici>();
         services.AddSingleton<IWhatsAppGonderici, Bildirim.WhatsAppGonderici>();
         services.AddScoped<IBildirimServisi, BildirimServisi>();
+        services.AddScoped<ICikisTalimatServisi, CikisTalimatServisi>();
         services.AddSingleton<IZamanlanmisGorevServisi, ZamanlanmisGorevServisi>();
         services.AddScoped<IGuncellemeServisi, Platform.GuncellemeServisi>();
         services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();

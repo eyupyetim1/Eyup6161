@@ -39,6 +39,7 @@ public interface IPayControlDbContext
     DbSet<BesTanimi> BesTanimlari { get; }
     DbSet<Belge> Belgeler { get; }
     DbSet<TahsilatPlani> TahsilatPlanlari { get; }
+    DbSet<CikisTalimati> CikisTalimatlari { get; }
     DbSet<TahsilatTaksiti> TahsilatTaksitleri { get; }
     DbSet<BildirimAyari> BildirimAyarlari { get; }
     DbSet<BildirimAlicisi> BildirimAlicilari { get; }

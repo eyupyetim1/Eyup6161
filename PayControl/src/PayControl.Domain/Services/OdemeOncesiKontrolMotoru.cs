@@ -33,6 +33,8 @@ public sealed class OdemeKontrolBaglami
     public IReadOnlyList<IcraDosyasi> IcraDosyalari { get; init; } = Array.Empty<IcraDosyasi>();
     public IReadOnlyList<BesTanimi> BesTanimlari { get; init; } = Array.Empty<BesTanimi>();
     public IReadOnlyList<TahsilatPlani> TahsilatPlanlari { get; init; } = Array.Empty<TahsilatPlani>();
+    /// <summary>Henüz çıkış kaydı girilmemiş (bekleyen) çıkış talimatları.</summary>
+    public IReadOnlyList<CikisTalimati> CikisTalimatlari { get; init; } = Array.Empty<CikisTalimati>();
 }
 
 /// <summary>Tek bir kontrol kuralının bulgusu.</summary>
@@ -159,6 +161,7 @@ public sealed class OdemeOncesiKontrolMotoru
                 AvansKurallari(b, personel, bordro, donemSonu, bulgular);
                 KesintiVeGunKurallari(b, personel, bordro, donemBasi, donemSonu, bulgular);
                 IcraBesTahsilatKurallari(b, personel, bordro, donemBasi, donemSonu, bulgular);
+                CikisTalimatiKurallari(b, personel, donemBasi, donemSonu, bulgular);
             }
             else
             {
@@ -186,6 +189,7 @@ public sealed class OdemeOncesiKontrolMotoru
             if (talimatlar.Count > 1)
                 bulgular.Add(new(OdemeKontrolSonucu.MukerrerOdemeRiski, true, false, $"Aynı kişiye {talimatlar.Count} ayrı ödeme talimatı."));
             GecmisOdemeKurallari(b, p, bulgular);
+            CikisTalimatiKurallari(b, p, donemBasi, donemSonu, bulgular);
             Uygula(satir, bulgular);
             sonuc.Add(satir);
         }
@@ -378,6 +382,26 @@ public sealed class OdemeOncesiKontrolMotoru
             bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
                 "Personel kartı 'işten ayrıldı' durumunda ancak açık çalışma dönemi var; kayıtlar çelişkili."));
         }
+    }
+
+    /// <summary>
+    /// Yönetici çıkış talimatı verdiği hâlde İK çıkış kaydını girmemişse: son günden sonrası için ücret ödenmemeli.
+    /// Son gün dönemden önceyse tüm ay, dönem içindeyse son günden sonraki günler hak edilmez.
+    /// </summary>
+    private static void CikisTalimatiKurallari(OdemeKontrolBaglami b, Personel personel, DateOnly donemBasi, DateOnly donemSonu,
+        List<KontrolBulgusu> bulgular)
+    {
+        var t = b.CikisTalimatlari
+            .Where(x => x.PersonelId == personel.Id && x.Durum == CikisTalimatDurumu.Bekliyor && x.SonCalismaGunu < donemSonu)
+            .OrderBy(x => x.SonCalismaGunu).FirstOrDefault();
+        if (t is null) return;
+        var kapsam = t.SonCalismaGunu < donemBasi
+            ? "Bu dönemin tamamı son çalışma gününden sonra; ücret beklenmez."
+            : $"Bu dönemde yalnız {t.SonCalismaGunu.Day} günlük ücret beklenir.";
+        bulgular.Add(new(OdemeKontrolSonucu.IstenCikisKontrolu, true, false,
+            $"ÇIKIŞ TALİMATI UYGULANMAMIŞ: {t.TalepZamani.ToLocalTime():dd.MM.yyyy} tarihinde {t.TalepEden} tarafından son çalışma günü " +
+            $"{t.SonCalismaGunu:dd.MM.yyyy} olarak çıkış talimatı verildi ({t.Neden}) ama işten çıkış kaydı yapılmadı" +
+            (string.IsNullOrWhiteSpace(t.Sorumlu) ? "" : $" (sorumlu: {t.Sorumlu})") + $". {kapsam}"));
     }
 
     private static void GecmisOdemeKurallari(OdemeKontrolBaglami b, Personel personel, List<KontrolBulgusu> bulgular)

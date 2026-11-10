@@ -34,6 +34,13 @@
                             <TextBlock Text="Çıkış ödemelerini incele"/>
                         </StackPanel>
                     </Button>
+                    <Button Style="{StaticResource SecondaryButton}" Command="{Binding CikisTalimatiVerCommand}" Margin="0,0,8,0"
+                            ToolTip="İK'ya çıkış talimatı verin; çıkış yapılana kadar takip edilir ve ödeme kontrolü durdurur">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE724;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                            <TextBlock Text="Çıkış talimatı ver"/>
+                        </StackPanel>
+                    </Button>
                     <Button Style="{StaticResource DangerButton}" Command="{Binding IstenCikisOlusturCommand}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7E8;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>

@@ -500,7 +500,8 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
             OncekiOnayliOdemeler = oncekiListeler,
             IcraDosyalari = await _db.IcraDosyalari.AsNoTracking().Include(d => d.Kesintiler).ToListAsync(ct),
             BesTanimlari = await _db.BesTanimlari.AsNoTracking().ToListAsync(ct),
-            TahsilatPlanlari = await _db.TahsilatPlanlari.AsNoTracking().Include(t => t.Taksitler).ToListAsync(ct)
+            TahsilatPlanlari = await _db.TahsilatPlanlari.AsNoTracking().Include(t => t.Taksitler).ToListAsync(ct),
+            CikisTalimatlari = await _db.CikisTalimatlari.AsNoTracking().Where(t => t.Durum == CikisTalimatDurumu.Bekliyor).ToListAsync(ct)
         });
 
         // Listeden çıkarılan talimatlar ilgili kişinin satırında görünür kalsın

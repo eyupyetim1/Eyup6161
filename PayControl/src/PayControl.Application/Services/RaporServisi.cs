@@ -36,6 +36,7 @@ public sealed class RaporServisi : IRaporServisi
         new(RaporTuru.KesintiRaporu, "Kesinti raporu", "Bordro", "Dönem bazında icra, BES, avans, fazla ödeme ve diğer kesintiler."),
         new(RaporTuru.IcraDosyalari, "İcra dosyaları", "Bordro", "İcra dosyaları, kesilen ve kalan tutarlar."),
         new(RaporTuru.GirisCikisDevirHizi, "Giriş-çıkış ve devir hızı", "Personel", "Tesis ve ay bazında işe giriş, çıkış ve devir hızı."),
+        new(RaporTuru.CikisTalimatTakibi, "Çıkış talimatı takibi", "Personel", "Verilen çıkış talimatları, uygulanıp uygulanmadığı, son çalışma gününden sonra yapılan ödemeler ve tahmini fazla ödeme."),
         new(RaporTuru.SgkCikisDurumu, "SGK çıkış bildirgesi durumu", "Personel", "İşten çıkışların SGK bildirge durumu ve gecikmeler."),
         new(RaporTuru.MaasDegisiklikleri, "Maaş değişiklikleri", "Personel", "Personel kartlarındaki maaş değişiklikleri, kullanıcı ve gerekçe.")
     ];
@@ -66,6 +67,7 @@ public sealed class RaporServisi : IRaporServisi
             RaporTuru.IcraDosyalari => await Icra(kapsam, ct),
             RaporTuru.GirisCikisDevirHizi => GirisCikis(p, kapsam.Values),
             RaporTuru.SgkCikisDurumu => await Sgk(p, kapsam, ct),
+            RaporTuru.CikisTalimatTakibi => await CikisTakibi(p, kapsam, ct),
             RaporTuru.MaasDegisiklikleri => await MaasDegisiklikleri(p, kapsam, ct),
             _ => throw new ArgumentOutOfRangeException(nameof(tur))
         };
@@ -468,6 +470,30 @@ public sealed class RaporServisi : IRaporServisi
              new("Bildirge tarihi", RaporKolonTuru.Tarih, 11), new("Bekleyen gün", RaporKolonTuru.Sayi, 9), new("Onaylayan", Genislik: 10)],
             satirlar, null,
             [("Çıkış", cikislar.Count.ToString(Tr)), ("SGK bekleyen", cikislar.Count(c => c.SgkCikisDurumu != SgkCikisDurumu.Verildi).ToString(Tr))]);
+    }
+
+    private async Task<Tablo> CikisTakibi(RaporParametreleri p, Dictionary<Guid, Personel> kapsam, CancellationToken ct)
+    {
+        var liste = (await CikisTalimatServisi.HesaplaAsync(_db, new CikisTakipFiltre { Baslangic = p.Baslangic }, DateOnly.FromDateTime(DateTime.Today), ct))
+            .Where(s => kapsam.ContainsKey(s.PersonelId)).ToList();
+        string Durum(CikisTakipDurumu d) => d switch
+        {
+            CikisTakipDurumu.Gecikti => "GECİKTİ", CikisTakipDurumu.Bekliyor => "Bekliyor", CikisTakipDurumu.CikisYapildi => "Çıkış yapıldı", _ => "İptal"
+        };
+        var satirlar = liste.Select(s => new object?[]
+        {
+            s.AdSoyad, s.Tesis ?? TesisYok, s.Kaynak, s.SonCalismaGunu, s.Neden, s.TalepEden, Durum(s.Durum), s.GecikmeGun == 0 ? null : s.GecikmeGun,
+            s.CikisKaydiTarihi, s.CikisiYapan, s.Odemeler.Count, s.SonGunSonrasiOdenen, s.TahminiFazlaOdeme, s.SonrakiBordroSayisi
+        }).ToList();
+        return new Tablo(
+            [new("Personel", Genislik: 22), new("Tesis", Genislik: 14), new("Kaynak", Genislik: 12), new("Son çalışma günü", RaporKolonTuru.Tarih, 11),
+             new("Neden", Genislik: 16), new("Talimatı veren", Genislik: 10), new("Durum", Genislik: 11), new("Gecikme (gün)", RaporKolonTuru.Sayi, 8),
+             new("Çıkış kaydı", RaporKolonTuru.Tarih, 11), new("Çıkışı yapan", Genislik: 10), new("Ödeme adedi", RaporKolonTuru.Sayi, 7),
+             new("Son gün sonrası ödenen", RaporKolonTuru.Tutar, 13), new("Tahmini fazla ödeme", RaporKolonTuru.Tutar, 13), new("Sonraki bordro", RaporKolonTuru.Sayi, 8)],
+            satirlar, Topla(satirlar, 10, 11, 12, 13),
+            [("Geciken talimat", liste.Count(s => s.Durum == CikisTakipDurumu.Gecikti).ToString(Tr)),
+             ("Bekleyen", liste.Count(s => s.Durum == CikisTakipDurumu.Bekliyor).ToString(Tr)),
+             ("Tahmini fazla ödeme", liste.Sum(s => s.TahminiFazlaOdeme).ToString("N2", Tr))]);
     }
 
     private async Task<Tablo> MaasDegisiklikleri(RaporParametreleri p, Dictionary<Guid, Personel> kapsam, CancellationToken ct)

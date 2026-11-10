@@ -22,6 +22,29 @@ public sealed class UyariServisi : IUyariServisi
         string Ad(Guid id) => personeller.TryGetValue(id, out var p) ? p.AdSoyad : "?";
         var bugun = DateOnly.FromDateTime(DateTime.Today);
 
+        // Çıkış talimatları: İK uygulamadıysa veya son günden sonra ödeme yapıldıysa
+        foreach (var c in await CikisTalimatServisi.HesaplaAsync(_db, new CikisTakipFiltre { YalnizSorunlu = true }, bugun, ct))
+        {
+            if (c.Durum == CikisTakipDurumu.Gecikti)
+                liste.Add(new UyariDto
+                {
+                    Seviye = UyariSeviyesi.Kritik, Kategori = "Çıkış talimatı",
+                    Baslik = $"{c.AdSoyad}: çıkış talimatı {c.GecikmeGun} gündür uygulanmadı",
+                    Aciklama = $"Son çalışma günü {c.SonCalismaGunu:dd.MM.yyyy}, talimatı veren {c.TalepEden}" + (c.Sorumlu is null ? "" : $", sorumlu {c.Sorumlu}") +
+                               $". Neden: {c.Neden}." + (c.TahminiFazlaOdeme > 0 ? $" Şimdiden {c.TahminiFazlaOdeme:N2} TL hak edilmemiş ödeme yapılmış." : ""),
+                    Tesis = c.Tesis, PersonelId = c.PersonelId, Eylem = "Çıkış Takibi → Çıkışı kaydet"
+                });
+            if (c.TahminiFazlaOdeme > 0 || c.SonrakiBordroSayisi > 0)
+                liste.Add(new UyariDto
+                {
+                    Seviye = UyariSeviyesi.Kritik, Kategori = "Çıkış sonrası ödeme",
+                    Baslik = $"{c.AdSoyad}: son çalışma gününden sonra {c.TahminiFazlaOdeme:N2} TL hak edilmemiş ödeme",
+                    Aciklama = $"Son gün {c.SonCalismaGunu:dd.MM.yyyy}. {c.OdemeOzeti}." +
+                               (c.SonrakiBordroSayisi > 0 ? $" Sonraki {c.SonrakiBordroSayisi} ay bordrosunda hâlâ ücret var." : ""),
+                    Tesis = c.Tesis, PersonelId = c.PersonelId, Eylem = "Çıkış Takibi → ödemeleri inceleyin; fazla ödemeyi hesap ekstresinden kesinleştirin"
+                });
+        }
+
         // Açık mutabakat farkları
         foreach (var f in await _db.MutabakatFarklari.AsNoTracking().Where(f => f.Durum == FarkDurumu.Acik).ToListAsync(ct))
             liste.Add(new UyariDto

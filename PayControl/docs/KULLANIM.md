@@ -1,4 +1,4 @@
-# PayControl — Kullanım Kılavuzu (1.3)
+# PayControl — Kullanım Kılavuzu (1.3.1)
 
 ## Kurulum (Windows 10/11 x64)
 
@@ -35,6 +35,18 @@ Hesap ekstresi, maaş geçmişi, avanslar, işe giriş/çıkış, çıkış ve S
 - **Tahsilat planı:** kesinleşmiş fazla ödeme için taksit sayısı ve ilk ay. Bordroya **FAZLA ÖDEME KESİNTİSİ** kolonu eklendiğinde taksitlere işlenir ve geri ödeme borcundan düşer.
 - **Ödeme iptali:** yanlış girilmiş banka/kasa ödemesini seçip nedenini yazın. Kayıt silinmez, ekstrede ters kayıt oluşur, doğru ödeme yeniden girilebilir. Kapalı dönemde yapılamaz.
 - **Belgeler:** istifa dilekçesi, ibraname, icra yazısı gibi dosyalar eklenir; kopyası güvenli depoya alınır ve SHA-256 ile korunur. Belgeler silinmez, gerekçeyle geçersiz kılınır.
+
+## Çıkış takibi (İK çıkışı unutursa)
+
+Bir personelin çıkarılmasını İK'ya söylediğinizde bunu **Çıkış Takibi** ekranından (veya personel kartında **Çıkış talimatı ver**) kaydedin:
+
+1. Personeli, **son çalışma gününü**, nedeni ve çıkışı yapacak kişiyi seçin → **Talimatı kaydet ve bildir**. Sorumluya e-posta gider (WhatsApp ayarlıysa WhatsApp da).
+2. İK çıkış kaydını girince talimat otomatik olarak **Çıkış yapıldı** olur. İsterseniz **Çıkışı şimdi kaydet** ile kendiniz de yapabilirsiniz.
+3. Son gün geçtiği hâlde çıkış yapılmadıysa satır kırmızı **Gecikti** olur ve kaç gündür beklediği yazar. Sorumluya her gün bir hatırlatma gider (program kapalıyken de çalışması için Ayarlar → Zamanlanmış görevler).
+4. Alttaki tabloda **son çalışma gününden sonra yapılan her ödeme** görünür: ödeme tarihi, hangi ay için, banka/kasa, tutar, referans ve **ne için ödendiği**. Çıkış ayında yalnız çalışılan günlerin ücreti hak edilmiş sayılır; sonraki ayların ücreti tamamen hak edilmemiştir. Kırmızı sütun tahmini geri istenmesi gereken tutardır (kesinleştirmek için personel kartı → hesap ekstresi).
+5. Çıkışı yapılmamış talimatı olan kişi **ödeme öncesi kontrolde kritik** olarak durdurulur; böylece unutulsa bile bir sonraki maaş listesinde yakalanır. Uyarı merkezinde de kritik uyarı olarak görünür.
+
+**Yalnız sorunlular** filtresi gecikenleri ve son günden sonra ödeme yapılanları gösterir. Excel düğmesi listeyi rapor olarak kaydeder (Rapor Merkezi → Çıkış talimatı takibi).
 
 ## Tesisler (birden fazla tesis)
 

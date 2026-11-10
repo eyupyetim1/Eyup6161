@@ -143,6 +143,7 @@ public sealed class IstenCikisAppServisi : IIstenCikisServisi
             });
         }
 
+        await CikisTalimatServisi.TalimatiTamamlaAsync(_db, kayit, kullaniciAdi, ct);
         await _db.SaveChangesAsync(ct);
 
         return new IstenCikisDto

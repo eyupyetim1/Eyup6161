@@ -183,6 +183,20 @@ public sealed class BildirimServisi : IBildirimServisi
         return url;
     }
 
+    public async Task KisiyeBildirAsync(Guid aliciId, string olayAnahtari, string konu, string metin, CancellationToken ct = default)
+    {
+        var a = await _db.BildirimAlicilari.AsNoTracking().FirstOrDefaultAsync(x => x.Id == aliciId && x.Aktif, ct);
+        if (a is null) return;
+        var ayar = await _db.BildirimAyarlari.AsNoTracking().FirstOrDefaultAsync(ct);
+        var whatsAppHazir = ayar is { WhatsAppEtkin: true } && !string.IsNullOrEmpty(ayar.WhatsAppErisimAnahtariSifreli);
+        var kanal = whatsAppHazir ? BildirimKanali.EpostaVeWhatsApp : BildirimKanali.Eposta;
+        var hedefler = Hedefler([a], kanal).ToList();
+        if (hedefler.Count == 0 && !string.IsNullOrWhiteSpace(a.Telefon))
+            hedefler = Hedefler([a], BildirimKanali.WhatsApp).ToList(); // e-postası yoksa (ayar eksikse hata olarak kaydedilir)
+        if (hedefler.Count > 0)
+            await TeslimEtAsync(hedefler, konu, metin, null, null, $"Kisi:{olayAnahtari}", "sistem", ct);
+    }
+
     private async Task<List<BildirimKaydi>> TeslimEtAsync(IReadOnlyList<(BildirimKanali Kanal, string Adres)> hedefler, string konu, string metin,
         BildirimEki? ek, Guid? kuralId, string? olayAnahtari, string kullanici, CancellationToken ct)
     {

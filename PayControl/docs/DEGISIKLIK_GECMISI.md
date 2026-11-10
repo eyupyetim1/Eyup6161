@@ -1,5 +1,18 @@
 # Değişiklik Geçmişi
 
+## 1.3.1 — 2026-11-10 (Çıkış takibi)
+
+İK'ya verilen "şu kişiyi çıkar" talimatı unutulduğunda personele çalışmadığı hâlde maaş yatmasını önlemek için:
+- **Çıkış talimatı:** personel, son çalışma günü, neden, çıkışı yapacak kişi. Kaydedilince sorumluya e-posta (ve ayarlıysa WhatsApp) gider; denetim kaydı tutulur.
+- **Çıkış Takibi ekranı:** her talimatın durumu (Bekliyor / Gecikti / Çıkış yapıldı / İptal), kaç gündür beklediği, çıkışı kimin ne zaman yaptığı, SGK durumu. Talimatsız doğrudan çıkışlar da listelenir.
+- **Son çalışma gününden sonraki ödemeler:** tarih, hak ediş dönemi, kanal, tutar, referans ve "ne için ödendi" değerlendirmesi; çıkış ayında gün oranına göre tahmini hak ediş, sonraki aylarda tamamı hak edilmemiş sayılır. Toplam tahmini fazla ödeme ve sonraki aylarda hâlâ bordroya girip girmediği.
+- **Ödeme öncesi kontrol:** çıkışı yapılmamış talimatı olan kişi kritik bulgu ("ÇIKIŞ TALİMATI UYGULANMAMIŞ") ile durdurulur.
+- **Uyarı merkezi:** geciken talimat ve son gün sonrası ödeme kritik uyarı olarak görünür.
+- **Günlük hatırlatma:** son gün geçince çıkış yapılana kadar sorumluya her gün bir hatırlatma (zamanlanmış görevle).
+- İK çıkış kaydını girince talimat kendiliğinden tamamlanır; "Çıkışı şimdi kaydet" ile çıkışı kendiniz de yapabilirsiniz.
+- Yeni rapor: **Çıkış talimatı takibi** (19 rapor). Yeni bildirim olayları: çıkış talimatı verildi / gecikti.
+
+
 ## 1.3.0 — 2026-11-10 (çoklu tesis, rapor merkezi, e-posta / WhatsApp, yönetim)
 
 ### Çoklu tesis

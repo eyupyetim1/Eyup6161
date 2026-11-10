@@ -75,6 +75,9 @@ public interface IBildirimServisi
     /// <summary>Olay tetikleyicili kurallar için bildirim üretir; aynı olay aynı alıcıya ikinci kez gönderilmez.</summary>
     Task OlayBildirAsync(BildirimTetikleyici olay, string olayAnahtari, string konu, string metin, string? tesis, CancellationToken ct = default);
 
+    /// <summary>Sistem bildirimi: tek alıcıya e-posta (ve WhatsApp ayarlıysa WhatsApp); aynı olay anahtarı ikinci kez gönderilmez.</summary>
+    Task KisiyeBildirAsync(Guid aliciId, string olayAnahtari, string konu, string metin, CancellationToken ct = default);
+
     /// <summary>Başarısız gönderimleri (en fazla 3 deneme) yeniden dener.</summary>
     Task<int> BasarisizlariYenidenDeneAsync(CancellationToken ct = default);
 
