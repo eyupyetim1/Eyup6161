@@ -93,7 +93,8 @@ public partial class DonemKapanisViewModel : ObservableObject
                 i == DurumSirasi.Length - 1)).ToList();
             AcikFarkSayisi = Rapor.Farklar.Count(f => f.Durum == FarkDurumu.Acik).ToString();
             TamamlananMadde = $"{Rapor.KontrolMaddeleri.Count(m => m.Tamamlandi)} / {Rapor.KontrolMaddeleri.Count}";
-            Mesaj = $"Durum: {Rapor.Durum}" + (Rapor.DondurulmusVeri ? " — kapanış anındaki dondurulmuş değerler gösteriliyor." : "");
+            Mesaj = $"Dönem durumu: {Converters.DurumRozetiConverter.Coz(Rapor.Durum).Metin}." +
+                    (Rapor.DondurulmusVeri ? " Kapanış anındaki dondurulmuş değerler gösteriliyor." : "");
         }
         catch (Exception ex) { Mesaj = ex.Message; }
     }

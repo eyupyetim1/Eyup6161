@@ -95,6 +95,8 @@ public static class EkranGoruntusuModu
 
     private static async Task KaydetAsync(Window w, string yol, Func<Task>? hazirla = null)
     {
+        // Pencere önce gerçekten açılır (bağlamalar, Loaded); ardından içerik ekran boyutundan bağımsız
+        // olarak pencerenin tasarım boyutunda yeniden yerleştirilip çizilir.
         w.WindowStartupLocation = WindowStartupLocation.Manual;
         w.Left = 0;
         w.Top = 0;
@@ -103,28 +105,41 @@ public static class EkranGoruntusuModu
         w.Show();
         if (hazirla is not null)
             await hazirla();
-        // Bağlamalar, yerleşim ve giriş animasyonları otursun
-        await Task.Delay(900);
-        w.UpdateLayout();
-        await w.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        await Task.Delay(400);
 
+        var genislik = (double.IsNaN(w.Width) ? 1200 : w.Width) - 16;   // pencere kenarlığı
+        var yukseklik = (double.IsNaN(w.Height) ? 800 : w.Height) - 39; // başlık çubuğu
         var icerik = (FrameworkElement)w.Content;
-        var genislik = icerik.ActualWidth;
-        var yukseklik = icerik.ActualHeight;
-        var rtb = new RenderTargetBitmap((int)(genislik * Olcek), (int)(yukseklik * Olcek), 96 * Olcek, 96 * Olcek, PixelFormats.Pbgra32);
-        var dv = new DrawingVisual();
-        using (var dc = dv.RenderOpen())
+        var dataContext = w.DataContext;
+        w.Content = null;
+        var kap = new System.Windows.Controls.Border
         {
-            dc.DrawRectangle(w.Background ?? Brushes.White, null, new Rect(0, 0, genislik, yukseklik));
-            dc.DrawRectangle(new VisualBrush(icerik) { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top },
-                null, new Rect(0, 0, genislik, yukseklik));
-        }
-        rtb.Render(dv);
+            Background = w.Background ?? Brushes.White,
+            Child = icerik,
+            Width = genislik,
+            Height = yukseklik,
+            DataContext = dataContext,
+            Resources = w.Resources
+        };
+        System.Windows.Controls.TextBlock.SetFontFamily(kap, w.FontFamily);
 
+        for (var i = 0; i < 3; i++)
+        {
+            kap.Measure(new Size(genislik, yukseklik));
+            kap.Arrange(new Rect(0, 0, genislik, yukseklik));
+            kap.UpdateLayout();
+            await w.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            await Task.Delay(350);
+        }
+
+        var rtb = new RenderTargetBitmap((int)(genislik * Olcek), (int)(yukseklik * Olcek), 96 * Olcek, 96 * Olcek, PixelFormats.Pbgra32);
+        rtb.Render(kap);
         var enc = new PngBitmapEncoder();
         enc.Frames.Add(BitmapFrame.Create(rtb));
         await using (var fs = File.Create(yol))
             enc.Save(fs);
+
+        kap.Child = null;
         w.Close();
     }
 
