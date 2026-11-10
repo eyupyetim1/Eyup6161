@@ -36,6 +36,13 @@
                         <TextBlock Text="Dönemi yükle"/>
                     </StackPanel>
                 </Button>
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding TesisOnaylariCommand}" Margin="0,0,8,0"
+                        ToolTip="Her tesisin bordro/ödeme farkını görün ve tesis sorumlusu onayı verin">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE80F;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Tesis onayları"/>
+                    </StackPanel>
+                </Button>
                 <Button Style="{StaticResource SecondaryButton}" Command="{Binding RaporExcelCommand}" ToolTip="Özet, kontrol listesi, farklar, istisnalar, karşılaştırma">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE896;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>

@@ -1,0 +1,40 @@
+<Window x:Class="PayControl.Desktop.Views.SifreDegistirWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctl="clr-namespace:PayControl.Desktop.Controls"
+        Title="Şifre değiştir"
+        SizeToContent="Height" Width="440" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <Border Style="{StaticResource Kart}" Margin="20">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource BirincilYumusakBrush}" Margin="0,0,12,0">
+                    <TextBlock Text="&#xE8D7;" FontFamily="{StaticResource IkonFont}" FontSize="16" Foreground="{StaticResource BirincilBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Yeni şifre belirleyin" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding KullaniciAdi}" Foreground="{StaticResource MutedBrush}" FontSize="12"/>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Text="{Binding Aciklama}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,16"/>
+            <StackPanel Margin="0,0,0,12" Visibility="{Binding Zorunlu, Converter={StaticResource Gorunurluk}, ConverterParameter=ters}">
+                <TextBlock Text="Mevcut şifre" Style="{StaticResource AlanEtiketi}"/>
+                <PasswordBox ctl:SifreBaglama.Sifre="{Binding EskiSifre}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <TextBlock Text="Yeni şifre" Style="{StaticResource AlanEtiketi}"/>
+            <PasswordBox ctl:SifreBaglama.Sifre="{Binding YeniSifre}" Margin="0,4,0,12"/>
+            <TextBlock Text="Yeni şifre (tekrar)" Style="{StaticResource AlanEtiketi}"/>
+            <PasswordBox ctl:SifreBaglama.Sifre="{Binding YeniSifreTekrar}" Margin="0,4,0,12"/>
+            <Border Style="{StaticResource UyariSeridi}" Margin="0,0,0,12" Visibility="{Binding Hata, Converter={StaticResource Gorunurluk}}">
+                <TextBlock Text="{Binding Hata}" TextWrapping="Wrap"/>
+            </Border>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource SecondaryButton}" Content="Vazgeç" IsCancel="True" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource PrimaryButton}" Content="Şifreyi kaydet" IsDefault="True" Command="{Binding KaydetCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

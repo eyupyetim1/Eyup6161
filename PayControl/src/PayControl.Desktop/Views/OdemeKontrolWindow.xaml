@@ -82,6 +82,11 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Margin="0,0,14,0">
+                        <TextBlock Text="Tesis" Style="{StaticResource AlanEtiketi}"/>
+                        <ComboBox Width="170" ItemsSource="{Binding Tesisler}" SelectedItem="{Binding SeciliTesis}"
+                                  ToolTip="Tesis seçilirse yalnız o tesisin bordrosu ile o tesisin banka dosyası karşılaştırılır; her tesisin ayrı onaylı listesi olur"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,14,0">
                         <TextBlock Text="1 · Bordro dosyası" Style="{StaticResource AlanEtiketi}"/>
                         <StackPanel Orientation="Horizontal">
                             <TextBox Width="240" IsReadOnly="True" Text="{Binding BordroDosyaYolu}" Tag="Dönemin son yüklenen bordrosu kullanılır"/>

@@ -210,7 +210,7 @@ public sealed class DenetimServisi : IDenetimServisi
         return new DenetimSonucu
         {
             Toplam = await q.CountAsync(ct),
-            Kayitlar = await q.OrderByDescending(d => d.IslemZamani).Skip((Math.Max(1, filtre.Sayfa) - 1) * boyut).Take(boyut).ToListAsync(ct),
+            Kayitlar = await q.Include(d => d.Personel).OrderByDescending(d => d.IslemZamani).Skip((Math.Max(1, filtre.Sayfa) - 1) * boyut).Take(boyut).ToListAsync(ct),
             Kullanicilar = await _db.DenetimKayitlari.Where(d => d.KullaniciAdi != null).Select(d => d.KullaniciAdi!).Distinct().OrderBy(x => x).ToListAsync(ct),
             Islemler = await _db.DenetimKayitlari.Select(d => d.Islem).Distinct().OrderBy(x => x).ToListAsync(ct)
         };

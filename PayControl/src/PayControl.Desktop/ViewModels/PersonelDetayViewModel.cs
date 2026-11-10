@@ -33,6 +33,7 @@ public partial class PersonelDetayViewModel : ObservableObject
     [ObservableProperty] private decimal? _yenidenMaas;
 
     public HesapEkstresiPanelModel Ekstre { get; }
+    public PersonelEkPanelModel Ek { get; }
     public ObservableCollection<MaasDonemDto> MaasGecmisi { get; } = new();
     public ObservableCollection<CalismaDonemiDto> CalismaDonemleri { get; } = new();
     public ObservableCollection<IstenCikisDto> CikisKayitlari { get; } = new();
@@ -47,6 +48,8 @@ public partial class PersonelDetayViewModel : ObservableObject
         IHesapEkstresiServisi ekstreServisi,
         IMaliHareketServisi defter,
         IBankaOdemeServisi banka,
+        IKesintiServisi kesinti,
+        IBelgeServisi belge,
         OturumServisi oturum)
     {
         _personelServisi = personelServisi;
@@ -54,6 +57,8 @@ public partial class PersonelDetayViewModel : ObservableObject
         _avansServisi = avansServisi;
         _oturum = oturum;
         Ekstre = new HesapEkstresiPanelModel(ekstreServisi, defter, banka, oturum);
+        Ek = new PersonelEkPanelModel(kesinti, belge, banka, oturum);
+        Ek.Degisti = async () => { if (Detay is not null) await Ekstre.YukleAsync(Detay.Id); };
     }
 
     public async Task YukleAsync(Guid personelId)
@@ -79,6 +84,7 @@ public partial class PersonelDetayViewModel : ObservableObject
             Avanslar.Add(a);
 
         await Ekstre.YukleAsync(personelId);
+        await Ek.YukleAsync(personelId);
 
         KontrolOzeti = Detay.CalismaDurumu == CalismaDurumu.IstenAyrildi
             ? "Personel işten ayrılmış. SGK ve ödeme denetimini Kontrol sekmesinden inceleyin."

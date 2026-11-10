@@ -1,4 +1,4 @@
-# PayControl — Kullanım Kılavuzu (1.2)
+# PayControl — Kullanım Kılavuzu (1.3)
 
 ## Kurulum (Windows 10/11 x64)
 
@@ -13,21 +13,55 @@ Veriler bilgisayarınızda saklanır:
 
 - Kullanıcı adı: **admin**
 - Şifre: **Admin123!**  
-İlk girişten sonra şifreyi değiştirmeniz önerilir (sonraki sürümde arayüz eklenecek).
+İlk girişte yeni şifre belirlemeniz istenir. Şifrenizi sonradan sol alttaki kullanıcı kartındaki anahtar simgesinden değiştirebilirsiniz.
 
 ## Personel listesi
 
 - Ana ekranda personelleri arayabilir (ad, TC, sicil), şirket/işyeri filtreleyebilirsiniz.
 - Bir satıra çift tıklayarak personel kartını açın.
 
+## Ana ekran
+
+- **Genel bakış:** son 12 ayın bordro net / gerçekleşen ödeme grafiği (çubuğun üzerine gelince ayrıntı), tesis dağılımı, açık ve kritik uyarı sayısı.
+- **Personeller:** arama ve şirket/tesis filtresi.
+- Sol menü: Rapor Merkezi, Uyarı Merkezi, Bildirimler, Tesisler, Denetim Geçmişi, Ayarlar ve Yönetim (yalnız yönetici).
+
 ## Personel kartı sekmeleri
 
-1. Genel Bilgiler  
-2. Maaş Geçmişi (dönem dönem; eski aylar korunur)  
-3–7. Sonraki sürümlerde doldurulacak (avans, banka, kesinti vb.)  
-8. İşe Giriş/Çıkış Geçmişi (yeniden işe alımlar ayrı dönem)  
-9. Evraklar (sonraki sürüm)  
-10. Kontrol ve Denetim Geçmişi  
+Hesap ekstresi, maaş geçmişi, avanslar, işe giriş/çıkış, çıkış ve SGK kontrolü, **İcra · BES · Tahsilat**, **Banka / kasa ödemeleri** (iptal), **Belgeler**.
+
+- **İcra:** dosya no, icra dairesi, alacaklı, toplam borç, kesinti oranı ve sıra girin. Bordrodaki İCRA kolonu aktif dosyalara sırayla dağıtılır, kalan borç izlenir; ödeme kontrolü icra kesintisini bu dayanakla doğrular.
+- **BES:** oran ve başlangıç; cayma tarihi işlenebilir.
+- **Tahsilat planı:** kesinleşmiş fazla ödeme için taksit sayısı ve ilk ay. Bordroya **FAZLA ÖDEME KESİNTİSİ** kolonu eklendiğinde taksitlere işlenir ve geri ödeme borcundan düşer.
+- **Ödeme iptali:** yanlış girilmiş banka/kasa ödemesini seçip nedenini yazın. Kayıt silinmez, ekstrede ters kayıt oluşur, doğru ödeme yeniden girilebilir. Kapalı dönemde yapılamaz.
+- **Belgeler:** istifa dilekçesi, ibraname, icra yazısı gibi dosyalar eklenir; kopyası güvenli depoya alınır ve SHA-256 ile korunur. Belgeler silinmez, gerekçeyle geçersiz kılınır.
+
+## Tesisler (birden fazla tesis)
+
+1. **Tesisler → Personelden oluştur** ile personel kartlarındaki işyeri adlarından tesisler açılır (bordro içe aktarırken de otomatik açılır). Sorumlu ve iletişim bilgilerini girin.
+2. **Ödeme öncesi kontrolde** tesis seçin: yalnız o tesisin bordrosu, o tesisin banka dosyasıyla karşılaştırılır; her tesisin ayrı onaylı listesi olur.
+3. **Kapanış → Tesis onayları:** her tesisin bordro net, ödenen, fark, kritik uyarı ve açık fark durumu görünür; tesis sorumlusu onaylar. Tüm tesisler onaylanmadan dönem kapanmaz.
+4. Tüm raporlar tesis filtresiyle alınabilir; **Tesis karşılaştırma** raporu tesisleri yan yana gösterir.
+
+## Rapor merkezi
+
+Soldan rapor türünü seçin, tarih aralığı / tesis / şirket girip **Oluştur**'a basın. Önizleme tablosu, üstte özet göstergeler. **Excel / PDF / CSV** ile kaydedin veya sağdan kanal, biçim ve alıcıları seçip **Raporu gönder** ile e-posta / WhatsApp ile gönderin.
+
+## Bildirimler (e-posta ve WhatsApp)
+
+1. **Bağlantı ayarları** (yönetici): SMTP sunucusu, port, SSL, kullanıcı, şifre, gönderen. **Deneme e-postası gönder** ile doğrulayın.
+   - Gmail: uygulama şifresi gerekir (smtp.gmail.com, 587). Office 365: smtp.office365.com, 587.
+2. WhatsApp otomatik gönderim için Meta WhatsApp Business Cloud API: telefon numarası kimliği, kalıcı erişim anahtarı ve onaylı şablon (gövdede tek `{{1}}` değişkeni). Anahtar yoksa **WhatsApp'ta aç (elle)** mesajı hazır doldurulmuş sohbeti açar, siz gönderirsiniz.
+3. **Alıcılar:** ad, e-posta, telefon, rol ve (isteğe bağlı) tesis.
+4. **Otomatik kurallar:** zamanlanmış rapor (günlük / haftalık / aylık, gün ve saat), uyarı özeti veya olay (dönem kapandı, mutabakat farkı, yedek hatası). Tesis seçilen kuralda rapor o tesise süzülür ve yalnız o tesisin alıcılarına gider.
+5. **Gönderim geçmişi:** her gönderim, durum ve hata. Başarısızlar otomatik olarak en fazla 3 kez yeniden denenir.
+
+Otomatik işler PayControl açıkken 5 dakikada bir çalışır. Program kapalıyken de çalışması için **Ayarlar ve Yönetim → Zamanlanmış görevler → Windows görevini kaydet**.
+
+## Uyarı merkezi ve denetim geçmişi
+
+- **Uyarı merkezi:** kapanış, mutabakat, avans, çıkış, icra, tahsilat, yedek ve bildirim kaynaklı açık işler; tesis/seviye/kategori filtresi; satıra çift tıklayınca personel kartı açılır.
+- **Denetim geçmişi:** tarih, kullanıcı, işlem, kayıt türü ve metin filtresi; eski/yeni değer ve neden; Excel'e aktarma. Kayıtlar değiştirilemez.
 
 ## Kullanıcı rolleri
 
@@ -36,6 +70,10 @@ Veriler bilgisayarınızda saklanır:
 | Ödeme kontrolü çalıştırma, avans, kasa/prim girişi | Herhangi bir oturum |
 | Banka talimatı düzeltme, onaylı liste üretme, mutabakat, fark çözme, düzeltme kaydı, ters kayıt | Muhasebe veya Yönetici |
 | Kritik satır için istisna, mutabakat farkı için istisna, yönetici kapanış onayı, dönemi kapatma / yeniden açma | Yönetici |
+| Kullanıcı yönetimi, bildirim bağlantı ayarları, yedekten geri yükleme, veritabanı ayarı | Yönetici |
+| Bildirim alıcı/kuralı, rapor gönderimi, icra/BES/tahsilat, belge, ödeme iptali | Muhasebe veya Yönetici |
+
+Görüntüleyici rolü maaş tutarlarını göremez.
 
 ## Hesap ekstresi (personel kartı)
 
@@ -110,13 +148,28 @@ Desteklenen başlıklar: T.C. KİMLİK NO, ADI SOYADI, İŞYERİ, GÖREVİ, MAA�
 
 **Önemli:** Çıkış ayı ücretinin sonraki ayda yatırılması tek başına hata değildir. Program hak ediş dönemi ile ödeme tarihini ayrı tutar.
 
-## Yedekleme
+## Yedekleme ve geri yükleme
 
-1. PayControl kapalıyken  
-2. `paycontrol.db` dosyasını kopyalayın  
-3. Geri yüklemek için aynı konuma geri koyun  
+**Ayarlar ve Yönetim → Yedekleme**
 
-Şifreli yedekleme sonraki sürümde gelecektir.
+- **Şimdi yedek al:** program açıkken tutarlı yedek alınır (`.pcyedek`). İçinde SHA-256 bütünlük özeti vardır.
+- **Otomatik yedek:** günde bir kez; saklanacak yedek sayısı ayarlanabilir. Yedek klasörü olarak ağ sürücüsü veya harici disk önerilir.
+- **Yedek şifresi:** verilirse yedekler AES-256-GCM ile şifrelenir. Şifreyi kaybederseniz şifreli yedek açılamaz.
+- **Geri yükle (yönetici):** yedek doğrulanır, mevcut veri önce güvenlik yedeğine alınır, ardından geri yüklenip program yeniden başlar.
+
+PostgreSQL kullanıyorsanız yedeği sunucuda `pg_dump` ile alın.
+
+## Çok kullanıcılı kullanım (PostgreSQL)
+
+**Ayarlar ve Yönetim → Veritabanı:** PostgreSQL sunucusu, port, veritabanı, kullanıcı ve şifre → **Bağlantıyı dene** → **Kaydet ve yeniden başlat**. Boş veritabanında tablolar otomatik oluşur. Her kullanıcının bilgisayarında aynı ayar yapılır; bağlantı bilgisi o bilgisayarda şifreli saklanır. Mevcut SQLite verisi sunucuya otomatik taşınmaz.
+
+## Banka hesap hareketi dosyaları
+
+Kapanış ekranında **Gerçekleşen ödemeleri içe aktar** Excel'in yanında **MT940** (`.sta`, `.940`, `.txt`) ve **CAMT.053** (`.xml`) dosyalarını da kabul eder; biçim içerikten algılanır. Yalnız giden (borç) hareketler alınır, ters kayıtlar atlanır; toplu ödemede her işlem ayrı satırdır. Eşleşme IBAN veya TC kimlik no ile yapılır.
+
+## Güncelleme
+
+**Ayarlar ve Yönetim → Güncelleme:** açılışta otomatik denetim, **Güncellemeleri denetle**, **İndir ve kur**. Paket SHA-256 ile doğrulanmadan kurulmaz; kurulumdan önce yedek alınır. Şirket içinde güncellemeyi ağ paylaşımından dağıtmak için bildirim adresine `\\sunucu\paylasim\guncelleme.json` yazın.
 
 ## Loglar
 

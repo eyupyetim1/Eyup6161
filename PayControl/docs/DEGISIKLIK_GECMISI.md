@@ -1,5 +1,38 @@
 # Değişiklik Geçmişi
 
+## 1.3.0 — 2026-11-10 (çoklu tesis, rapor merkezi, e-posta / WhatsApp, yönetim)
+
+### Çoklu tesis
+- Tesis tanımları (kod, şirket, sorumlu, iletişim); bordro içe aktarmada eksik tesisler otomatik açılır, "Personelden oluştur" ile toplu oluşturma
+- Ödeme öncesi kontrol tesis bazında: yalnız o tesisin bordrosu, ayrı sürümlü onaylı liste, dosya adında tesis
+- Mutabakat ve kapanış anlık görüntüsü tesis bilgisini taşır; her tesis sorumlusu dönemi ayrıca onaylar, tüm tesisler onaylanmadan kapanış tamamlanmaz (yeni kontrol maddesi "Tesis onayları")
+- Gösterge paneli: son 12 ay bordro/ödeme grafiği, tesis dağılımı, açık uyarı sayısı
+
+### Rapor merkezi (18 rapor)
+Dönem bordro özeti, tesis karşılaştırma, personel maliyet trendi, ödenmemiş hak ediş yaşlandırma, avans durumu, fazla ödeme ve tahsilat, giriş-çıkış/devir hızı, SGK çıkış durumu, kesinti raporu (avans/icra/BES/tahsilat), mutabakat farkları, ödeme kontrol istisnaları, banka/kasa ödeme dökümü, maaş değişiklikleri, denetim izi, kapanış özetleri, personel bakiye listesi, icra dosyaları, tesis personel listesi. Tarih aralığı, tesis ve şirket filtresi; önizleme; Excel, PDF ve CSV.
+
+### Bildirimler (e-posta ve WhatsApp)
+- Elle gönderim: kayıtlı alıcılar veya doğrudan adres; rapor ekli gönderim; API anahtarı olmadan "WhatsApp'ta aç" (wa.me)
+- Otomatik: günlük / haftalık / aylık zamanlanmış rapor, uyarı özeti; olay bildirimleri (dönem kapandı, mutabakat farkı, yedek hatası); tesis seçilirse rapor süzülür ve yalnız o tesisin alıcılarına gider
+- SMTP (MailKit) ve WhatsApp Business Cloud API (onaylı şablon + belge eki); şifre/anahtar şifreli saklanır
+- Gönderim geçmişi, başarısızların en fazla 3 kez yeniden denenmesi, aynı olay için tekrar gönderim engeli
+- Uygulama açıkken 5 dakikada bir; kapalıyken Windows Görev Zamanlayıcısı (`PayControl.exe --zamanlanmis-gorevler`)
+
+### Yönetim ve güvenlik
+- Kullanıcı yönetimi: oluşturma, rol, pasifleştirme, geçici şifre; ilk girişte zorunlu şifre değişimi; şifre politikası; 5 hatalı girişte 15 dk kilit; son yöneticinin korunması
+- Yedekleme: çalışırken tutarlı anlık yedek, SHA-256 manifest, isteğe bağlı AES-256-GCM şifreleme, günlük otomatik yedek ve saklama sayısı, güvenlik yedeği alınarak geri yükleme
+- Denetim geçmişi ekranı (filtre, sayfalama, Excel); uyarı merkezi (tüm modüllerin açık işleri)
+- Banka/kasa ödemesi iptali: kayıt silinmez, ters kayıt oluşur, doğru ödeme yeniden girilebilir
+- İcra dosyaları (sıralı dağıtım, kalan borç), BES tanımı/cayma, fazla ödeme için taksitli tahsilat planı (bordrodaki "FAZLA ÖDEME KESİNTİSİ" kolonu taksitlere işlenir); kontrol motoru bu dayanaklarla tutar doğrular
+- Personel belgeleri: güvenli depo, SHA-256 bütünlük, silinemez (geçersiz kılınır)
+
+### Altyapı
+- PostgreSQL desteği (çok kullanıcılı); tüm testler SQLite ve PostgreSQL 16'da çalışır; şema yükseltici iki sağlayıcıyı destekler
+- Banka hareketi içe aktarmada MT940 ve ISO 20022 CAMT.053 (toplu ödeme işlem bazında, ters kayıt ve alacaklar atlanır)
+- Otomatik güncelleme: GitHub sürümü veya ağ paylaşımındaki `guncelleme.json`; SHA-256 doğrulaması, kurulum öncesi yedek, hata olursa geri alma
+- CI: PostgreSQL test işi, `CODE_SIGN_PFX` tanımlıysa kod imzalama, `v*` etiketinde otomatik GitHub sürümü
+
+
 ## 1.2.0 — 2026-11-10 (Bölüm 16–18 tam entegrasyon)
 
 1.1'deki üç modülün gereksinime göre eksik/hatalı kalan kısımları tamamlandı. Ayrıntılı analiz: `docs/V12_ANALIZ.md`.

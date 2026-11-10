@@ -215,4 +215,11 @@ public partial class DonemKapanisViewModel : ObservableObject
         hedef.Clear();
         foreach (var x in kaynak) hedef.Add(x);
     }
+
+    [RelayCommand]
+    private async Task TesisOnaylariAsync()
+    {
+        ArayuzYardimcisi.PencereAc<PayControl.Desktop.Views.TesislerWindow>(w => w.Vm.DonemeOdaklan(DonemYil, DonemAy));
+        await YukleAsync();
+    }
 }

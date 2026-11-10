@@ -20,6 +20,16 @@ Bağımlılık yönü: Desktop → Application → Domain; Infrastructure → Ap
 - `EnsureCreated` ile şema oluşturulur (V1)
 - Finansal kayıtlar soft-delete ile silinmez; içe aktarma geri alma denetim izi bırakır
 
+## 1.3 eklentileri
+
+- **Sağlayıcı seçimi:** `VeritabaniYapilandirmasi` (`%LocalAppData%/PayControl/veritabani.json` veya uygulama klasörü). `Saglayici: "PostgreSql"` + `BaglantiMetni` / `BaglantiMetniSifreli`. Npgsql için `Npgsql.EnableLegacyTimestampBehavior` açıktır (uygulama yerel ve UTC zamanlarını birlikte kullanır).
+- **PostgreSQL testleri:** `PAYCONTROL_TEST_PG="Host=localhost;Username=postgres;Password=..." dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true` — her test geçici `pc_test_*` veritabanı açar ve siler. SQLite'a özgü dosya yedeği testleri PostgreSQL'de atlanır.
+- **Zamanlanmış görevler:** `IZamanlanmisGorevServisi` (otomatik yedek → zamanlanmış kurallar → yeniden deneme; her adım ayrı kapsam). Masaüstünde `DispatcherTimer` (5 dk), CLI `PayControl.exe --zamanlanmis-gorevler`, Windows kaydı `WindowsGorevZamanlayici` (schtasks).
+- **Bildirim:** `BildirimServisi` → `IEpostaGonderici` (MailKit) / `IWhatsAppGonderici` (Graph API). `BildirimKaydi.OlayAnahtari` benzersizdir; aynı olay/vade ikinci kez gönderilmez.
+- **Banka dosyaları:** `BankaHareketOkuyucu.Oku` biçimi içerikten algılar (xlsx / MT940 / CAMT.053).
+- **Güncelleme:** `GuncellemeServisi` bildirim (`guncelleme.json`: surum, adres, sha256) → indirme + SHA-256 → PowerShell güncelleyici (süreç kapanınca kopyalar, hata olursa `.onceki` klasöründen geri alır). CI `v*` etiketinde zip ve `guncelleme.json` dosyasını GitHub sürümüne yükler.
+- **Kod imzalama:** depo gizlerine `CODE_SIGN_PFX` (base64 .pfx) ve `CODE_SIGN_PASSWORD` eklenirse CI `signtool` ile exe/dll imzalar.
+
 ## Mali hareket defteri ve veri bütünlüğü (1.2)
 
 - Tüm mali hareketler `IMaliHareketServisi.DeftereEkleAsync` üzerinden yazılır (benzersiz `IslemKimligi`, çalışma dönemi/şirket/tesis ataması, kapalı dönem kontrolü)
@@ -76,4 +86,4 @@ dotnet run --project tools/GenerateSampleExcel -- samples
 
 ## Sonraki aşamalar
 
-Kullanıcı yönetimi ekranı, icra/BES dayanak verisi (tutar doğrulaması için), banka ödeme kaydı iptal akışı, şirket bazlı ayrı dönem kapanışı, uyarı merkezi UI, PDF/OCR, şifreli yedek, MSI kurulum paketi.
+Bkz. `docs/DEGISIKLIK_GECMISI.md` ve sürüm notlarındaki öneriler.

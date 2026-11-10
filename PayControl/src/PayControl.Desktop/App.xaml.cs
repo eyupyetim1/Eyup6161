@@ -60,6 +60,24 @@ public partial class App : System.Windows.Application
         _ = BaslatAsync();
     }
 
+    /// <summary>1.3 ekranları: rapor merkezi, bildirimler, uyarı merkezi, denetim, tesisler, yönetim, şifre.</summary>
+    private static void EkEkranlariKaydet(ServiceCollection services)
+    {
+        services.AddTransient<RaporMerkeziViewModel>();
+        services.AddTransient<BildirimlerViewModel>();
+        services.AddTransient<UyariMerkeziViewModel>();
+        services.AddTransient<DenetimGecmisiViewModel>();
+        services.AddTransient<TesislerViewModel>();
+        services.AddTransient<YonetimViewModel>();
+        services.AddTransient<SifreDegistirViewModel>();
+        services.AddTransient<RaporMerkeziWindow>();
+        services.AddTransient<BildirimlerWindow>();
+        services.AddTransient<UyariMerkeziWindow>();
+        services.AddTransient<DenetimGecmisiWindow>();
+        services.AddTransient<TesislerWindow>();
+        services.AddTransient<YonetimWindow>();
+    }
+
     private System.Windows.Threading.DispatcherTimer? _zamanlayici;
 
     /// <summary>Uygulama açıkken her 5 dakikada bir otomatik yedek / zamanlanmış bildirim / yeniden deneme çalıştırır.</summary>
@@ -131,6 +149,7 @@ public partial class App : System.Windows.Application
             services.AddTransient<BordroImportWindow>();
             services.AddTransient<OdemeKontrolWindow>();
             services.AddTransient<DonemKapanisWindow>();
+            EkEkranlariKaydet(services);
 
             Services = services.BuildServiceProvider();
             await ServiceCollectionExtensions.InitializeDatabaseAsync(Services);
@@ -164,6 +183,7 @@ public partial class App : System.Windows.Application
             services.AddTransient<OdemeKontrolViewModel>();
             services.AddTransient<DonemKapanisViewModel>();
             services.AddTransient<LoginWindow>();
+            EkEkranlariKaydet(services);
             Services = services.BuildServiceProvider();
             await ServiceCollectionExtensions.InitializeDatabaseAsync(Services);
             await EkranGoruntusuModu.CalistirAsync(Services, klasor);

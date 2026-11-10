@@ -104,6 +104,31 @@ public sealed class DurumRozetiConverter : IValueConverter
             BakiyeTuru.KesinlesmisGeriOdeme => (RozetTonu.Tehlike, "Kesin geri ödeme"),
             _ => (RozetTonu.Notr, "Bilgi")
         },
+        BildirimDurumu bd => bd switch
+        {
+            BildirimDurumu.Gonderildi => (RozetTonu.Basari, "Gönderildi"),
+            BildirimDurumu.Hata => (RozetTonu.Tehlike, "Hata"),
+            BildirimDurumu.ElleAcildi => (RozetTonu.Bilgi, "Elle açıldı"),
+            _ => (RozetTonu.Uyari, "Bekliyor")
+        },
+        PayControl.Application.Interfaces.UyariSeviyesi us => us switch
+        {
+            PayControl.Application.Interfaces.UyariSeviyesi.Kritik => (RozetTonu.Tehlike, "Kritik"),
+            PayControl.Application.Interfaces.UyariSeviyesi.Uyari => (RozetTonu.Uyari, "Uyarı"),
+            _ => (RozetTonu.Bilgi, "Bilgi")
+        },
+        KullaniciRolu kr => kr switch
+        {
+            KullaniciRolu.Yonetici => (RozetTonu.Mor, "Yönetici"),
+            KullaniciRolu.Muhasebe => (RozetTonu.Bilgi, "Muhasebe"),
+            _ => (RozetTonu.Notr, "Görüntüleyici")
+        },
+        BildirimKanali bk => bk switch
+        {
+            BildirimKanali.Eposta => (RozetTonu.Bilgi, "E-posta"),
+            BildirimKanali.WhatsApp => (RozetTonu.Basari, "WhatsApp"),
+            _ => (RozetTonu.Mor, "E-posta + WhatsApp")
+        },
         bool v => v ? (RozetTonu.Basari, "Evet") : (RozetTonu.Notr, "Hayır"),
         null => (RozetTonu.Notr, "—"),
         _ => (RozetTonu.Notr, value.ToString() ?? "")
@@ -181,4 +206,23 @@ public sealed class GorunurlukConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
+}
+
+/// <summary>UTC saklanan zamanı yerel saate çevirip "dd.MM.yyyy HH:mm" biçiminde gösterir.</summary>
+public sealed class YerelZamanConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    {
+        DateTime d => (d.Kind == DateTimeKind.Local ? d : DateTime.SpecifyKind(d, DateTimeKind.Utc).ToLocalTime()).ToString(parameter as string ?? "dd.MM.yyyy HH:mm", culture),
+        _ => ""
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>bool tersi (iki yönlü; RadioButton çiftleri için).</summary>
+public sealed class TersBoolConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
 }

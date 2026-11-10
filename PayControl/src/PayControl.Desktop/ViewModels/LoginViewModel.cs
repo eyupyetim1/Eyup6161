@@ -45,6 +45,18 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
+            if (sonuc.SifreDegistirmeGerekli)
+            {
+                var svm = new SifreDegistirViewModel(_kimlik) { KullaniciAdi = sonuc.KullaniciAdi!, Zorunlu = true, EskiSifre = Sifre };
+                var dlg = new SifreDegistirWindow(svm) { Owner = System.Windows.Application.Current.Windows.OfType<LoginWindow>().FirstOrDefault() };
+                if (dlg.ShowDialog() != true)
+                {
+                    HataMesaji = "Devam etmek için yeni şifre belirlemelisiniz.";
+                    return;
+                }
+                Sifre = string.Empty;
+            }
+
             _oturum.Baslat(sonuc.KullaniciId.Value, sonuc.KullaniciAdi!, sonuc.Rol.Value);
             var main = App.Services.GetService(typeof(MainWindow)) as MainWindow
                        ?? new MainWindow(App.Services.GetService(typeof(MainViewModel)) as MainViewModel

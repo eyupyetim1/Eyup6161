@@ -47,12 +47,26 @@ public partial class OdemeKontrolViewModel : ObservableObject
     public ObservableCollection<OdemeKontrolSatiri> Satirlar { get; } = new();
     public ObservableCollection<OnayliOdemeListesi> Listeler { get; } = new();
 
-    public OdemeKontrolViewModel(IOdemeOncesiKontrolServisi servis, IBordroIceAktarmaServisi bordro, OturumServisi oturum)
+    public ObservableCollection<string> Tesisler { get; } = new() { TumTesisler };
+    private const string TumTesisler = "Tüm tesisler";
+    [ObservableProperty] private string _seciliTesis = TumTesisler;
+
+    public OdemeKontrolViewModel(IOdemeOncesiKontrolServisi servis, IBordroIceAktarmaServisi bordro, ITesisServisi tesis, OturumServisi oturum)
     {
         _servis = servis;
         _bordro = bordro;
         _oturumServisi = oturum;
         AdimlariGuncelle();
+        _ = TesisleriYukleAsync(tesis);
+    }
+
+    private async Task TesisleriYukleAsync(ITesisServisi tesis)
+    {
+        try
+        {
+            foreach (var t in (await tesis.ListeleAsync()).Where(t => t.Tesis.Aktif).Select(t => t.Tesis.Ad)) Tesisler.Add(t);
+        }
+        catch { /* tesis listesi alınamazsa tüm tesisler ile çalışılır */ }
     }
 
     partial void OnBordroDosyaYoluChanged(string? value) => AdimlariGuncelle();
@@ -145,7 +159,8 @@ public partial class OdemeKontrolViewModel : ObservableObject
 
             KontrolOturumu = await _servis.KontrolBaslatAsync(
                 DonemYil, DonemAy, dosya, Path.GetFileName(BankaDosyaYolu),
-                Convert.ToHexString(SHA256.HashData(bytes)), Kullanici, bordroId);
+                Convert.ToHexString(SHA256.HashData(bytes)), Kullanici, bordroId,
+                tesis: SeciliTesis == TumTesisler ? null : SeciliTesis);
             await GosterAsync(KontrolOturumu.Id);
             notlar.Insert(0, "Kontrol tamamlandı. Program bankaya ödeme göndermez.");
             Mesaj = string.Join(Environment.NewLine, notlar);

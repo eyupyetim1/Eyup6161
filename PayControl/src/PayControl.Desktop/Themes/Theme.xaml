@@ -82,6 +82,8 @@
     <conv:TutarRengiConverter x:Key="TutarRengi"/>
     <conv:GorunurlukConverter x:Key="Gorunurluk"/>
     <BooleanToVisibilityConverter x:Key="BoolGorunur"/>
+    <conv:YerelZamanConverter x:Key="YerelZaman"/>
+    <conv:TersBoolConverter x:Key="TersBool"/>
 
     <!-- =================================================================== Tipografi stilleri -->
     <Style x:Key="SayfaBasligi" TargetType="TextBlock">
@@ -665,6 +667,63 @@
                             <Setter Property="Opacity" Value="0.55"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =================================================================== RadioButton -->
+    <Style TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource AnaFont}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource YaziBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid Background="Transparent">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid VerticalAlignment="Center">
+                            <Ellipse x:Name="daire" Width="18" Height="18" Fill="{StaticResource YuzeyBrush}" Stroke="{StaticResource KenarKoyuBrush}" StrokeThickness="1.5"/>
+                            <Ellipse x:Name="nokta" Width="8" Height="8" Fill="White" Opacity="0"/>
+                        </Grid>
+                        <ContentPresenter Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="daire" Property="Stroke" Value="{StaticResource BirincilBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="daire" Property="Fill" Value="{StaticResource BirincilBrush}"/>
+                            <Setter TargetName="daire" Property="Stroke" Value="{StaticResource BirincilBrush}"/>
+                            <Setter TargetName="nokta" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =================================================================== ProgressBar -->
+    <Style TargetType="ProgressBar">
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="Foreground" Value="{StaticResource BirincilBrush}"/>
+        <Setter Property="Background" Value="{StaticResource YuzeyIkincilBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Border CornerRadius="3" Background="{TemplateBinding Background}" ClipToBounds="True">
+                        <Grid x:Name="PART_Track">
+                            <Border x:Name="PART_Indicator" CornerRadius="3" Background="{TemplateBinding Foreground}" HorizontalAlignment="Left"/>
+                        </Grid>
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

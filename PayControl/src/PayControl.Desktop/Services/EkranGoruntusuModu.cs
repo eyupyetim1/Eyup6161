@@ -90,10 +90,68 @@ public static class EkranGoruntusuModu
         var cikis = new IstenCikisWindow(cikisVm);
         await KaydetAsync(cikis, Path.Combine(klasor, "07-isten-cikis.png"));
 
+        // 8) Rapor merkezi — tesis karşılaştırması
+        var raporVm = sp.GetRequiredService<RaporMerkeziViewModel>();
+        raporVm.BaslangicYil = 2026; raporVm.BaslangicAy = 9; raporVm.BitisYil = 2026; raporVm.BitisAy = 9;
+        raporVm.SeciliTanim = raporVm.Tanimlar.First(t => t.Tur == RaporTuru.TesisKarsilastirma);
+        await KaydetAsync(new RaporMerkeziWindow(raporVm), Path.Combine(klasor, "08-rapor-merkezi.png"), async () =>
+        {
+            await Task.Delay(600);
+            foreach (var a in raporVm.Alicilar.Take(2)) a.Secili = true;
+        });
+
+        // 9) Bildirimler — otomatik kurallar
+        var bildirimVm = sp.GetRequiredService<BildirimlerViewModel>();
+        await KaydetAsync(new BildirimlerWindow(bildirimVm), Path.Combine(klasor, "09-bildirimler.png"), async () =>
+        {
+            await Task.Delay(400);
+            bildirimVm.SeciliKural = bildirimVm.Kurallar.FirstOrDefault();
+        }, sekme: 1);
+
+        // 10) Uyarı merkezi
+        await KaydetAsync(sp.GetRequiredService<UyariMerkeziWindow>(), Path.Combine(klasor, "10-uyari-merkezi.png"));
+
+        // 11) Tesisler — dönem tesis onayları
+        var tesisVm = sp.GetRequiredService<TesislerViewModel>();
+        tesisVm.DonemeOdaklan(2026, 9);
+        await KaydetAsync(new TesislerWindow(tesisVm), Path.Combine(klasor, "11-tesis-onaylari.png"));
+
+        // 12) Denetim geçmişi
+        var denetimVm = sp.GetRequiredService<DenetimGecmisiViewModel>();
+        denetimVm.Baslangic = DateTime.Today.AddDays(-1);
+        await KaydetAsync(new DenetimGecmisiWindow(denetimVm), Path.Combine(klasor, "12-denetim-gecmisi.png"));
+
+        // 13) Ayarlar ve yönetim — kullanıcılar
+        await KaydetAsync(sp.GetRequiredService<YonetimWindow>(), Path.Combine(klasor, "13-ayarlar-yonetim.png"));
+
+        // 14) Personel kartı — icra / BES / tahsilat
+        var detayVm2 = sp.GetRequiredService<PersonelDetayViewModel>();
+        await KaydetAsync(new PersonelDetayWindow(detayVm2), Path.Combine(klasor, "14-personel-icra-bes-tahsilat.png"),
+            () => detayVm2.YukleAsync(demo.IcraPersonelId), sekme: -3);
+
         try { Directory.Delete(gecici, true); } catch { /* yoksay */ }
     }
 
-    private static async Task KaydetAsync(Window w, string yol, Func<Task>? hazirla = null)
+    /// <summary>Penceredeki ilk TabControl'de sekme seçer (negatif: sondan).</summary>
+    private static void SekmeSec(DependencyObject kok, int sekme)
+    {
+        var tc = Bul<System.Windows.Controls.TabControl>(kok);
+        if (tc is null || tc.Items.Count == 0) return;
+        tc.SelectedIndex = sekme >= 0 ? Math.Min(sekme, tc.Items.Count - 1) : Math.Max(0, tc.Items.Count + sekme);
+    }
+
+    private static T? Bul<T>(DependencyObject d) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+        {
+            var c = VisualTreeHelper.GetChild(d, i);
+            if (c is T t) return t;
+            if (Bul<T>(c) is { } r) return r;
+        }
+        return null;
+    }
+
+    private static async Task KaydetAsync(Window w, string yol, Func<Task>? hazirla = null, int? sekme = null)
     {
         // Pencere önce gerçekten açılır (bağlamalar, Loaded); ardından içerik ekran boyutundan bağımsız
         // olarak pencerenin tasarım boyutunda yeniden yerleştirilip çizilir.
@@ -108,6 +166,11 @@ public static class EkranGoruntusuModu
         w.Show();
         if (hazirla is not null)
             await hazirla();
+        if (sekme is { } sk)
+        {
+            await w.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+            SekmeSec(w, sk);
+        }
         await Task.Delay(400);
 
         var genislik = tasarimGenislik - 16;   // pencere kenarlığı
@@ -148,7 +211,7 @@ public static class EkranGoruntusuModu
 
     // ------------------------------------------------------------------ Demo veri
 
-    private sealed record DemoSonuc(Guid EkstrePersonelId, string EkimBordroDosyasi, string EkimBankaDosyasi, string KasimBordroDosyasi);
+    private sealed record DemoSonuc(Guid EkstrePersonelId, string EkimBordroDosyasi, string EkimBankaDosyasi, string KasimBordroDosyasi, Guid IcraPersonelId);
 
     private sealed record P(string Tc, string Ad, string Tesis, string Gorev, decimal Maas, int IbanNo, DateOnly Giris);
 
@@ -256,7 +319,55 @@ public static class EkranGoruntusuModu
         var kasim = ekim.Where(s => s.P.Tc != "10000000010").Select(s => s with { Avans = s.P.Tc == "10000000001" ? 4000m : null, Cikis = null, Gun = 30 }).ToList();
         File.WriteAllBytes(kasimYol, BordroExcel(kasim));
 
-        return new DemoSonuc(ayse, ekimYol, bankaYol, kasimYol);
+        // 1.3: tesisler, icra/BES/tahsilat, bildirim alıcıları ve kuralları, tesis onayı
+        var tesisSrv = sp.GetRequiredService<ITesisServisi>();
+        await tesisSrv.EksikleriOlusturAsync(k);
+        foreach (var t in await tesisSrv.ListeleAsync())
+            await tesisSrv.KaydetAsync(new TesisDto
+            {
+                Id = t.Tesis.Id, Kod = t.Tesis.Kod, Ad = t.Tesis.Ad, Sirket = Sirket, Aktif = true,
+                SorumluAdSoyad = t.Tesis.Ad switch { "İstanbul Depo" => "Murat Er", "Ankara Depo" => "Hande Yıldız", _ => "Can Tekin" },
+                SorumluEposta = "sorumlu@ornek.test"
+            }, k);
+        await tesisSrv.TesisOnaylaAsync(eylulDonem.Id, "İstanbul Depo", "Bordro ve banka tutarları kontrol edildi.", k);
+
+        var kesinti = sp.GetRequiredService<IKesintiServisi>();
+        var hasan = idler["10000000008"];
+        await kesinti.IcraDosyasiKaydetAsync(hasan, "2026/4417 E.", "Ankara 12. İcra Dairesi", "Örnek Finans A.Ş.", 48000m, 0.25m, 1, new DateOnly(2026, 8, 1), k);
+        await kesinti.IcraDosyasiKaydetAsync(hasan, "2026/5120 E.", "Ankara 3. İcra Dairesi", "Demo Bank", 15000m, 0.25m, 2, new DateOnly(2026, 9, 15), k);
+        await kesinti.BesTanimlaAsync(hasan, 0.03m, new DateOnly(2025, 1, 1), k);
+
+        var bildirim = sp.GetRequiredService<IBildirimServisi>();
+        await bildirim.AliciKaydetAsync(new BildirimAlicisi { AdSoyad = "Genel Müdür", Eposta = "gm@ornek.test", Telefon = "05321112233", Rol = "Yönetici" }, k);
+        await bildirim.AliciKaydetAsync(new BildirimAlicisi { AdSoyad = "Murat Er", Eposta = "murat@ornek.test", Telefon = "05331112233", Rol = "Tesis sorumlusu", Tesis = "İstanbul Depo" }, k);
+        await bildirim.AliciKaydetAsync(new BildirimAlicisi { AdSoyad = "Hande Yıldız", Eposta = "hande@ornek.test", Rol = "Tesis sorumlusu", Tesis = "Ankara Depo" }, k);
+        await bildirim.AliciKaydetAsync(new BildirimAlicisi { AdSoyad = "Muhasebe Ekibi", Eposta = "muhasebe@ornek.test", Rol = "Muhasebe" }, k);
+        await bildirim.KuralKaydetAsync(new BildirimKurali
+        {
+            Ad = "Aylık tesis karşılaştırması", Tetikleyici = BildirimTetikleyici.ZamanlanmisRapor, Siklik = BildirimSikligi.Aylik, Gun = 5, Saat = 9,
+            Kanal = BildirimKanali.Eposta, AliciRolu = "Yönetici", RaporTuru = RaporTuru.TesisKarsilastirma, RaporBicimi = RaporBicimi.Pdf
+        }, k);
+        await bildirim.KuralKaydetAsync(new BildirimKurali
+        {
+            Ad = "Tesis bazlı bordro özeti", Tetikleyici = BildirimTetikleyici.ZamanlanmisRapor, Siklik = BildirimSikligi.Aylik, Gun = 6, Saat = 10,
+            Kanal = BildirimKanali.EpostaVeWhatsApp, AliciRolu = "Tesis sorumlusu", Tesis = "İstanbul Depo", RaporTuru = RaporTuru.DonemBordroOzeti
+        }, k);
+        await bildirim.KuralKaydetAsync(new BildirimKurali
+        {
+            Ad = "Günlük kritik uyarı özeti", Tetikleyici = BildirimTetikleyici.UyariOzeti, Siklik = BildirimSikligi.Gunluk, Saat = 8,
+            Kanal = BildirimKanali.WhatsApp, AliciRolu = "Muhasebe"
+        }, k);
+        await bildirim.KuralKaydetAsync(new BildirimKurali
+        {
+            Ad = "Dönem kapandığında bildir", Tetikleyici = BildirimTetikleyici.DonemKapandi, Kanal = BildirimKanali.Eposta, AliciRolu = "Yönetici"
+        }, k);
+        await bildirim.WhatsAppBaglantisiAsync("05321112233", "Eylül 2026 bordro özeti hazır.", k);
+
+        var kimlik = sp.GetRequiredService<IKimlikServisi>();
+        await kimlik.OlusturAsync(new KullaniciOlusturDto { KullaniciAdi = "muhasebe1", Sifre = "Muhasebe2026", Rol = KullaniciRolu.Muhasebe, AdSoyad = "Seda Uçar", Eposta = "seda@ornek.test" }, k);
+        await kimlik.OlusturAsync(new KullaniciOlusturDto { KullaniciAdi = "denetci", Sifre = "Denetim2026", Rol = KullaniciRolu.Goruntuleyici, AdSoyad = "Okan Bal" }, k);
+
+        return new DemoSonuc(ayse, ekimYol, bankaYol, kasimYol, hasan);
     }
 
     private static decimal NetHesapla(decimal brut) => Math.Round(brut * 0.71m, 2);
