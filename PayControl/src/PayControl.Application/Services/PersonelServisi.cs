@@ -25,25 +25,14 @@ public sealed class PersonelServisi : IPersonelServisi
         string? isyeri = null,
         CancellationToken ct = default)
     {
-        var q = _db.Personeller.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(arama))
-        {
-            var a = IsimKurallari.Duzelt(arama)!;
-            q = q.Where(p =>
-                p.AdSoyad.Contains(a) ||
-                p.TcKimlikNo.Contains(a) ||
-                (p.SicilNo != null && p.SicilNo.Contains(a)));
-        }
-
-        if (!string.IsNullOrWhiteSpace(sirket))
-            q = q.Where(p => p.Sirket == sirket);
-
-        if (!string.IsNullOrWhiteSpace(isyeri))
-            q = q.Where(p => p.Isyeri == isyeri);
-
-        return await q
-            .OrderBy(p => p.AdSoyad)
+        // Türkçe harf/büyük-küçük harf duyarsız arama bellekte yapılır (SQLite yalnız İngilizce harflerde duyarsızdır)
+        var tum = await _db.Personeller.AsNoTracking().ToListAsync(ct);
+        var trKarsilastir = StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"), true);
+        return tum
+            .Where(p => AramaKurallari.Eslesir(arama, p.AdSoyad, p.TcKimlikNo, p.SicilNo, p.Gorevi, p.Telefon))
+            .Where(p => string.IsNullOrWhiteSpace(sirket) || AramaKurallari.Eslesir(sirket, p.Sirket))
+            .Where(p => string.IsNullOrWhiteSpace(isyeri) || AramaKurallari.Eslesir(isyeri, p.Isyeri))
+            .OrderBy(p => p.AdSoyad, trKarsilastir)
             .Select(p => new PersonelOzetDto
             {
                 Id = p.Id,
@@ -57,7 +46,7 @@ public sealed class PersonelServisi : IPersonelServisi
                 GuncelMaas = p.GuncelMaas,
                 Iban = p.Iban
             })
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<PersonelDetayDto?> GetirAsync(Guid id, CancellationToken ct = default)

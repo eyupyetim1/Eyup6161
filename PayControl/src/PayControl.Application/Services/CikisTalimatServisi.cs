@@ -1,3 +1,4 @@
+using PayControl.Domain.Services;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using PayControl.Application.Interfaces;
@@ -143,7 +144,7 @@ public sealed class CikisTalimatServisi : ICikisTalimatServisi
         if (f.YalnizSorunlu) q = q.Where(s => s.Durum == CikisTakipDurumu.Gecikti || s.TahminiFazlaOdeme > 0 || s.SonrakiBordroSayisi > 0);
         if (!string.IsNullOrWhiteSpace(f.Tesis)) q = q.Where(s => string.Equals(s.Tesis, f.Tesis, StringComparison.CurrentCultureIgnoreCase));
         if (!string.IsNullOrWhiteSpace(f.Metin))
-            q = q.Where(s => s.AdSoyad.Contains(f.Metin, StringComparison.CurrentCultureIgnoreCase) || s.TcKimlikNo.Contains(f.Metin));
+            q = q.Where(s => AramaKurallari.Eslesir(f.Metin, s.AdSoyad, s.TcKimlikNo, s.Tesis, s.Neden, s.Sorumlu));
         if (f.Baslangic is { } bas) q = q.Where(s => s.Durum is CikisTakipDurumu.Bekliyor or CikisTakipDurumu.Gecikti || s.SonCalismaGunu >= bas);
         return q.OrderBy(s => s.Durum switch { CikisTakipDurumu.Gecikti => 0, CikisTakipDurumu.Bekliyor => 1, CikisTakipDurumu.CikisYapildi => 2, _ => 3 })
             .ThenByDescending(s => s.TahminiFazlaOdeme).ThenByDescending(s => s.SonCalismaGunu).ToList();

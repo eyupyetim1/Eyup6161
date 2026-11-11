@@ -71,6 +71,13 @@ public partial class CikisTakibiViewModel : ObservableObject
     public bool SeciliBekliyor => SeciliSatir?.TalimatId is not null && SeciliSatir.Durum is CikisTakipDurumu.Bekliyor or CikisTakipDurumu.Gecikti;
 
     partial void OnYalnizSorunluChanged(bool value) => _ = YenileAsync();
+    private CancellationTokenSource? _aramaGecikme;
+    partial void OnAramaChanged(string? value)
+    {
+        _aramaGecikme?.Cancel();
+        var cts = _aramaGecikme = new CancellationTokenSource();
+        _ = Task.Delay(250, cts.Token).ContinueWith(t => { if (!t.IsCanceled) _ = YenileAsync(); }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
     partial void OnSeciliTesisChanged(string value) => _ = YenileAsync();
 
     partial void OnSeciliSatirChanged(CikisTakipDto? value)

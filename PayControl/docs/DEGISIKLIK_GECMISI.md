@@ -1,5 +1,13 @@
 # Değişiklik Geçmişi
 
+## 1.5.0 — 2026-11-11
+
+- **Tüm Access tabloları aktarılıyor** (35 tablo daha): izin hareketleri, HT bakiye sabitleme, görev/hasat izin kesintileri, manuel düzeltmeler, izin işlem geçmişi, personel belgeleri ve belge tanımları, şirket ve personel sözleşmeleri, İSG belgeleri, zimmet/malzeme/bakım, eğitim/katılım/türler, avans ve taksitler, fazla mesai, disiplin, görevlendirme, işe giriş kontrolü, şirketler ve eşleşmeleri, eski kullanıcılar/yetkiler/ayarlar/günlükler. Sütunlar Access ile birebir.
+- Yeni menü grubu **İK ve özlük**: İzin ve bakiye, Personel dosyaları, Sözleşmeler, İSG belgeleri, İK işlemleri, Şirketler. Her tablo kendi sekmesinde; personel adı TC'den otomatik; arama, ekleme, düzeltme, silme, Excel'e aktarma.
+- **Hazır veri paketi**: kurulumla gelen `baslangic-verisi.zip` ilk açılışta (programda personel yokken) bir kez otomatik yüklenir; Access sürücüsü gerekmez. Veri aktarımı ekranı zip paketini de kabul eder.
+- **Arama düzeltildi**: büyük/küçük harf, Türkçe harf (ı/i, ş/s, ğ/g, ü/u, ö/o, ç/c), fazla boşluk ve kelime sırası farkı yok sayılır ("eyup yetim" → "EYÜP YETİM"); yazarken anında süzülür (Enter gerekmez). Personel listesi, puantaj, çıkış takibi, denetim geçmişi ve yeni modül ekranlarında geçerli.
+
+
 ## 1.4.0 — 2026-11-11 (Excel/VBA sisteminin taşınması — 1. paket)
 
 - **Access veri aktarımı** (Yönetim → Veri aktarımı): eski sistemin `Database.accdb` dosyasından tesisler, personel kartları (cinsiyet, doğum tarihi, medeni hal, sicil, telefon, IBAN dahil), tüm tesislerin günlük puantajı, puantaj notları, aylık özetler, nakiller ve kişisel izin ayarları aktarılır. Tekrar çalıştırılabilir. Access sürücüsü 64 ve 32 bit denenir.

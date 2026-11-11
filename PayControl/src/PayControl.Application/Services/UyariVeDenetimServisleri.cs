@@ -228,23 +228,26 @@ public sealed class DenetimServisi : IDenetimServisi
         if (!string.IsNullOrWhiteSpace(f.Islem)) q = q.Where(d => d.Islem == f.Islem);
         if (!string.IsNullOrWhiteSpace(f.VarlikTuru)) q = q.Where(d => d.VarlikTuru == f.VarlikTuru);
         if (f.PersonelId.HasValue) q = q.Where(d => d.PersonelId == f.PersonelId);
-        if (!string.IsNullOrWhiteSpace(f.Metin))
-        {
-            var m = f.Metin.Trim();
-            q = q.Where(d => (d.YeniDeger != null && d.YeniDeger.Contains(m)) || (d.EskiDeger != null && d.EskiDeger.Contains(m)) ||
-                             (d.DegisiklikNedeni != null && d.DegisiklikNedeni.Contains(m)) || (d.AlanAdi != null && d.AlanAdi.Contains(m)));
-        }
         return q;
+    }
+
+    /// <summary>Metin araması Türkçe harf/büyük-küçük harf duyarsız: bellekte yapılır (personel adı da aranır).</summary>
+    private async Task<List<DenetimKaydi>> SuzAsync(DenetimFiltre f, CancellationToken ct)
+    {
+        var liste = await Sorgu(f).Include(d => d.Personel).OrderByDescending(d => d.IslemZamani).ToListAsync(ct);
+        if (string.IsNullOrWhiteSpace(f.Metin)) return liste;
+        return liste.Where(d => AramaKurallari.Eslesir(f.Metin, d.YeniDeger, d.EskiDeger, d.DegisiklikNedeni, d.AlanAdi, d.Islem, d.VarlikTuru,
+            d.KullaniciAdi, d.Personel?.AdSoyad, d.Personel?.TcKimlikNo)).ToList();
     }
 
     public async Task<DenetimSonucu> AraAsync(DenetimFiltre filtre, CancellationToken ct = default)
     {
-        var q = Sorgu(filtre);
+        var liste = await SuzAsync(filtre, ct);
         var boyut = Math.Clamp(filtre.SayfaBoyutu, 10, 2000);
         return new DenetimSonucu
         {
-            Toplam = await q.CountAsync(ct),
-            Kayitlar = await q.Include(d => d.Personel).OrderByDescending(d => d.IslemZamani).Skip((Math.Max(1, filtre.Sayfa) - 1) * boyut).Take(boyut).ToListAsync(ct),
+            Toplam = liste.Count,
+            Kayitlar = liste.Skip((Math.Max(1, filtre.Sayfa) - 1) * boyut).Take(boyut).ToList(),
             Kullanicilar = await _db.DenetimKayitlari.Where(d => d.KullaniciAdi != null).Select(d => d.KullaniciAdi!).Distinct().OrderBy(x => x).ToListAsync(ct),
             Islemler = await _db.DenetimKayitlari.Select(d => d.Islem).Distinct().OrderBy(x => x).ToListAsync(ct)
         };
@@ -252,7 +255,7 @@ public sealed class DenetimServisi : IDenetimServisi
 
     public async Task<byte[]> ExcelAsync(DenetimFiltre filtre, CancellationToken ct = default)
     {
-        var kayitlar = await Sorgu(filtre).OrderByDescending(d => d.IslemZamani).Take(100_000).ToListAsync(ct);
+        var kayitlar = (await SuzAsync(filtre, ct)).Take(100_000).ToList();
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Denetim İzi");
         string[] b = ["Zaman", "Kullanıcı", "İşlem", "Varlık", "Alan", "Eski değer", "Yeni değer", "Neden", "Personel", "Varlık kimliği"];
@@ -270,7 +273,7 @@ public sealed class DenetimServisi : IDenetimServisi
             ws.Cell(r, 6).Value = d.EskiDeger;
             ws.Cell(r, 7).Value = d.YeniDeger;
             ws.Cell(r, 8).Value = d.DegisiklikNedeni;
-            ws.Cell(r, 9).Value = d.PersonelId?.ToString();
+            ws.Cell(r, 9).Value = d.Personel?.AdSoyad ?? d.PersonelId?.ToString();
             ws.Cell(r, 10).Value = d.VarlikId?.ToString();
             r++;
         }

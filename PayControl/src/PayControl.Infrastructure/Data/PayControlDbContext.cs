@@ -48,6 +48,10 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
     public DbSet<PersonelNakil> PersonelNakilleri => Set<PersonelNakil>();
     public DbSet<PersonelIzinAyari> PersonelIzinAyarlari => Set<PersonelIzinAyari>();
     public DbSet<AylikOzetKaydi> AylikOzetKayitlari => Set<AylikOzetKaydi>();
+    public IQueryable<object> PysSorgu(Type tablo) =>
+        (IQueryable<object>)typeof(DbContext).GetMethod(nameof(Set), Type.EmptyTypes)!.MakeGenericMethod(tablo).Invoke(this, null)!;
+    public void PysEkle(object kayit) => Add(kayit);
+    public void PysSil(object kayit) => Remove(kayit);
     public DbSet<TahsilatTaksiti> TahsilatTaksitleri => Set<TahsilatTaksiti>();
     public DbSet<BildirimAyari> BildirimAyarlari => Set<BildirimAyari>();
     public DbSet<BildirimAlicisi> BildirimAlicilari => Set<BildirimAlicisi>();
@@ -192,6 +196,15 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.HasIndex(x => new { x.VarlikTuru, x.VarlikId });
             e.HasIndex(x => x.PersonelId);
         });
+        // Eski sistem (Access) tabloları: Access sütun adlarıyla birebir, anahtar PysId
+        foreach (var (ad, tur) in PayControl.Domain.Entities.Pys.PysTablolari.Tumu)
+        {
+            var e = modelBuilder.Entity(tur);
+            e.ToTable("Pys_" + ad);
+            e.HasKey(nameof(PayControl.Domain.Entities.Pys.IPysTablo.PysId));
+            foreach (var p in tur.GetProperties().Where(p => p.PropertyType == typeof(int?) && (p.Name == "ID" || p.Name.EndsWith("ID"))))
+                e.Property(p.Name).ValueGeneratedNever();
+        }
         modelBuilder.Entity<PuantajGunu>(e =>
         {
             e.HasKey(x => x.Id);

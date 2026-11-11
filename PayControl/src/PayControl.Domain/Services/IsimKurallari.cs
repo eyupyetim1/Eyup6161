@@ -35,3 +35,33 @@ public static class IsimKurallari
 
     private static bool Gorunmez(char c) => c is '​' or '‌' or '‍' or '⁠' or '﻿' or '­';
 }
+
+/// <summary>
+/// Türkçe arama: büyük/küçük harf, Türkçe harf (ı/i, ş/s, ğ/g, ü/u, ö/o, ç/c), fazla boşluk ve kelime sırası farkı yok sayılır.
+/// "eyup yetim", "YETİM eyüp", "Eyüp  Yetim" → "EYÜP YETİM" ile eşleşir. Rakamlar (TC, sicil) parça olarak aranır.
+/// </summary>
+public static class AramaKurallari
+{
+    public static string Normalize(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+        var u = (IsimKurallari.Duzelt(s) ?? "").ToUpper(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
+        var sb = new System.Text.StringBuilder(u.Length);
+        foreach (var c in u)
+            sb.Append(c switch
+            {
+                'İ' or 'I' or 'Î' => 'I', 'Ş' => 'S', 'Ğ' => 'G', 'Ü' or 'Û' => 'U', 'Ö' => 'O', 'Ç' => 'C', 'Â' => 'A',
+                _ => c
+            });
+        return sb.ToString();
+    }
+
+    /// <summary>Aramadaki her kelime alanlardan birinde geçiyorsa true (boş arama her şeyle eşleşir).</summary>
+    public static bool Eslesir(string? arama, params string?[] alanlar)
+    {
+        var a = Normalize(arama);
+        if (a.Length == 0) return true;
+        var metin = string.Join(" | ", alanlar.Where(x => !string.IsNullOrEmpty(x)).Select(Normalize));
+        return a.Split(' ', StringSplitOptions.RemoveEmptyEntries).All(metin.Contains);
+    }
+}

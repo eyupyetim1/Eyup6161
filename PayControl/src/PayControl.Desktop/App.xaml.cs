@@ -90,6 +90,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<NakilWindow>();
         services.AddTransient<VeriAktarimiViewModel>();
         services.AddTransient<VeriAktarimiWindow>();
+        services.AddTransient<ModulVeriViewModel>();
+        services.AddTransient<ModulVeriWindow>();
         services.AddTransient<CikisTakibiWindow>();
         services.AddTransient<RaporMerkeziWindow>();
         services.AddTransient<BildirimlerWindow>();
@@ -97,6 +99,42 @@ public partial class App : System.Windows.Application
         services.AddTransient<DenetimGecmisiWindow>();
         services.AddTransient<TesislerWindow>();
         services.AddTransient<YonetimWindow>();
+    }
+
+    /// <summary>İlk açılış mesajı (başlangıç verisi yüklendiyse ana ekranda gösterilir).</summary>
+    public static string? AcilisMesaji { get; private set; }
+
+    /// <summary>
+    /// Kurulumla gelen hazır veri paketi (baslangic-verisi.zip: eski Access sisteminin tabloları) ilk açılışta,
+    /// programda hiç personel yokken bir kez aktarılır.
+    /// </summary>
+    private static async Task BaslangicVerisiniYukleAsync()
+    {
+        var paket = Path.Combine(AppContext.BaseDirectory, "baslangic-verisi.zip");
+        if (!File.Exists(paket)) return;
+        try
+        {
+            using var scope = Services.CreateScope();
+            var sp = scope.ServiceProvider;
+            var ayar = sp.GetRequiredService<PayControl.Application.Interfaces.IAyarServisi>();
+            var ozet = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(await File.ReadAllBytesAsync(paket)));
+            if (await ayar.GetirAsync("BaslangicVerisi.Aktarilan") == ozet) return;
+            var db = sp.GetRequiredService<PayControl.Infrastructure.Data.PayControlDbContext>();
+            if (await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(db.Personeller))
+            {
+                Log.Information("Başlangıç verisi atlandı: programda zaten personel var (Veri aktarımı ekranından elle aktarılabilir)");
+                return;
+            }
+            var sonuc = await sp.GetRequiredService<PayControl.Application.Interfaces.IAccessAktarimServisi>().IceAktarAsync(paket, "admin");
+            await ayar.AyarlaAsync("BaslangicVerisi.Aktarilan", ozet, "admin");
+            AcilisMesaji = "Eski sistemdeki verileriniz yüklendi: " + sonuc;
+            Log.Information("Başlangıç verisi aktarıldı: {Sonuc}", sonuc.ToString());
+        }
+        catch (Exception ex)
+        {
+            AcilisMesaji = "Hazır veri paketi yüklenemedi: " + ex.Message + " (Yönetim → Veri aktarımı ile tekrar deneyin)";
+            Log.Error(ex, "Başlangıç verisi aktarılamadı");
+        }
     }
 
     private System.Windows.Threading.DispatcherTimer? _zamanlayici;
@@ -193,6 +231,7 @@ public partial class App : System.Windows.Application
 
             Services = services.BuildServiceProvider();
             await ServiceCollectionExtensions.InitializeDatabaseAsync(Services);
+            await BaslangicVerisiniYukleAsync();
 
             var login = Services.GetRequiredService<LoginWindow>();
             login.Show();

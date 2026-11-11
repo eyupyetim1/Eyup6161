@@ -61,6 +61,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICikisTalimatServisi, CikisTalimatServisi>();
         services.AddScoped<IPuantajServisi, PuantajServisi>();
         services.AddScoped<IAccessAktarimServisi, Import.AccessAktarimServisi>();
+        services.AddScoped<IEskiVeriServisi, EskiVeriServisi>();
         services.AddSingleton<IZamanlanmisGorevServisi, ZamanlanmisGorevServisi>();
         services.AddScoped<IGuncellemeServisi, Platform.GuncellemeServisi>();
         services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();

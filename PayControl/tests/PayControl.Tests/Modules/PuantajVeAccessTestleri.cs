@@ -63,7 +63,8 @@ public class PuantajVeAccessTestleri : TestOrtami
             $"\"Giresun (Keşap) Limanı\",2026,9,\"{Tc1}\",\"EYÜP YETİM\",4,4,25,1,0,0,0,4,30,0,0,0,0\n");
         File.WriteAllText(Path.Combine(k, "PersonelNakil.csv"), $"NakilID,TCKN,AdSoyad,EskiTesis,YeniTesis,NakilTarihi,Aciklama,KayitTarihi\n1,\"{Tc1}\",\"EYÜP YETİM\",\"Arsin Limanı\",\"Giresun (Keşap) Limanı\",2026-06-01 00:00:00,\"İhtiyaç\",2026-06-01 09:00:00\n");
         File.WriteAllText(Path.Combine(k, "PersonelIzinAyar.csv"), $"TCKN,RTDahil,HaftaTatili\n\"{Tc1}\",1,\"6\"\n");
-        File.WriteAllText(Path.Combine(k, "Zimmet.csv"), "ZimmetID,TCKN\n1,\"x\"\n");
+        File.WriteAllText(Path.Combine(k, "Zimmet.csv"), $"ZimmetID,IslemNo,PersonelID,TCKN,MalzemeID,Miktar,TeslimTarihi,Durum,Iptal,Bedel\n1,10,7,\"{Tc1}\",3,2,2026-09-01 00:00:00,\"Teslim\",0,150.5\n");
+        File.WriteAllText(Path.Combine(k, "Bilinmeyen.csv"), "A,B\n1,2\n");
         return k;
     }
 
@@ -78,7 +79,8 @@ public class PuantajVeAccessTestleri : TestOrtami
         await Assert.ThrowsAsync<YetkiHatasiException>(() => srv.IceAktarAsync(k, Muhasebe));
         var s = await srv.IceAktarAsync(k, Yonetici);
         Assert.Equal((2, 2, 30, 1, 1, 1, 1, 1), (s.Tesis, s.PersonelYeni, s.Puantaj, s.PuantajNotu, s.AylikOzet, s.Nakil, s.IzinAyari, s.CikisYapilan));
-        Assert.Contains("Zimmet", s.AktarilmayanTablolar);
+        Assert.Equal(1, s.DigerTablolar["Zimmet"]);
+        Assert.Contains("Bilinmeyen", s.AktarilmayanTablolar);
 
         var p = await Db.Personeller.AsNoTracking().Include(x => x.CalismaDonemleri).SingleAsync(x => x.TcKimlikNo == Tc1);
         Assert.Equal(("EYÜP YETİM", "Giresun (Keşap) Limanı", "Erkek", "Evli", "S-7", new DateOnly(1990, 5, 4)), (p.AdSoyad, p.Isyeri, p.Cinsiyet, p.MedeniHal, p.SicilNo, p.DogumTarihi!.Value));
@@ -98,6 +100,46 @@ public class PuantajVeAccessTestleri : TestOrtami
         Assert.Equal((25m, 1m, 4m, 4m, 30m), (satir.Ozet.Calisilan, satir.Ozet.YillikIzin, satir.Ozet.HaftasonuHakki, satir.Ozet.HT, satir.Ozet.AylikToplam));
         var aktarilan = await Db.AylikOzetKayitlari.AsNoTracking().SingleAsync();
         Assert.Equal((aktarilan.Calisilan, aktarilan.HaftasonuHakki, aktarilan.AylikToplam), (satir.Ozet.Calisilan, satir.Ozet.HaftasonuHakki, satir.Ozet.AylikToplam));
+    }
+
+    [Fact]
+    public async Task Eski_sistem_tablolari_personel_adiyla_gorunur_duzenlenir_ve_silinir()
+    {
+        await S<IAccessAktarimServisi>().IceAktarAsync(SentetikAccessKlasoru(), Yonetici);
+        var srv = S<IEskiVeriServisi>();
+        Assert.Equal(1, (await srv.SatirSayilariAsync())["Zimmet"]);
+        var dt = await srv.TabloAsync("Zimmet");
+        var r = dt.Rows[0];
+        Assert.Equal("EYÜP YETİM", r["Personel"]);
+        Assert.Equal(150.5m, r["Bedel"]);
+        Assert.Equal(new DateTime(2026, 9, 1), r["TeslimTarihi"]);
+        Assert.Equal("Teslim tarihi", srv.SutunBasligi("TeslimTarihi"));
+
+        r["Durum"] = "İade";
+        var yeni = dt.NewRow();
+        yeni["TCKN"] = Tc1; yeni["Miktar"] = 1; yeni["Durum"] = "Teslim"; yeni["Iptal"] = false;
+        dt.Rows.Add(yeni);
+        await Assert.ThrowsAsync<YetkiHatasiException>(() => srv.KaydetAsync("Zimmet", dt, Izleyici));
+        Assert.Equal(2, await srv.KaydetAsync("Zimmet", dt, Muhasebe));
+        var dt2 = await srv.TabloAsync("Zimmet");
+        Assert.Equal(2, dt2.Rows.Count);
+        Assert.Contains(dt2.Rows.Cast<System.Data.DataRow>(), x => (string)x["Durum"] == "İade");
+        dt2.Rows[0].Delete();
+        Assert.Equal(1, await srv.KaydetAsync("Zimmet", dt2, Muhasebe));
+        Assert.Equal(1, (await srv.SatirSayilariAsync())["Zimmet"]);
+        // Kullanıcı şifre özetleri gösterilmez
+        Assert.DoesNotContain((await srv.TabloAsync("Kullanicilar")).Columns.Cast<System.Data.DataColumn>(), c => c.ColumnName is "SifreOzet" or "Tuz");
+    }
+
+    [Fact]
+    public async Task Hazir_veri_paketi_zip_olarak_aktarilir()
+    {
+        var k = SentetikAccessKlasoru();
+        var zip = Path.Combine(Klasor, "baslangic-verisi.zip");
+        System.IO.Compression.ZipFile.CreateFromDirectory(k, zip);
+        var s = await S<IAccessAktarimServisi>().IceAktarAsync(zip, Yonetici);
+        Assert.Equal(2, s.PersonelYeni);
+        Assert.Equal(30, s.Puantaj);
     }
 
     [Fact]
@@ -134,7 +176,15 @@ public class PuantajVeAccessTestleri : TestOrtami
         if (string.IsNullOrWhiteSpace(klasor) || !Directory.Exists(klasor)) return;
         var s = await S<IAccessAktarimServisi>().IceAktarAsync(klasor, Yonetici);
         _cikti.WriteLine(s.ToString());
-        _cikti.WriteLine("Sonraki aşama tabloları: " + string.Join(", ", s.AktarilmayanTablolar));
+        _cikti.WriteLine("Aktarılmayan tablolar: " + string.Join(", ", s.AktarilmayanTablolar));
+        foreach (var (t, n) in s.DigerTablolar.OrderByDescending(x => x.Value))
+        {
+            var csvSatir = File.ReadAllLines(Path.Combine(klasor, t + ".csv")).Length - 1;
+            _cikti.WriteLine($"  {t}: {n} (CSV satırı ~{csvSatir})");
+        }
+        Assert.Empty(s.AktarilmayanTablolar);
+        Assert.Equal(131, s.DigerTablolar["PersonelBelge"]);
+        Assert.Equal(147, s.DigerTablolar["HTBakiyeSabitleme"]);
         foreach (var u in s.Uyarilar.Take(10)) _cikti.WriteLine("Uyarı: " + u);
 
         var ozetler = await Db.AylikOzetKayitlari.AsNoTracking().ToListAsync();

@@ -155,8 +155,7 @@ public partial class PuantajViewModel : ObservableObject
     {
         Satirlar.Clear();
         if (Tablo is null) return;
-        foreach (var s in Tablo.Satirlar.Where(s => string.IsNullOrWhiteSpace(Arama) ||
-                     s.AdSoyad.Contains(IsimKurallari.Duzelt(Arama)!, StringComparison.CurrentCultureIgnoreCase) || s.TcKimlikNo.Contains(Arama.Trim())))
+        foreach (var s in Tablo.Satirlar.Where(s => AramaKurallari.Eslesir(Arama, s.AdSoyad, s.TcKimlikNo, s.Unvan)))
             Satirlar.Add(new PuantajSatirVM(s, Tablo.Yil, Tablo.Ay));
     }
 

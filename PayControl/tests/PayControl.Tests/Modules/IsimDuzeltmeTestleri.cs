@@ -58,4 +58,30 @@ public class IsimDuzeltmeTestleri : TestOrtami
         Assert.Contains(await Db.DenetimKayitlari.AsNoTracking().ToListAsync(), d => d.AlanAdi == "AdSoyad" && d.EskiDeger == "ALİ  CAN   AKSOY");
         Assert.Equal(0, await ServiceCollectionExtensions.IsimleriDuzeltAsync(Db));
     }
+
+    [Theory]
+    [InlineData("eyüp yetim", true)]
+    [InlineData("eyup yetim", true)]
+    [InlineData("YETİM eyüp", true)]
+    [InlineData("yetım", true)]
+    [InlineData("  Eyüp   ", true)]
+    [InlineData("eyüp kaya", false)]
+    public void Turkce_arama_harf_ve_sira_duyarsiz(string arama, bool beklenen) =>
+        Assert.Equal(beklenen, AramaKurallari.Eslesir(arama, "EYÜP YETİM", "12345678901"));
+
+    [Fact]
+    public async Task Personel_aramasi_kucuk_harf_turkce_harf_ve_tc_parcasiyla_bulur()
+    {
+        var p1 = await PersonelAsync("ALİ ŞEN", 30000, 950, isyeri: "Arsin Limanı");
+        await PersonelAsync("Çağrı Öztürk", 30000, 951, isyeri: "Rize Limanı");
+        var srv = S<IPersonelServisi>();
+        Assert.Single(await srv.ListeleAsync("ali şen"));
+        Assert.Single(await srv.ListeleAsync("sen ali"));
+        Assert.Single(await srv.ListeleAsync("cagri ozturk"));
+        Assert.Single(await srv.ListeleAsync("ÇAĞRI"));
+        Assert.Single(await srv.ListeleAsync(p1.TcKimlikNo[7..]));
+        Assert.Single(await srv.ListeleAsync(null, null, "arsin"));
+        Assert.Equal(2, (await srv.ListeleAsync("")).Count);
+        Assert.Empty(await srv.ListeleAsync("mehmet"));
+    }
 }

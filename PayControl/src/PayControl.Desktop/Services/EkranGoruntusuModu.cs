@@ -141,6 +141,11 @@ public static class EkranGoruntusuModu
         await KaydetAsync(sp.GetRequiredService<NakilWindow>(), Path.Combine(klasor, "17-nakil.png"));
         await KaydetAsync(sp.GetRequiredService<VeriAktarimiWindow>(), Path.Combine(klasor, "18-veri-aktarimi.png"));
 
+        // 19) İzin ve bakiye (eski sistem tabloları)
+        var modul = sp.GetRequiredService<ModulVeriWindow>();
+        modul.Grup = "İzin ve bakiye";
+        await KaydetAsync(modul, Path.Combine(klasor, "19-izin-ve-bakiye.png"), () => Task.Delay(800));
+
         // 15) Çıkış takibi
         var takipVm = sp.GetRequiredService<CikisTakibiViewModel>();
         await KaydetAsync(new CikisTakibiWindow(takipVm), Path.Combine(klasor, "15-cikis-takibi.png"));
@@ -498,6 +503,14 @@ public static class EkranGoruntusuModu
         await puantajSrv.KaydetAsync("Ankara Depo", 2026, 10, degisiklikler, k);
         await puantajSrv.NotKaydetAsync("Ankara Depo", ankara[1].Tc, 2026, 10, 7, "Rapor belgesi teslim alındı", k);
         await puantajSrv.NakilYapAsync(idler["10000000005"], "Ankara Depo", new DateOnly(2026, 11, 1), "Sezon ihtiyacı", k);
+
+        // Eski sistem tabloları (izin hareketleri, HT sabitleme, belgeler)
+        var pdb = sp.GetRequiredService<PayControl.Infrastructure.Data.PayControlDbContext>();
+        pdb.PysEkle(new PayControl.Domain.Entities.Pys.PysIzinHareket { ID = 1, TCKN = "10000000003", Tarih = new DateTime(2026, 10, 12), Tur = "YIKULLANIM", Gun = 5, Aciklama = "Yıllık izin", KayitTarihi = DateTime.Now });
+        pdb.PysEkle(new PayControl.Domain.Entities.Pys.PysIzinHareket { ID = 2, TCKN = "10000000004", Tarih = new DateTime(2026, 10, 29), Tur = "RTKULLANIM", Gun = 1, TatilAdi = "Cumhuriyet Bayramı", KayitTarihi = DateTime.Now });
+        pdb.PysEkle(new PayControl.Domain.Entities.Pys.PysHTBakiyeSabitleme { ID = 1, TCKN = "10000000003", EtkinTarih = new DateTime(2026, 9, 30), Bakiye = 3, Aciklama = "Eylül sonu sayım", KayitTarihi = DateTime.Now });
+        pdb.PysEkle(new PayControl.Domain.Entities.Pys.PysHTBakiyeSabitleme { ID = 2, TCKN = "10000000008", EtkinTarih = new DateTime(2026, 9, 30), Bakiye = -1.5m, Aciklama = "Eylül sonu sayım", KayitTarihi = DateTime.Now });
+        await pdb.SaveChangesAsync();
 
         return new DemoSonuc(ayse, ekimYol, bankaYol, kasimYol, hasan);
     }

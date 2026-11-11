@@ -46,6 +46,10 @@ public interface IPayControlDbContext
     DbSet<PersonelNakil> PersonelNakilleri { get; }
     DbSet<PersonelIzinAyari> PersonelIzinAyarlari { get; }
     DbSet<AylikOzetKaydi> AylikOzetKayitlari { get; }
+    /// <summary>Eski sistem (Access) tablosu sorgusu.</summary>
+    IQueryable<object> PysSorgu(Type tablo);
+    void PysEkle(object kayit);
+    void PysSil(object kayit);
     DbSet<TahsilatTaksiti> TahsilatTaksitleri { get; }
     DbSet<BildirimAyari> BildirimAyarlari { get; }
     DbSet<BildirimAlicisi> BildirimAlicilari { get; }

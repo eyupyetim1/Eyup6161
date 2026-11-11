@@ -141,10 +141,26 @@ public partial class MainViewModel : ObservableObject
         win.ShowDialog();
     }
 
+    private CancellationTokenSource? _aramaGecikme;
+
+    /// <summary>Yazarken arama: son tuştan 250 ms sonra liste süzülür (Enter beklenmez).</summary>
+    private async void AramaTetikle()
+    {
+        _aramaGecikme?.Cancel();
+        var cts = _aramaGecikme = new CancellationTokenSource();
+        try { await Task.Delay(250, cts.Token); await YenileAsync(); }
+        catch (TaskCanceledException) { }
+    }
+
+    partial void OnAramaChanged(string value) => AramaTetikle();
+    partial void OnFiltreSirketChanged(string? value) => AramaTetikle();
+    partial void OnFiltreIsyeriChanged(string? value) => AramaTetikle();
+
     public async Task IlkYukleAsync()
     {
         await YenileAsync();
         await GostergeYukleAsync();
+        if (App.AcilisMesaji is { } m) DurumMetni = m;
         _ = GuncellemeDenetleAsync();
     }
 
@@ -210,6 +226,9 @@ public partial class MainViewModel : ObservableObject
         });
         _ = GostergeYukleAsync();
     }
+
+    [RelayCommand]
+    private void Modul(string? grup) => ArayuzYardimcisi.PencereAc<ModulVeriWindow>(w => w.Grup = grup ?? "İK işlemleri");
 
     [RelayCommand] private void Nakil() { Ac<NakilWindow>(); _ = YenileAsync(); }
     [RelayCommand] private void VeriAktarimi() { Ac<VeriAktarimiWindow>(); _ = YenileAsync(); _ = GostergeYukleAsync(); }

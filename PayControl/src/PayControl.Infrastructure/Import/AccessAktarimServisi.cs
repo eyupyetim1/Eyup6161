@@ -115,6 +115,15 @@ public sealed class AccessAktarimServisi : IAccessAktarimServisi
     public async Task<AccessAktarimSonucu> IceAktarAsync(string csvKlasoru, string kullanici, CancellationToken ct = default)
     {
         await _yetki.DogrulaAsync(kullanici, KullaniciRolu.Yonetici, "Access verisi aktarımı", ct);
+        if (File.Exists(csvKlasoru) && csvKlasoru.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            // Hazır veri paketi (CSV'lerin zip'i)
+            var acilan = Path.Combine(Path.GetTempPath(), $"pys-paket-{Guid.NewGuid():N}");
+            System.IO.Compression.ZipFile.ExtractToDirectory(csvKlasoru, acilan);
+            var ic = Directory.GetFiles(acilan, "Personel.csv", SearchOption.AllDirectories).FirstOrDefault();
+            try { return await IceAktarAsync(ic is null ? acilan : Path.GetDirectoryName(ic)!, kullanici, ct); }
+            finally { try { Directory.Delete(acilan, true); } catch { /* yoksay */ } }
+        }
         if (!Directory.Exists(csvKlasoru)) throw new InvalidOperationException("Aktarım klasörü bulunamadı.");
         string Yol(string t) => Path.Combine(csvKlasoru, t + ".csv");
         if (!File.Exists(Yol("Personel"))) throw new InvalidOperationException("Klasörde Personel tablosu yok; doğru Access dosyası mı?");
@@ -303,6 +312,16 @@ public sealed class AccessAktarimServisi : IAccessAktarimServisi
                 sonuc.IzinAyari++;
             }
         }
+
+        // --- Diğer tüm tablolar (izin, belge, sözleşme, İSG, zimmet, eğitim, avans, mesai, disiplin, görev, şirket…): Access sütunlarıyla birebir
+        foreach (var (tablo, _) in PayControl.Domain.Entities.Pys.PysTablolari.Tumu)
+        {
+            if (!File.Exists(Yol(tablo))) continue;
+            bilinen.Add(tablo);
+            var n = await PayControl.Application.Services.EskiVeriServisi.CsvdenAktarAsync(_db, tablo, CsvOkuyucu.Oku(Yol(tablo)), ct);
+            sonuc.DigerTablolar[tablo] = n;
+        }
+        foreach (var t in new[] { "OturumKilit", "SemaSurum", "GirisKayit" }) bilinen.Add(t); // eski programın teknik tabloları
 
         foreach (var f in Directory.GetFiles(csvKlasoru, "*.csv").Select(Path.GetFileNameWithoutExtension))
             if (!bilinen.Contains(f!) && !f!.StartsWith("PuantajGunluk_") && new FileInfo(Yol(f)).Length > 0 && File.ReadLines(Yol(f)).Skip(1).Any())

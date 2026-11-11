@@ -25,7 +25,7 @@
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Personel Yönetim" FontFamily="{StaticResource BaslikFont}" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Text="Sistemi · 1.4.0" FontSize="11.5" Foreground="#8EA0BC" ToolTip="Sürüm 1.4.0 · Bankaya otomatik ödeme göndermez"/>
+                        <TextBlock Text="Sistemi · 1.5.0" FontSize="11.5" Foreground="#8EA0BC" ToolTip="Sürüm 1.5.0 · Bankaya otomatik ödeme göndermez"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -113,6 +113,46 @@
                             </Button>
                         </StackPanel>
                     </Expander>
+                    <Expander Style="{StaticResource MenuGrubu}" IsExpanded="True" Tag="&#xE8F1;" Header="İK ve özlük">
+                        <StackPanel>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="İzin ve bakiye" ToolTip="İzin hareketleri, HT bakiye sabitleme, kesintiler, manuel düzeltmeler">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE823;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="İzin ve bakiye"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="Personel dosyaları" ToolTip="Kimde hangi belge tam, bekleniyor, eksik">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8A5;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Personel dosyaları"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="Sözleşmeler" ToolTip="Şirket ve personel sözleşmeleri">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8F4;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Sözleşmeler"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="İSG" ToolTip="İşyeri İSG belgeleri ve süreleri">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE7BA;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="İSG belgeleri"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="İK işlemleri" ToolTip="Zimmet, eğitim, avans, fazla mesai, disiplin, görevlendirme, işe giriş">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8EF;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="İK işlemleri"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="Şirketler" ToolTip="Şirketler ve eşleşmeler">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE731;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Şirketler"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Expander>
                     <Expander Style="{StaticResource MenuGrubu}" IsExpanded="True" Tag="&#xE8C7;" Header="Maaş ve ödeme">
                         <StackPanel>
                             <Button Style="{StaticResource MenuButon}" Command="{Binding OdemeKontrolCommand}" ToolTip="Banka dosyasını göndermeden önce bordro ile karşılaştır">
@@ -157,6 +197,12 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE81C;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
                                     <TextBlock Text="Denetim geçmişi"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource MenuButon}" Command="{Binding ModulCommand}" CommandParameter="Sistem" ToolTip="Eski programın kullanıcıları, ayarları ve günlükleri">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE9F9;" Style="{StaticResource IkonYazi}" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Eski sistem kayıtları"/>
                                 </StackPanel>
                             </Button>
                             <Button Style="{StaticResource MenuButon}" Command="{Binding VeriAktarimiCommand}" ToolTip="Eski Excel/Access sisteminden veri aktar" Visibility="{Binding Yonetici, Converter={StaticResource BoolGorunur}}">

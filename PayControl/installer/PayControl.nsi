@@ -96,6 +96,10 @@ Section "PayControl" SecAna
   Delete "$INSTDIR\*.dll"
 
   File /r "${KAYNAK}\*.*"
+!ifdef VERI
+  ; Eski sistem verileri: ilk açılışta otomatik yüklenir (yalnız size özel kurulum)
+  File "/oname=baslangic-verisi.zip" "${VERI}"
+!endif
   File "/oname=PayControl.ico" "${KAYNAK}\..\PayControl.ico"
 
   CreateDirectory "$INSTDIR\Ornekler"

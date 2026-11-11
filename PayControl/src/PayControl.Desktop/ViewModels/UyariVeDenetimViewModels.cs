@@ -111,6 +111,14 @@ public partial class DenetimGecmisiViewModel : ObservableObject
     private int _toplam;
     private const int SayfaBoyutu = 200;
 
+    private CancellationTokenSource? _aramaGecikme;
+    partial void OnMetinChanged(string? value)
+    {
+        _aramaGecikme?.Cancel();
+        var cts = _aramaGecikme = new CancellationTokenSource();
+        _ = Task.Delay(300, cts.Token).ContinueWith(t => { if (!t.IsCanceled) { Sayfa = 1; _ = AraAsync(); } }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
     private DenetimFiltre Filtre() => new()
     {
         Baslangic = Baslangic?.Date,

@@ -11,11 +11,13 @@ public sealed class AccessAktarimSonucu
     public int Nakil { get; set; }
     public int IzinAyari { get; set; }
     public int CikisYapilan { get; set; }
+    public Dictionary<string, int> DigerTablolar { get; } = new();
     public List<string> Uyarilar { get; } = new();
     public List<string> AktarilmayanTablolar { get; } = new();
     public override string ToString() =>
         $"{Tesis} tesis, {PersonelYeni} yeni / {PersonelGuncellenen} güncellenen personel ({CikisYapilan} çıkışlı), {Puantaj:N0} puantaj günü, " +
-        $"{PuantajNotu} puantaj notu, {AylikOzet} aylık özet, {Nakil} nakil, {IzinAyari} kişisel izin ayarı aktarıldı.";
+        $"{PuantajNotu} puantaj notu, {AylikOzet} aylık özet, {Nakil} nakil, {IzinAyari} kişisel izin ayarı" +
+        (DigerTablolar.Count == 0 ? "" : $"; ayrıca {DigerTablolar.Count} tabloda {DigerTablolar.Values.Sum():N0} kayıt (izin, belge, sözleşme, İSG, zimmet, eğitim, avans, şirket…)") + " aktarıldı.";
 }
 
 public interface IAccessAktarimServisi
