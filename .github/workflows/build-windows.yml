@@ -114,6 +114,8 @@ jobs:
         shell: pwsh
         working-directory: PayControl
         run: |
+          # GitHub imajında Access sürücüsü yok: Microsoft'un ücretsiz Access Database Engine'i (x64) kurulur
+          choco install msaccess2010-redist-x64 -y --no-progress | Select-Object -Last 3
           $db = Join-Path $env:RUNNER_TEMP 'deneme.accdb'
           $olustur = @"
           `$cat = New-Object -ComObject ADOX.Catalog
