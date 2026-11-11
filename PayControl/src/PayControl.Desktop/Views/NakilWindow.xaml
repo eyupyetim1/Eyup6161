@@ -1,0 +1,64 @@
+<Window x:Class="PayControl.Desktop.Views.NakilWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nakil Geçmişi"
+        Height="760" Width="1240" MinHeight="560" MinWidth="980"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <DockPanel Margin="24,20,24,20">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <TextBlock Text="Nakil geçmişi" Style="{StaticResource SayfaBasligi}"/>
+            <TextBlock Style="{StaticResource AltBaslik}" Text="Tesisler arası tüm personel aktarımları"/>
+        </StackPanel>
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource BilgiSeridi}" Margin="0,12,0,0" Visibility="{Binding Mesaj, Converter={StaticResource Gorunurluk}}">
+            <TextBlock Text="{Binding Mesaj}" Style="{StaticResource MesajYazi}"/>
+        </Border>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="340"/>
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="16,12,16,10">
+                        <ComboBox DockPanel.Dock="Right" Width="200" ItemsSource="{Binding FiltreTesisler}" SelectedItem="{Binding FiltreTesis}"/>
+                        <TextBlock Text="{Binding Nakiller.Count, StringFormat={}{0} nakil}" Style="{StaticResource BolumBasligi}" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DataGrid ItemsSource="{Binding Nakiller}" IsReadOnly="True" BorderThickness="0,1,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding NakilTarihi, StringFormat=dd.MM.yyyy}" Width="100"/>
+                            <DataGridTextColumn Header="Personel" Binding="{Binding AdSoyad}" Width="1.3*"/>
+                            <DataGridTextColumn Header="TC" Binding="{Binding TcKimlikNo}" Width="110" ElementStyle="{StaticResource SolukHucre}"/>
+                            <DataGridTextColumn Header="Eski tesis" Binding="{Binding EskiTesis}" Width="*"/>
+                            <DataGridTextColumn Header="Yeni tesis" Binding="{Binding YeniTesis}" Width="*"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="*" ElementStyle="{StaticResource SarilanHucre}"/>
+                            <DataGridTextColumn Header="Kullanıcı" Binding="{Binding Kullanici}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource Kart}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="Personel aktar" Style="{StaticResource BolumBasligi}" Margin="0,0,0,12"/>
+                    <TextBlock Text="Personel" Style="{StaticResource AlanEtiketi}"/>
+                    <ComboBox ItemsSource="{Binding Personeller}" SelectedItem="{Binding SeciliPersonel}" IsEditable="True" IsTextSearchEnabled="True"
+                              TextSearch.TextPath="AdSoyad" DisplayMemberPath="AdSoyad" Margin="0,4,0,6"/>
+                    <TextBlock Text="{Binding SeciliPersonel.Isyeri, StringFormat=Şu anki tesis: {0}}" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12"/>
+                    <TextBlock Text="Yeni tesis" Style="{StaticResource AlanEtiketi}"/>
+                    <ComboBox ItemsSource="{Binding Tesisler}" SelectedItem="{Binding YeniTesis}" Margin="0,4,0,12"/>
+                    <TextBlock Text="Nakil tarihi" Style="{StaticResource AlanEtiketi}"/>
+                    <DatePicker SelectedDate="{Binding NakilTarihi}" Margin="0,4,0,12"/>
+                    <TextBlock Text="Açıklama" Style="{StaticResource AlanEtiketi}"/>
+                    <TextBox Text="{Binding Aciklama}" Margin="0,4,0,14"/>
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding NakilYapCommand}" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8AB;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                            <TextBlock Text="Nakli kaydet"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

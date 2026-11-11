@@ -1,0 +1,160 @@
+<Window x:Class="PayControl.Desktop.Views.PuantajWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Puantaj"
+        Height="900" Width="1500" MinHeight="620" MinWidth="1100"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <DockPanel Margin="20,18,20,16">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <ComboBox Width="210" ItemsSource="{Binding Tesisler}" SelectedItem="{Binding SeciliTesis}" ToolTip="Tesis" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding OncekiAyCommand}" ToolTip="Önceki ay" Margin="0,0,4,0">
+                    <TextBlock Text="&#xE76B;" Style="{StaticResource IkonYazi}" FontSize="12"/>
+                </Button>
+                <ComboBox Width="110" ItemsSource="{Binding Aylar}" DisplayMemberPath="Ad" SelectedValuePath="Deger" SelectedValue="{Binding Ay}" Margin="0,0,4,0"/>
+                <ComboBox Width="80" ItemsSource="{Binding Yillar}" SelectedItem="{Binding Yil}" Margin="0,0,4,0"/>
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding SonrakiAyCommand}" ToolTip="Sonraki ay" Margin="0,0,12,0">
+                    <TextBlock Text="&#xE76C;" Style="{StaticResource IkonYazi}" FontSize="12"/>
+                </Button>
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding KaydetCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Kaydet"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Puantaj" Style="{StaticResource SayfaBasligi}"/>
+                <TextBlock Style="{StaticResource AltBaslik}" Text="Hücreleri seçip bir kod düğmesine basın (Delete: sil). Özet sütunları Excel/VBA kurallarıyla anında hesaplanır."/>
+            </StackPanel>
+        </DockPanel>
+
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource BilgiSeridi}" Margin="0,10,0,0" Visibility="{Binding Mesaj, Converter={StaticResource Gorunurluk}}">
+            <TextBlock Text="{Binding Mesaj}" Style="{StaticResource MesajYazi}"/>
+        </Border>
+
+        <TabControl x:Name="Sekmeler">
+            <TabItem Header="Puantaj tablosu">
+                <DockPanel Margin="0,12,0,0">
+                    <!-- Kod düğmeleri -->
+                    <Border DockPanel.Dock="Top" Style="{StaticResource Kart}" Padding="12,10" Margin="0,0,0,10">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <TextBox Width="190" Style="{StaticResource AramaKutusu}" Tag="Personel ara…" Text="{Binding Arama, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Click="BoslariDoldur_Click"
+                                        ToolTip="Seçili personellerin (seçim yoksa tümünün) boş günlerini doldurur: hafta içi Ç, pazar HT, resmi tatil RT">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8B3;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Boşları doldur"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <WrapPanel VerticalAlignment="Center">
+                                <ItemsControl ItemsSource="{Binding Kodlar}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Click="KodDugmesi_Click" Tag="{Binding Kod}" ToolTip="{Binding Ipucu}" Margin="0,0,6,4" Cursor="Hand" FocusVisualStyle="{x:Null}">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="b" CornerRadius="8" Padding="10,5" Background="{Binding Renk}" BorderBrush="#33000000" BorderThickness="1">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="{Binding Kod}" FontWeight="Bold" Foreground="{Binding YaziRengi}" Margin="0,0,6,0"/>
+                                                                <TextBlock Text="{Binding Ad}" FontSize="12" Foreground="{Binding YaziRengi}"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="b" Property="BorderBrush" Value="#99000000"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Style="{StaticResource GhostButton}" Click="Sil_Click" Content="Sil" Margin="0,0,0,4" ToolTip="Seçili hücreleri temizle (Delete)"/>
+                            </WrapPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Not ve durum -->
+                    <Border DockPanel.Dock="Bottom" Style="{StaticResource Kart}" Padding="12,10" Margin="0,10,0,0">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Command="{Binding NotKaydetCommand}" Content="Notu kaydet" Margin="8,0,0,0"/>
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding SeciliHucreMetni, TargetNullValue=Hücre seçin}" VerticalAlignment="Center" Width="360"
+                                       TextTrimming="CharacterEllipsis" Foreground="{StaticResource IkincilYaziBrush}" FontWeight="SemiBold"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Durum}" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource MutedBrush}"/>
+                            <TextBox Text="{Binding NotMetni}" Tag="Seçili günün notu (örn. rapor belgesi geldi)" Margin="12,0,0,0"/>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Kart}" Padding="0">
+                        <DataGrid x:Name="Tablo" ItemsSource="{Binding Satirlar}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                  IsReadOnly="True" SelectionUnit="Cell" SelectionMode="Extended" FrozenColumnCount="1" MinRowHeight="34"
+                                  EnableColumnVirtualization="True" EnableRowVirtualization="True" BorderThickness="0" HeadersVisibility="Column"
+                                  SelectedCellsChanged="Tablo_SelectedCellsChanged" PreviewKeyDown="Tablo_PreviewKeyDown">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Personel" Width="220" SortMemberPath="AdSoyad">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="4,2">
+                                                <TextBlock Text="{Binding AdSoyad}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock FontSize="11" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding TcKimlikNo, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding Unvan, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="Resmi tatiller">
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="340"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="16,12,16,10">
+                                <ComboBox DockPanel.Dock="Right" Width="90" ItemsSource="{Binding Yillar}" SelectedItem="{Binding TatilYili}"/>
+                                <TextBlock Text="Resmi tatiller (arifeler yarım gün)" Style="{StaticResource BolumBasligi}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding Tatiller}" SelectedItem="{Binding SeciliTatil}" IsReadOnly="True" BorderThickness="0,1,0,0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tarih" Binding="{Binding Tarih, StringFormat=dd.MM.yyyy dddd}" Width="200"/>
+                                    <DataGridTextColumn Header="Tatil" Binding="{Binding Ad}" Width="*"/>
+                                    <DataGridTextColumn Header="Hak (gün)" Binding="{Binding Hak, StringFormat=0.#}" Width="90"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Kart}" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Text="Tatil ekle / düzelt" Style="{StaticResource BolumBasligi}" Margin="0,0,0,12"/>
+                            <TextBlock Text="Tarih" Style="{StaticResource AlanEtiketi}"/>
+                            <DatePicker SelectedDate="{Binding YeniTatilTarihi}" Margin="0,4,0,12"/>
+                            <TextBlock Text="Ad" Style="{StaticResource AlanEtiketi}"/>
+                            <TextBox Text="{Binding YeniTatilAdi}" Margin="0,4,0,12" Tag="örn. Kurban Bayramı"/>
+                            <CheckBox Content="Yarım gün (arife)" IsChecked="{Binding YeniTatilYarim}" Margin="0,0,0,14"/>
+                            <WrapPanel>
+                                <Button Style="{StaticResource PrimaryButton}" Command="{Binding TatilKaydetCommand}" Content="Kaydet" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource DangerButton}" Command="{Binding TatilSilCommand}" Content="Seçiliyi sil"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

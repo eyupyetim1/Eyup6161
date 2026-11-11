@@ -75,6 +75,12 @@ public partial class App : System.Windows.Application
         services.AddTransient<YonetimViewModel>();
         services.AddTransient<SifreDegistirViewModel>();
         services.AddTransient<CikisTakibiViewModel>();
+        services.AddTransient<PuantajViewModel>();
+        services.AddTransient<PuantajWindow>();
+        services.AddTransient<NakilViewModel>();
+        services.AddTransient<NakilWindow>();
+        services.AddTransient<VeriAktarimiViewModel>();
+        services.AddTransient<VeriAktarimiWindow>();
         services.AddTransient<CikisTakibiWindow>();
         services.AddTransient<RaporMerkeziWindow>();
         services.AddTransient<BildirimlerWindow>();

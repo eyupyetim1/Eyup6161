@@ -84,6 +84,7 @@
     <BooleanToVisibilityConverter x:Key="BoolGorunur"/>
     <conv:YerelZamanConverter x:Key="YerelZaman"/>
     <conv:TersBoolConverter x:Key="TersBool"/>
+    <conv:PuantajKodRengiConverter x:Key="PuantajKodRengi"/>
 
     <!-- =================================================================== Tipografi stilleri -->
     <Style x:Key="SayfaBasligi" TargetType="TextBlock">
@@ -281,6 +282,57 @@
     </Style>
 
     <!-- Yan menü butonu -->
+    <!-- Kenar menü grubu: başlık (ikon + ad + ok) ve alt başlıklar; tıklayınca açılır/kapanır -->
+    <Style x:Key="MenuGrubu" TargetType="Expander">
+        <Setter Property="Foreground" Value="#E4E9F2"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <DockPanel>
+                        <ToggleButton DockPanel.Dock="Top" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                      Cursor="Hand" FocusVisualStyle="{x:Null}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="b" Background="Transparent" CornerRadius="10" Padding="12,9">
+                                        <DockPanel>
+                                            <TextBlock x:Name="ok" DockPanel.Dock="Right" Text="&#xE70D;" FontFamily="{StaticResource IkonFont}" FontSize="10"
+                                                       Foreground="#8EA0BC" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                                <TextBlock.RenderTransform><RotateTransform Angle="-90"/></TextBlock.RenderTransform>
+                                            </TextBlock>
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Tag, RelativeSource={RelativeSource AncestorType=Expander}}" FontFamily="{StaticResource IkonFont}"
+                                                       FontSize="14" Foreground="#9FB3D1" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Text="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" FontSize="13.5" FontWeight="SemiBold"
+                                                       Foreground="#F2F5FA" VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="#14FFFFFF"/>
+                                        </Trigger>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="ok" Property="RenderTransform">
+                                                <Setter.Value><RotateTransform Angle="0"/></Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <Border x:Name="icerik" Margin="16,0,0,4" BorderBrush="#26FFFFFF" BorderThickness="1,0,0,0" Padding="6,2,0,2" Visibility="Collapsed">
+                            <ContentPresenter/>
+                        </Border>
+                    </DockPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True">
+                            <Setter TargetName="icerik" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="MenuButon" TargetType="Button">
         <Setter Property="Foreground" Value="#B7C3D7"/>
         <Setter Property="FontFamily" Value="{StaticResource AnaFont}"/>
@@ -1278,58 +1330,42 @@
     <!-- KPI kartı -->
     <Style TargetType="ctl:KpiKarti">
         <Setter Property="Margin" Value="0,0,12,0"/>
-        <Setter Property="MinWidth" Value="150"/>
+        <Setter Property="MinWidth" Value="160"/>
         <Setter Property="Vurgu" Value="{StaticResource BirincilBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ctl:KpiKarti">
-                    <Grid x:Name="kok" RenderTransformOrigin="0.5,0.5">
-                        <Grid.RenderTransform>
-                            <TranslateTransform x:Name="kaydir" Y="0"/>
-                        </Grid.RenderTransform>
-                        <Border x:Name="kart" Background="{StaticResource YuzeyBrush}" BorderBrush="{StaticResource KenarBrush}" BorderThickness="1"
-                                CornerRadius="14" Padding="16,14" Effect="{StaticResource GolgeHafif}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid Width="38" Height="38" VerticalAlignment="Top" Margin="0,0,12,0">
-                                    <Border CornerRadius="10" Background="{TemplateBinding Vurgu}" Opacity="0.12"/>
-                                    <TextBlock Text="{TemplateBinding Ikon}" FontFamily="{StaticResource IkonFont}" FontSize="16"
-                                               Foreground="{TemplateBinding Vurgu}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Grid>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{TemplateBinding Baslik}" FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{TemplateBinding Deger}" FontFamily="{StaticResource BaslikFont}" FontSize="20" FontWeight="SemiBold"
-                                               Foreground="{StaticResource YaziBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock x:Name="alt" Text="{TemplateBinding AltBilgi}" FontSize="11.5" Foreground="{StaticResource SolukYaziBrush}"
-                                               Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </Grid>
+                    <!-- Net okunur KPI: koyu başlık, büyük kalın değer (sığmazsa küçülür, kesilmez), renkli üst şerit -->
+                    <Border x:Name="kart" Background="{StaticResource YuzeyBrush}" BorderBrush="{StaticResource KenarBrush}" BorderThickness="1"
+                            CornerRadius="12" Effect="{StaticResource GolgeHafif}" ClipToBounds="True">
+                        <Grid>
+                            <Border Height="4" VerticalAlignment="Top" Background="{TemplateBinding Vurgu}" CornerRadius="12,12,0,0"/>
+                            <StackPanel Margin="18,16,18,14">
+                                <DockPanel>
+                                    <Grid DockPanel.Dock="Left" Width="30" Height="30" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border CornerRadius="8" Background="{TemplateBinding Vurgu}" Opacity="0.14"/>
+                                        <TextBlock Text="{TemplateBinding Ikon}" FontFamily="{StaticResource IkonFont}" FontSize="14"
+                                                   Foreground="{TemplateBinding Vurgu}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{TemplateBinding Baslik}" FontSize="13.5" FontWeight="SemiBold" Foreground="#344054"
+                                               VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                </DockPanel>
+                                <Viewbox StretchDirection="DownOnly" Stretch="Uniform" HorizontalAlignment="Left" Margin="0,10,0,0" Height="34">
+                                    <TextBlock Text="{TemplateBinding Deger}" FontFamily="{StaticResource BaslikFont}" FontSize="28" FontWeight="Bold"
+                                               Foreground="#101828"/>
+                                </Viewbox>
+                                <TextBlock x:Name="alt" Text="{TemplateBinding AltBilgi}" FontSize="12.5" Foreground="#475467"
+                                           Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="AltBilgi" Value="{x:Null}">
                             <Setter TargetName="alt" Property="Visibility" Value="Collapsed"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="kart" Property="Effect" Value="{StaticResource GolgeOrta}"/>
-                            <Setter TargetName="kart" Property="BorderBrush" Value="#D0D9E6"/>
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="kaydir" Storyboard.TargetProperty="Y" To="-3" Duration="0:0:0.18"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="kaydir" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.2"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
+                            <Setter TargetName="kart" Property="BorderBrush" Value="#C5D0E0"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -31,6 +31,14 @@ public class Personel
     public string? Iban { get; set; }
     public string? Notlar { get; set; }
 
+    // Personel Yönetim Sistemi (Access) alanları
+    public string? Cinsiyet { get; set; }
+    public DateOnly? DogumTarihi { get; set; }
+    public string? MedeniHal { get; set; }
+    public string? Telefon { get; set; }
+    /// <summary>Access'teki PersonelID (aktarım eşleşmesi için).</summary>
+    public int? EskiSistemId { get; set; }
+
     public DateTime OlusturmaZamani { get; set; } = DateTime.UtcNow;
     public DateTime? GuncellemeZamani { get; set; }
 

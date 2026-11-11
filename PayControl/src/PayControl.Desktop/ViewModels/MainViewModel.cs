@@ -196,6 +196,23 @@ public partial class MainViewModel : ObservableObject
 
     private static void Ac<TPencere>() where TPencere : System.Windows.Window => ArayuzYardimcisi.PencereAc<TPencere>();
 
+    [ObservableProperty] private int _anaSekme;
+
+    [RelayCommand]
+    private void AnaSekmeAc(string? sekme) => AnaSekme = int.TryParse(sekme, out var i) ? i : 0;
+
+    [RelayCommand]
+    private void Puantaj(string? sekme)
+    {
+        ArayuzYardimcisi.PencereAc<PuantajWindow>(w =>
+        {
+            if (sekme == "1") w.Loaded += (_, _) => { if (w.FindName("Sekmeler") is System.Windows.Controls.TabControl tc) tc.SelectedIndex = 1; };
+        });
+        _ = GostergeYukleAsync();
+    }
+
+    [RelayCommand] private void Nakil() { Ac<NakilWindow>(); _ = YenileAsync(); }
+    [RelayCommand] private void VeriAktarimi() { Ac<VeriAktarimiWindow>(); _ = YenileAsync(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void RaporMerkezi() => Ac<RaporMerkeziWindow>();
     [RelayCommand] private void CikisTakibi() { Ac<CikisTakibiWindow>(); _ = YenileAsync(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void Bildirimler() => Ac<BildirimlerWindow>();

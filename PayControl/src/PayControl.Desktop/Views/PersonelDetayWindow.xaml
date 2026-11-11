@@ -310,6 +310,10 @@
                                         <ContentControl Content="{Binding Detay.CalismaDurumu}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False" Margin="0,2,0,18"/></StackPanel>
                                     <StackPanel><TextBlock Text="İlk işe giriş" Style="{StaticResource BilgiEtiket}"/><TextBlock Text="{Binding Detay.IlkIseGirisTarihi, StringFormat=dd.MM.yyyy, TargetNullValue=—}" Style="{StaticResource BilgiDeger}"/></StackPanel>
                                     <StackPanel><TextBlock Text="Son çıkış" Style="{StaticResource BilgiEtiket}"/><TextBlock Text="{Binding Detay.SonCikisTarihi, StringFormat=dd.MM.yyyy, TargetNullValue=—}" Style="{StaticResource BilgiDeger}"/></StackPanel>
+                                    <StackPanel><TextBlock Text="Cinsiyet" Style="{StaticResource BilgiEtiket}"/><TextBlock Text="{Binding Detay.Cinsiyet, TargetNullValue=—}" Style="{StaticResource BilgiDeger}"/></StackPanel>
+                                    <StackPanel><TextBlock Text="Doğum tarihi" Style="{StaticResource BilgiEtiket}"/><TextBlock Text="{Binding Detay.DogumTarihi, StringFormat=dd.MM.yyyy, TargetNullValue=—}" Style="{StaticResource BilgiDeger}"/></StackPanel>
+                                    <StackPanel><TextBlock Text="Medeni hal" Style="{StaticResource BilgiEtiket}"/><TextBlock Text="{Binding Detay.MedeniHal, TargetNullValue=—}" Style="{StaticResource BilgiDeger}"/></StackPanel>
+                                    <StackPanel><TextBlock Text="Telefon" Style="{StaticResource BilgiEtiket}"/><TextBlock Text="{Binding Detay.Telefon, TargetNullValue=—}" Style="{StaticResource BilgiDeger}"/></StackPanel>
                                 </UniformGrid>
                             </StackPanel>
                         </Border>

@@ -127,6 +127,20 @@ public static class EkranGoruntusuModu
         // 13) Ayarlar ve yönetim — kullanıcılar
         await KaydetAsync(sp.GetRequiredService<YonetimWindow>(), Path.Combine(klasor, "13-ayarlar-yonetim.png"));
 
+        // 16) Puantaj tablosu
+        var puantajVm = sp.GetRequiredService<PuantajViewModel>();
+        puantajVm.Yil = 2026; puantajVm.Ay = 10;
+        await KaydetAsync(new PuantajWindow(puantajVm), Path.Combine(klasor, "16-puantaj.png"), async () =>
+        {
+            await Task.Delay(300);
+            puantajVm.SeciliTesis = "Ankara Depo";
+            await Task.Delay(900);
+        });
+
+        // 17) Nakil geçmişi, 18) Veri aktarımı
+        await KaydetAsync(sp.GetRequiredService<NakilWindow>(), Path.Combine(klasor, "17-nakil.png"));
+        await KaydetAsync(sp.GetRequiredService<VeriAktarimiWindow>(), Path.Combine(klasor, "18-veri-aktarimi.png"));
+
         // 15) Çıkış takibi
         var takipVm = sp.GetRequiredService<CikisTakibiViewModel>();
         await KaydetAsync(new CikisTakibiWindow(takipVm), Path.Combine(klasor, "15-cikis-takibi.png"));
@@ -464,6 +478,26 @@ public static class EkranGoruntusuModu
         var kimlik = sp.GetRequiredService<IKimlikServisi>();
         await kimlik.OlusturAsync(new KullaniciOlusturDto { KullaniciAdi = "muhasebe1", Sifre = "Muhasebe2026", Rol = KullaniciRolu.Muhasebe, AdSoyad = "Seda Uçar", Eposta = "seda@ornek.test" }, k);
         await kimlik.OlusturAsync(new KullaniciOlusturDto { KullaniciAdi = "denetci", Sifre = "Denetim2026", Rol = KullaniciRolu.Goruntuleyici, AdSoyad = "Okan Bal" }, k);
+
+        // Puantaj (Ekim 2026, Ankara Depo): hafta içi Ç, pazar HT, birkaç izin/rapor, 29 Ekim RT
+        var puantajSrv = sp.GetRequiredService<IPuantajServisi>();
+        var degisiklikler = new List<PuantajDegisikligi>();
+        var ankara = liste.Where(x => x.Tesis == "Ankara Depo").ToList();
+        foreach (var (pp, i) in ankara.Select((x, i) => (x, i)))
+            for (var g = 1; g <= 31; g++)
+            {
+                var d = new DateOnly(2026, 10, g);
+                var kod = d.DayOfWeek == DayOfWeek.Sunday ? "HT" : g == 29 ? "RT" : "Ç";
+                if (i == 0 && g is >= 12 and <= 16) kod = "Yi";
+                if (i == 1 && g is 7 or 8) kod = "R";
+                if (i == 2 && g == 21) kod = "YG";
+                if (i == 1 && g is >= 26 and <= 27) kod = "Üİ";
+                if (g > 24 && i == 2) continue; // ay sonu henüz girilmemiş
+                degisiklikler.Add(new PuantajDegisikligi(pp.Tc, g, kod));
+            }
+        await puantajSrv.KaydetAsync("Ankara Depo", 2026, 10, degisiklikler, k);
+        await puantajSrv.NotKaydetAsync("Ankara Depo", ankara[1].Tc, 2026, 10, 7, "Rapor belgesi teslim alındı", k);
+        await puantajSrv.NakilYapAsync(idler["10000000005"], "Ankara Depo", new DateOnly(2026, 11, 1), "Sezon ihtiyacı", k);
 
         return new DemoSonuc(ayse, ekimYol, bankaYol, kasimYol, hasan);
     }

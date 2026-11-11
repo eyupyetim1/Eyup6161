@@ -40,6 +40,12 @@ public interface IPayControlDbContext
     DbSet<Belge> Belgeler { get; }
     DbSet<TahsilatPlani> TahsilatPlanlari { get; }
     DbSet<CikisTalimati> CikisTalimatlari { get; }
+    DbSet<PuantajGunu> PuantajGunleri { get; }
+    DbSet<PuantajNotu> PuantajNotlari { get; }
+    DbSet<ResmiTatil> ResmiTatiller { get; }
+    DbSet<PersonelNakil> PersonelNakilleri { get; }
+    DbSet<PersonelIzinAyari> PersonelIzinAyarlari { get; }
+    DbSet<AylikOzetKaydi> AylikOzetKayitlari { get; }
     DbSet<TahsilatTaksiti> TahsilatTaksitleri { get; }
     DbSet<BildirimAyari> BildirimAyarlari { get; }
     DbSet<BildirimAlicisi> BildirimAlicilari { get; }

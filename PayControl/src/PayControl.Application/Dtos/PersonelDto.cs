@@ -33,6 +33,10 @@ public sealed class PersonelDetayDto
     public string? BankaAdi { get; init; }
     public string? Iban { get; init; }
     public string? Notlar { get; init; }
+    public string? Cinsiyet { get; init; }
+    public DateOnly? DogumTarihi { get; init; }
+    public string? MedeniHal { get; init; }
+    public string? Telefon { get; init; }
     public IReadOnlyList<CalismaDonemiDto> CalismaDonemleri { get; init; } = Array.Empty<CalismaDonemiDto>();
     public IReadOnlyList<MaasDonemDto> MaasGecmisi { get; init; } = Array.Empty<MaasDonemDto>();
     public IReadOnlyList<IstenCikisDto> CikisKayitlari { get; init; } = Array.Empty<IstenCikisDto>();

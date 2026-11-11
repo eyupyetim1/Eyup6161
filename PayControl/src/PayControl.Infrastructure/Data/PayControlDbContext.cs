@@ -42,6 +42,12 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
     public DbSet<Belge> Belgeler => Set<Belge>();
     public DbSet<TahsilatPlani> TahsilatPlanlari => Set<TahsilatPlani>();
     public DbSet<CikisTalimati> CikisTalimatlari => Set<CikisTalimati>();
+    public DbSet<PuantajGunu> PuantajGunleri => Set<PuantajGunu>();
+    public DbSet<PuantajNotu> PuantajNotlari => Set<PuantajNotu>();
+    public DbSet<ResmiTatil> ResmiTatiller => Set<ResmiTatil>();
+    public DbSet<PersonelNakil> PersonelNakilleri => Set<PersonelNakil>();
+    public DbSet<PersonelIzinAyari> PersonelIzinAyarlari => Set<PersonelIzinAyari>();
+    public DbSet<AylikOzetKaydi> AylikOzetKayitlari => Set<AylikOzetKaydi>();
     public DbSet<TahsilatTaksiti> TahsilatTaksitleri => Set<TahsilatTaksiti>();
     public DbSet<BildirimAyari> BildirimAyarlari => Set<BildirimAyari>();
     public DbSet<BildirimAlicisi> BildirimAlicilari => Set<BildirimAlicisi>();
@@ -185,6 +191,35 @@ public sealed class PayControlDbContext : DbContext, IPayControlDbContext
             e.HasKey(x => x.Id);
             e.HasIndex(x => new { x.VarlikTuru, x.VarlikId });
             e.HasIndex(x => x.PersonelId);
+        });
+        modelBuilder.Entity<PuantajGunu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.TesisAdi, x.Yil, x.Ay, x.TcKimlikNo, x.Gun }).IsUnique();
+            e.HasIndex(x => new { x.TcKimlikNo, x.Yil, x.Ay });
+            e.Property(x => x.Kod).HasMaxLength(10);
+        });
+        modelBuilder.Entity<PuantajNotu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.TesisAdi, x.Yil, x.Ay, x.TcKimlikNo, x.Gun });
+        });
+        modelBuilder.Entity<ResmiTatil>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.Tarih).IsUnique();
+            e.Property(x => x.Hak).HasPrecision(4, 2);
+        });
+        modelBuilder.Entity<PersonelNakil>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.TcKimlikNo, x.NakilTarihi });
+        });
+        modelBuilder.Entity<PersonelIzinAyari>(e => e.HasKey(x => x.TcKimlikNo));
+        modelBuilder.Entity<AylikOzetKaydi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.TesisAdi, x.Yil, x.Ay, x.TcKimlikNo }).IsUnique();
         });
         modelBuilder.Entity<CikisTalimati>(e =>
         {

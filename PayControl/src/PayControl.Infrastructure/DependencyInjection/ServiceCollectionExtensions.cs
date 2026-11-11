@@ -59,6 +59,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IWhatsAppGonderici, Bildirim.WhatsAppGonderici>();
         services.AddScoped<IBildirimServisi, BildirimServisi>();
         services.AddScoped<ICikisTalimatServisi, CikisTalimatServisi>();
+        services.AddScoped<IPuantajServisi, PuantajServisi>();
+        services.AddScoped<IAccessAktarimServisi, Import.AccessAktarimServisi>();
         services.AddSingleton<IZamanlanmisGorevServisi, ZamanlanmisGorevServisi>();
         services.AddScoped<IGuncellemeServisi, Platform.GuncellemeServisi>();
         services.AddScoped<IMaliHareketServisi, MaliHareketServisi>();
@@ -124,6 +126,7 @@ public static class ServiceCollectionExtensions
         if (!yeniOlustu)
             await SemaYukseltici.YukseltAsync(db);
         await IsimleriDuzeltAsync(db);
+        await PuantajServisi.VarsayilanTatilleriYukleAsync(db);
         var kimlik = scope.ServiceProvider.GetRequiredService<IKimlikServisi>();
         await kimlik.EnsureAdminAsync();
     }

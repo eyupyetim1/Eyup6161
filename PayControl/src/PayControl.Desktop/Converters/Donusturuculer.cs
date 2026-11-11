@@ -249,3 +249,29 @@ public sealed class TersBoolConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
 }
+
+/// <summary>Puantaj kodu → hücre arka planı / yazı rengi (ConverterParameter: "yazi").</summary>
+public sealed class PuantajKodRengiConverter : IValueConverter
+{
+    private static readonly Dictionary<string, Brush> Onbellek = new();
+
+    private static Brush Firca(string hex)
+    {
+        if (!Onbellek.TryGetValue(hex, out var b))
+        {
+            b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            b.Freeze();
+            Onbellek[hex] = b;
+        }
+        return b;
+    }
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var kod = PayControl.Domain.Services.PuantajHesaplayici.Kodlar.FirstOrDefault(k => k.Kod == value as string);
+        if (parameter as string == "yazi") return kod is null ? Firca("#B42318") : Firca(kod.YaziRengi);
+        return kod is null ? (string.IsNullOrEmpty(value as string) ? Brushes.Transparent : Firca("#FEE4E2")) : Firca(kod.Renk);
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}

@@ -282,6 +282,10 @@ public sealed class PersonelServisi : IPersonelServisi
         BankaAdi = p.BankaAdi,
         Iban = p.Iban,
         Notlar = p.Notlar,
+        Cinsiyet = p.Cinsiyet,
+        DogumTarihi = p.DogumTarihi,
+        MedeniHal = p.MedeniHal,
+        Telefon = p.Telefon,
         CalismaDonemleri = p.CalismaDonemleri
             .OrderByDescending(d => d.IseGirisTarihi)
             .Select(d => new CalismaDonemiDto
