@@ -1,5 +1,11 @@
 # Değişiklik Geçmişi
 
+## 1.3.4 — 2026-11-11
+
+- Programın adı **Personel Yönetim Sistemi** oldu (pencereler, giriş ekranı, kurulum, kısayollar, e-posta ve raporlar). Veri klasörü ve dosya adı değişmedi; mevcut veriler korunur.
+- Ad soyaddaki çift/üçlü boşluk, sekme, satır sonu, bölünemez boşluk ve görünmez karakterler otomatik düzeltilir: bordro Excel'i, banka dosyaları, elle personel girişi, alıcılar, kullanıcılar. Bordro önizlemesinde uyarı gösterilir; arama boşluk farkına duyarsızdır; mevcut kayıtlar açılışta bir kez düzeltilir ve denetim geçmişine yazılır.
+
+
 ## 1.3.3 — 2026-11-11 (düzeltme)
 
 - Girişten sonra menü düğmelerine basınca "Owner özelliği kendisine ayarlanamaz" hatasıyla programın kapanması düzeltildi (giriş penceresi kapanınca ana pencere kaydı boş kalıyordu). Tüm pencereler artık güvenli biçimde ana pencereye bağlanır.
