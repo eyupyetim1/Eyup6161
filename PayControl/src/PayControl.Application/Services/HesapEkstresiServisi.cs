@@ -149,7 +149,7 @@ public sealed class HesapEkstresiServisi : IHesapEkstresiServisi
         using var wb = new XLWorkbook();
 
         var ws = wb.AddWorksheet("Hesap Ekstresi");
-        ws.Cell(1, 1).Value = "PayControl — Personel Hesap Ekstresi";
+        ws.Cell(1, 1).Value = "Personel Yönetim Sistemi — Personel Hesap Ekstresi";
         ws.Cell(1, 1).Style.Font.Bold = true;
         ws.Cell(1, 1).Style.Font.FontSize = 14;
         ws.Cell(2, 1).Value = $"{e.AdSoyad} — TC {e.TcKimlikNo}";
@@ -276,7 +276,7 @@ public sealed class HesapEkstresiServisi : IHesapEkstresiServisi
     {
         var e = await GetirAsync(personelId, filtre, ct);
         var pdf = new BasitPdfYazici();
-        pdf.Baslik("PayControl — Personel Hesap Ekstresi");
+        pdf.Baslik("Personel Yönetim Sistemi — Personel Hesap Ekstresi");
         pdf.Satir($"{e.AdSoyad}   TC: {e.TcKimlikNo}   Durum: {e.CalismaDurumu}", 9.5f, true);
         pdf.Satir($"İlk işe giriş: {e.IlkIseGirisTarihi?.ToString("dd.MM.yyyy") ?? "-"}   Son çıkış: {e.SonCikisTarihi?.ToString("dd.MM.yyyy") ?? "-"}   Rapor: {DateTime.Now:dd.MM.yyyy HH:mm}");
         pdf.Satir($"Filtre: {e.FiltreAciklamasi}");

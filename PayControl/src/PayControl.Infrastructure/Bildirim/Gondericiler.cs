@@ -14,7 +14,7 @@ public sealed class EpostaGonderici : IEpostaGonderici
     public async Task GonderAsync(BildirimAyari ayar, string sifre, string alici, string konu, string metin, BildirimEki? ek, CancellationToken ct = default)
     {
         var mesaj = new MimeMessage();
-        mesaj.From.Add(new MailboxAddress(ayar.GonderenAd ?? "PayControl", ayar.GonderenEposta));
+        mesaj.From.Add(new MailboxAddress(ayar.GonderenAd ?? "Personel Yönetim Sistemi", ayar.GonderenEposta));
         mesaj.To.Add(MailboxAddress.Parse(alici));
         mesaj.Subject = konu;
         var govde = new BodyBuilder
@@ -80,7 +80,7 @@ public sealed class WhatsAppGonderici : IWhatsAppGonderici
         await PostJsonAsync($"{temel}/messages", erisimAnahtari, new
         {
             messaging_product = "whatsapp", to = telefon, type = "document",
-            document = new { id = medyaId, filename = ek.DosyaAdi, caption = "PayControl" }
+            document = new { id = medyaId, filename = ek.DosyaAdi, caption = "Personel Yönetim Sistemi" }
         }, ct);
     }
 

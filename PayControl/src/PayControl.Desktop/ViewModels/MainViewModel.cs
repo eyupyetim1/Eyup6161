@@ -159,7 +159,7 @@ public partial class MainViewModel : ObservableObject
             if (await ayar.GetirAsync(AyarAnahtarlari.GuncellemeOtomatikDenetim) == "false") return;
             var surum = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 3);
             var yeni = await ((IGuncellemeServisi)sp.GetService(typeof(IGuncellemeServisi))!).DenetleAsync(surum);
-            if (yeni is not null) DurumMetni = $"Yeni sürüm mevcut: PayControl {yeni.Surum} — Ayarlar ve Yönetim → Güncelleme";
+            if (yeni is not null) DurumMetni = $"Yeni sürüm mevcut: Personel Yönetim Sistemi {yeni.Surum} — Ayarlar ve Yönetim → Güncelleme";
         }
         catch { /* çevrimdışı veya bildirim yok */ }
     }

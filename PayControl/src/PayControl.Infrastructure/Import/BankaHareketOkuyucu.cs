@@ -1,3 +1,4 @@
+using PayControl.Domain.Services;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -222,7 +223,7 @@ public static class BankaHareketOkuyucu
                 throw new InvalidOperationException($"Satır {r}: tarih okunamadı ('{tarihCell.GetString()}').");
 
             string? Get(string k) => map.TryGetValue(k, out var c) ? ws.Cell(r, c).GetString().Trim() : null;
-            list.Add(new BankaHareketSatiri(r, tarih, Get("TC"), Get("AD"), Get("IBAN"), Math.Abs(tutar),
+            list.Add(new BankaHareketSatiri(r, tarih, Get("TC"), IsimKurallari.Duzelt(Get("AD")), Get("IBAN"), Math.Abs(tutar),
                 string.IsNullOrWhiteSpace(Get("REF")) ? null : Get("REF"), Get("ACIKLAMA")));
         }
         return list;

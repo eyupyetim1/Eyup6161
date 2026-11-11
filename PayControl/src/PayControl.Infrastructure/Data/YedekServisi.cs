@@ -118,7 +118,7 @@ public sealed class YedekServisi : IYedekServisi
         {
             try
             {
-                await b.OlayBildirAsync(BildirimTetikleyici.YedekHatasi, kayit.Id.ToString("N"), "PayControl: yedekleme başarısız",
+                await b.OlayBildirAsync(BildirimTetikleyici.YedekHatasi, kayit.Id.ToString("N"), "Personel Yönetim Sistemi: yedekleme başarısız",
                     $"{DateTime.Now:dd.MM.yyyy HH:mm} yedekleme başarısız oldu: {kayit.Hata}", null, ct);
             }
             catch (Exception ex) when (ex is not OperationCanceledException) { /* bildirim hatası yedek kaydını etkilemez */ }
@@ -158,7 +158,7 @@ public sealed class YedekServisi : IYedekServisi
         {
             using (var zip = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read))
             {
-                var giris = zip.GetEntry("paycontrol.db") ?? throw new InvalidOperationException("Geçerli bir PayControl yedeği değil.");
+                var giris = zip.GetEntry("paycontrol.db") ?? throw new InvalidOperationException("Geçerli bir Personel Yönetim Sistemi yedeği değil.");
                 var manifestGiris = zip.GetEntry("manifest.json");
                 await using (var e = giris.Open())
                 await using (var f = File.Create(gecici))
@@ -180,7 +180,7 @@ public sealed class YedekServisi : IYedekServisi
                 await using var cmd = kontrol.CreateCommand();
                 cmd.CommandText = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('Personeller','MaliHareketler')";
                 if (Convert.ToInt32(await cmd.ExecuteScalarAsync(ct)) < 2)
-                    throw new InvalidOperationException("Yedek dosyası PayControl veritabanı içermiyor.");
+                    throw new InvalidOperationException("Yedek dosyası Personel Yönetim Sistemi veritabanı içermiyor.");
             }
 
             var guvenlik = await YedekAlAsync(kullanici, false, null, ct);

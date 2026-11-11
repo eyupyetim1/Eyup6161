@@ -29,7 +29,7 @@ public sealed class PersonelServisi : IPersonelServisi
 
         if (!string.IsNullOrWhiteSpace(arama))
         {
-            var a = arama.Trim();
+            var a = IsimKurallari.Duzelt(arama)!;
             q = q.Where(p =>
                 p.AdSoyad.Contains(a) ||
                 p.TcKimlikNo.Contains(a) ||
@@ -81,7 +81,7 @@ public sealed class PersonelServisi : IPersonelServisi
         var personel = new Personel
         {
             TcKimlikNo = tc,
-            AdSoyad = dto.AdSoyad.Trim(),
+            AdSoyad = IsimKurallari.Duzelt(dto.AdSoyad)!,
             SicilNo = dto.SicilNo,
             Sirket = dto.Sirket,
             Isyeri = dto.Isyeri,
@@ -146,7 +146,7 @@ public sealed class PersonelServisi : IPersonelServisi
         }
 
         KaydetDegisiklik(personel, nameof(Personel.AdSoyad), personel.AdSoyad, dto.AdSoyad, kullaniciAdi, neden);
-        personel.AdSoyad = dto.AdSoyad.Trim();
+        personel.AdSoyad = IsimKurallari.Duzelt(dto.AdSoyad)!;
 
         KaydetDegisiklik(personel, nameof(Personel.GuncelMaas), personel.GuncelMaas?.ToString(), dto.GuncelMaas?.ToString(), kullaniciAdi, neden);
         // Kart üzerindeki güncel maaş değişir; geçmiş dönem MaasDonemKaydi kayıtları dokunulmaz.

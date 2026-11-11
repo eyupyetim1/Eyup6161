@@ -46,7 +46,7 @@ public static class ArayuzYardimcisi
             w.WindowState = WindowState.Maximized;
     }
 
-    public static bool Onayla(string mesaj, string baslik = "PayControl") =>
+    public static bool Onayla(string mesaj, string baslik = "Personel Yönetim Sistemi") =>
         MessageBox.Show(AktifPencere!, mesaj, baslik, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
     /// <summary>Dosyayı kaydetme diyaloğuyla kaydeder ve isteğe bağlı açar; iptal edilirse null.</summary>
@@ -63,7 +63,7 @@ public static class ArayuzYardimcisi
     public static void Ac(string yolVeyaAdres)
     {
         try { Process.Start(new ProcessStartInfo(yolVeyaAdres) { UseShellExecute = true }); }
-        catch (Exception ex) { MessageBox.Show(AktifPencere!, $"Açılamadı: {ex.Message}", "PayControl", MessageBoxButton.OK, MessageBoxImage.Warning); }
+        catch (Exception ex) { MessageBox.Show(AktifPencere!, $"Açılamadı: {ex.Message}", "Personel Yönetim Sistemi", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
 
     public static string? DosyaSec(string filtre, string baslik)

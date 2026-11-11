@@ -1,3 +1,4 @@
+using PayControl.Domain.Services;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using PayControl.Application.Interfaces;
@@ -99,7 +100,7 @@ public sealed class BildirimServisi : IBildirimServisi
             mevcut = new BildirimAlicisi { Id = alici.Id == Guid.Empty ? Guid.NewGuid() : alici.Id };
             _db.BildirimAlicilari.Add(mevcut);
         }
-        mevcut.AdSoyad = alici.AdSoyad.Trim();
+        mevcut.AdSoyad = IsimKurallari.Duzelt(alici.AdSoyad)!;
         mevcut.Eposta = alici.Eposta?.Trim();
         mevcut.Telefon = telefon;
         mevcut.Rol = alici.Rol;
@@ -164,7 +165,7 @@ public sealed class BildirimServisi : IBildirimServisi
         {
             Kanal = kanal,
             AliciIdleri = aliciIdleri,
-            Konu = $"PayControl raporu: {rapor.Baslik}",
+            Konu = $"Personel Yönetim Sistemi raporu: {rapor.Baslik}",
             Metin = RaporMetni(rapor, notMetni),
             Ek = new BildirimEki(_rapor.DosyaAdi(rapor, bicim), _rapor.DisaAktar(rapor, bicim), IcerikTuru(bicim))
         }, kullanici, ct);
@@ -326,7 +327,7 @@ public sealed class BildirimServisi : IBildirimServisi
             if (k.Tetikleyici == BildirimTetikleyici.ZamanlanmisRapor)
             {
                 var r = await _rapor.OlusturAsync(k.RaporTuru!.Value, RaporDonemi(k, simdi), ct);
-                konu = $"PayControl {k.Ad}: {r.Baslik}";
+                konu = $"Personel Yönetim Sistemi {k.Ad}: {r.Baslik}";
                 metin = RaporMetni(r, null);
                 ek = new BildirimEki(_rapor.DosyaAdi(r, k.RaporBicimi), _rapor.DisaAktar(r, k.RaporBicimi), IcerikTuru(k.RaporBicimi));
             }
@@ -335,12 +336,12 @@ public sealed class BildirimServisi : IBildirimServisi
                 var uyarilar = await _uyari.ListeleAsync(k.Tesis, ct);
                 var onemli = uyarilar.Where(u => u.Seviye != UyariSeviyesi.Bilgi).ToList();
                 if (onemli.Count == 0) { k.SonCalisma = simdi; continue; }
-                konu = $"PayControl uyarı özeti: {onemli.Count(u => u.Seviye == UyariSeviyesi.Kritik)} kritik, {onemli.Count(u => u.Seviye == UyariSeviyesi.Uyari)} uyarı";
+                konu = $"Personel Yönetim Sistemi uyarı özeti: {onemli.Count(u => u.Seviye == UyariSeviyesi.Kritik)} kritik, {onemli.Count(u => u.Seviye == UyariSeviyesi.Uyari)} uyarı";
                 var sb = new StringBuilder();
                 sb.AppendLine($"{(k.Tesis is null ? "Tüm tesisler" : k.Tesis)} için açık işler ({simdi:dd.MM.yyyy HH:mm}):");
                 foreach (var u in onemli.Take(25))
                     sb.AppendLine($"• [{(u.Seviye == UyariSeviyesi.Kritik ? "KRİTİK" : "Uyarı")}] {u.Kategori}: {u.Baslik}{(u.Tesis is null ? "" : $" ({u.Tesis})")}");
-                if (onemli.Count > 25) sb.AppendLine($"… ve {onemli.Count - 25} uyarı daha. Ayrıntılar PayControl → Uyarı merkezi.");
+                if (onemli.Count > 25) sb.AppendLine($"… ve {onemli.Count - 25} uyarı daha. Ayrıntılar Personel Yönetim Sistemi → Uyarı merkezi.");
                 metin = sb.ToString();
             }
 
@@ -393,7 +394,7 @@ public sealed class BildirimServisi : IBildirimServisi
         sb.AppendLine(r.ParametreMetni);
         foreach (var (ad, deger) in r.Ozet) sb.AppendLine($"• {ad}: {deger}");
         sb.AppendLine($"Satır sayısı: {r.Satirlar.Count}. Ayrıntılar ekteki dosyadadır.");
-        sb.AppendLine().AppendLine("Bu mesaj PayControl tarafından gönderilmiştir.");
+        sb.AppendLine().AppendLine("Bu mesaj Personel Yönetim Sistemi tarafından gönderilmiştir.");
         return sb.ToString();
     }
 

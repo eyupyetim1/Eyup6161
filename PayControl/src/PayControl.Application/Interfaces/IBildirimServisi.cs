@@ -26,7 +26,7 @@ public sealed class BildirimAyarDto
     /// <summary>Boş bırakılırsa mevcut şifre korunur.</summary>
     public string? SmtpSifre { get; set; }
     public string? GonderenEposta { get; set; }
-    public string? GonderenAd { get; set; } = "PayControl";
+    public string? GonderenAd { get; set; } = "Personel Yönetim Sistemi";
     public bool WhatsAppEtkin { get; set; }
     public string? WhatsAppTelefonNumarasiId { get; set; }
     /// <summary>Boş bırakılırsa mevcut anahtar korunur.</summary>

@@ -9,10 +9,10 @@
     <AssemblyName>PayControl</AssemblyName>
     <RootNamespace>PayControl.Desktop</RootNamespace>
     <Version>1.3.3</Version>
-    <Product>PayControl</Product>
-    <Description>Personel Mali Denetim Sistemi</Description>
-    <Company>PayControl</Company>
-    <Copyright>PayControl</Copyright>
+    <Product>Personel Yönetim Sistemi</Product>
+    <Description>Personel Yönetim Sistemi</Description>
+    <Company>Personel Yönetim Sistemi</Company>
+    <Copyright>Personel Yönetim Sistemi</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(ExcludeDesktop)' != 'true'">

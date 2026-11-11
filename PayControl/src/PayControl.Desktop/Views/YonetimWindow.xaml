@@ -226,7 +226,7 @@
                 <Border Style="{StaticResource Kart}" Margin="0,14,0,0" VerticalAlignment="Top" MaxWidth="820" HorizontalAlignment="Left">
                     <StackPanel>
                         <TextBlock Text="Otomatik işler" Style="{StaticResource BolumBasligi}"/>
-                        <TextBlock Style="{StaticResource Aciklama}" Text="Otomatik yedek, zamanlanmış rapor/uyarı e-postaları ve WhatsApp mesajları, başarısız bildirimlerin yeniden denenmesi. PayControl açıkken her 5 dakikada bir kendiliğinden çalışır. Bilgisayar açık ama PayControl kapalıyken de çalışması için Windows Görev Zamanlayıcısı'na kaydedin (yönetici hakkı gerekmez)."/>
+                        <TextBlock Style="{StaticResource Aciklama}" Text="Otomatik yedek, zamanlanmış rapor/uyarı e-postaları ve WhatsApp mesajları, başarısız bildirimlerin yeniden denenmesi. Program açıkken her 5 dakikada bir kendiliğinden çalışır. Bilgisayar açık ama program kapalıyken de çalışması için Windows Görev Zamanlayıcısı'na kaydedin (yönetici hakkı gerekmez)."/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <TextBlock Text="Durum:" FontWeight="SemiBold" Margin="0,0,8,0"/>
                             <TextBlock Text="{Binding GorevDurumu}"/>

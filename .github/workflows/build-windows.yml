@@ -125,7 +125,7 @@ jobs:
           Get-ChildItem "$kur/app" -Filter *.pdb | Remove-Item
           Copy-Item docs/KULLANIM.md "$kur/app"
           Copy-Item src/PayControl.Desktop/Assets/PayControl.ico, samples/bordro-ornek.xlsx $kur
-          $setup = Join-Path $PWD "dist/PayControl-$surum-Kurulum.exe"
+          $setup = Join-Path $PWD "dist/PersonelYonetimSistemi-$surum-Kurulum.exe"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           makensis -V2 "-DSURUM=$surum" "-DKAYNAK=$kur\app" "-DCIKTI=$setup" installer/PayControl.nsi
           if ($LASTEXITCODE -ne 0) { throw "makensis başarısız" }
@@ -143,7 +143,7 @@ jobs:
           foreach ($f in @('PayControl.exe', 'Kaldir.exe', 'KULLANIM.md', 'Ornekler\bordro-ornek.xlsx')) {
             if (-not (Test-Path (Join-Path $hedef $f))) { throw "Kurulumda eksik: $f" }
           }
-          if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'PayControl.lnk'))) { throw "Masaüstü kısayolu yok" }
+          if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Personel Yönetim Sistemi.lnk'))) { throw "Masaüstü kısayolu yok" }
           $kayit = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\PayControl'
           if ($kayit.DisplayVersion -ne $surum) { throw "Programlar listesinde sürüm hatalı: $($kayit.DisplayVersion)" }
           Write-Output "KURULUM TAMAM: $hedef, sürüm $($kayit.DisplayVersion)"
@@ -165,7 +165,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PayControl-Kurulum-Setup
-          path: PayControl/dist/PayControl-*-Kurulum.exe
+          path: PayControl/dist/PersonelYonetimSistemi-*-Kurulum.exe
           if-no-files-found: error
           retention-days: 30
 
@@ -236,4 +236,4 @@ jobs:
         run: |
           ls -R paket
           gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --title "PayControl ${GITHUB_REF_NAME}" --generate-notes \
-            $(find paket -name 'PayControl-*-Kurulum.exe') $(find paket -name 'PayControl-Kurulum-win-x64.zip') $(find paket -name 'guncelleme.json')
+            $(find paket -name 'PersonelYonetimSistemi-*-Kurulum.exe') $(find paket -name 'PayControl-Kurulum-win-x64.zip') $(find paket -name 'guncelleme.json')

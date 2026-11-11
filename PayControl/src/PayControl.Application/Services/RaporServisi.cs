@@ -539,7 +539,7 @@ public sealed class RaporServisi : IRaporServisi
     public string DosyaAdi(RaporSonucu rapor, RaporBicimi bicim)
     {
         var ad = new string(rapor.Baslik.Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray());
-        return $"PayControl-{ad}-{rapor.OlusturmaZamani:yyyyMMdd-HHmm}.{bicim switch { RaporBicimi.Pdf => "pdf", RaporBicimi.Csv => "csv", _ => "xlsx" }}";
+        return $"{ad}-{rapor.OlusturmaZamani:yyyyMMdd-HHmm}.{bicim switch { RaporBicimi.Pdf => "pdf", RaporBicimi.Csv => "csv", _ => "xlsx" }}";
     }
 
     public byte[] DisaAktar(RaporSonucu rapor, RaporBicimi bicim) => bicim switch
@@ -564,7 +564,7 @@ public sealed class RaporServisi : IRaporServisi
     {
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet(r.Baslik.Length > 31 ? r.Baslik[..31] : r.Baslik);
-        ws.Cell(1, 1).Value = $"PayControl — {r.Baslik}";
+        ws.Cell(1, 1).Value = $"Personel Yönetim Sistemi — {r.Baslik}";
         ws.Cell(1, 1).Style.Font.Bold = true;
         ws.Cell(1, 1).Style.Font.FontSize = 14;
         ws.Cell(2, 1).Value = r.Aciklama;
@@ -628,7 +628,7 @@ public sealed class RaporServisi : IRaporServisi
     private static byte[] Pdf(RaporSonucu r)
     {
         var pdf = new BasitPdfYazici();
-        pdf.Baslik($"PayControl — {r.Baslik}");
+        pdf.Baslik($"Personel Yönetim Sistemi — {r.Baslik}");
         pdf.Satir(r.Aciklama);
         pdf.Satir($"{r.ParametreMetni}   |   Oluşturma: {r.OlusturmaZamani:dd.MM.yyyy HH:mm}");
         if (r.Ozet.Count > 0) pdf.Satir(string.Join("     ", r.Ozet.Select(o => $"{o.Ad}: {o.Deger}")), 8.5f, true);

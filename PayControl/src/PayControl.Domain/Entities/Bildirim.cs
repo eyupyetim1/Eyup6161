@@ -12,7 +12,7 @@ public class BildirimAyari
     public string? SmtpKullanici { get; set; }
     public string? SmtpSifreSifreli { get; set; }
     public string? GonderenEposta { get; set; }
-    public string? GonderenAd { get; set; } = "PayControl";
+    public string? GonderenAd { get; set; } = "Personel Yönetim Sistemi";
 
     public bool WhatsAppEtkin { get; set; }
     public string? WhatsAppTelefonNumarasiId { get; set; }

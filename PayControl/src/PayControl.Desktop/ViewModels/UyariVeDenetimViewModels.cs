@@ -182,7 +182,7 @@ public partial class DenetimGecmisiViewModel : ObservableObject
             var f = Filtre();
             f.Sayfa = 1;
             f.SayfaBoyutu = 100_000;
-            var yol = ArayuzYardimcisi.Kaydet(await _denetim.ExcelAsync(f), $"PayControl-Denetim-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
+            var yol = ArayuzYardimcisi.Kaydet(await _denetim.ExcelAsync(f), $"Denetim-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
             if (yol is not null) Mesaj = $"Kaydedildi: {yol}";
         }
         catch (Exception ex) { Mesaj = ex.Message; }

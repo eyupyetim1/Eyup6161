@@ -117,7 +117,7 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
                 personel = new Personel
                 {
                     TcKimlikNo = tc,
-                    AdSoyad = satir.AdSoyad!.Trim(),
+                    AdSoyad = IsimKurallari.Duzelt(satir.AdSoyad)!,
                     Isyeri = satir.Isyeri,
                     Gorevi = satir.Gorevi,
                     GuncelMaas = satir.Maas,
@@ -146,7 +146,9 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
             else
             {
                 // Kart güncel alanları güncellenir; eski maaş dönemlerine dokunulmaz.
-                personel.AdSoyad = satir.AdSoyad!.Trim();
+                if (IsimKurallari.DuzeltmeGerekirMi(personel.AdSoyad))
+                    uyarilar.Add($"{IsimKurallari.Duzelt(personel.AdSoyad)}: personel kartındaki addaki fazla boşluk düzeltildi.");
+                personel.AdSoyad = IsimKurallari.Duzelt(satir.AdSoyad)!;
                 personel.Isyeri = satir.Isyeri ?? personel.Isyeri;
                 personel.Gorevi = satir.Gorevi ?? personel.Gorevi;
                 personel.GuncelMaas = satir.Maas ?? personel.GuncelMaas;
@@ -547,7 +549,8 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
             var uyarilar = new List<string>();
 
             var tc = Get("TcKimlikNo");
-            var ad = Get("AdSoyad");
+            var hamAd = Get("AdSoyad");
+            var ad = IsimKurallari.Duzelt(hamAd);
             if (string.IsNullOrWhiteSpace(tc))
                 hatalar.Add("TC kimlik no boş");
             else
@@ -558,6 +561,8 @@ public sealed class BordroIceAktarmaServisi : IBordroIceAktarmaServisi
 
             if (string.IsNullOrWhiteSpace(ad))
                 hatalar.Add("Ad soyad boş");
+            else if (IsimKurallari.DuzeltmeGerekirMi(hamAd))
+                uyarilar.Add($"Ad soyaddaki fazla boşluk düzeltildi: \"{hamAd!.Replace('\u00A0', ' ')}\" → \"{ad}\"");
 
             var net = ParseDecimal(Get("NetIstihkak"));
             if (!net.HasValue)

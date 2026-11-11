@@ -81,7 +81,7 @@ public static class ServiceCollectionExtensions
     {
         var dir = logKlasoru ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "PayControl",
+            "Personel Yönetim Sistemi",
             "logs");
         Directory.CreateDirectory(dir);
 
@@ -94,6 +94,28 @@ public static class ServiceCollectionExtensions
             .CreateLogger();
     }
 
+    /// <summary>Kayıtlı ad soyadlardaki fazla boşlukları bir kez düzeltir (her düzeltme denetim kaydına yazılır).</summary>
+    public static async Task<int> IsimleriDuzeltAsync(PayControlDbContext db, CancellationToken ct = default)
+    {
+        var n = 0;
+        foreach (var p in await db.Personeller.ToListAsync(ct))
+        {
+            if (!IsimKurallari.DuzeltmeGerekirMi(p.AdSoyad)) continue;
+            var eski = p.AdSoyad;
+            p.AdSoyad = IsimKurallari.Duzelt(p.AdSoyad)!;
+            db.DenetimKayitlari.Add(new PayControl.Domain.Entities.DenetimKaydi
+            {
+                PersonelId = p.Id, VarlikTuru = "Personel", VarlikId = p.Id, Islem = "Guncelleme", AlanAdi = "AdSoyad",
+                EskiDeger = eski, YeniDeger = p.AdSoyad, DegisiklikNedeni = "Ad soyaddaki fazla boşluk otomatik düzeltildi.", KullaniciAdi = "sistem"
+            });
+            n++;
+        }
+        foreach (var a in await db.BildirimAlicilari.ToListAsync(ct))
+            if (IsimKurallari.DuzeltmeGerekirMi(a.AdSoyad)) { a.AdSoyad = IsimKurallari.Duzelt(a.AdSoyad)!; n++; }
+        if (n > 0) await db.SaveChangesAsync(ct);
+        return n;
+    }
+
     public static async Task InitializeDatabaseAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
@@ -101,6 +123,7 @@ public static class ServiceCollectionExtensions
         var yeniOlustu = await db.Database.EnsureCreatedAsync();
         if (!yeniOlustu)
             await SemaYukseltici.YukseltAsync(db);
+        await IsimleriDuzeltAsync(db);
         var kimlik = scope.ServiceProvider.GetRequiredService<IKimlikServisi>();
         await kimlik.EnsureAdminAsync();
     }

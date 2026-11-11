@@ -90,7 +90,7 @@ public static class BankaTalimatOkuyucu
 
             list.Add(new BankaTalimatSatiri(
                 map.TryGetValue("TC", out var tcCol) ? Digits(ws.Cell(r, tcCol).GetString()) : null,
-                map.TryGetValue("AD", out var adCol) ? ws.Cell(r, adCol).GetString().Trim() : null,
+                map.TryGetValue("AD", out var adCol) ? IsimKurallari.Duzelt(ws.Cell(r, adCol).GetString()) : null,
                 map.TryGetValue("IBAN", out var ibanCol) ? IbanKurallari.Normalize(ws.Cell(r, ibanCol).GetString()) : null,
                 tutar,
                 r));

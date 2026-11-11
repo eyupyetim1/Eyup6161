@@ -207,15 +207,15 @@ public partial class YonetimViewModel : ObservableObject
     [RelayCommand]
     private async Task GeriYukleAsync()
     {
-        var dosya = ArayuzYardimcisi.DosyaSec("PayControl yedeği|*.pcyedek;*.zip|Tüm dosyalar|*.*", "Geri yüklenecek yedek");
+        var dosya = ArayuzYardimcisi.DosyaSec("Personel Yönetim Sistemi yedeği|*.pcyedek;*.zip|Tüm dosyalar|*.*", "Geri yüklenecek yedek");
         if (dosya is null) return;
         if (!ArayuzYardimcisi.Onayla($"{Path.GetFileName(dosya)} geri yüklenecek.\n\nMevcut veriler önce otomatik güvenlik yedeğine alınır, ardından yedekteki verilerle değiştirilir. Uygulama yeniden başlatılacak.\n\nDevam edilsin mi?"))
             return;
         try
         {
             var guvenlik = await _yedek.GeriYukleAsync(dosya, GeriYuklemeSifresi, Kullanici);
-            MessageBox.Show(ArayuzYardimcisi.AktifPencere!, $"Geri yükleme tamamlandı.\nÖnceki verilerin güvenlik yedeği:\n{guvenlik}\n\nPayControl şimdi yeniden başlatılacak.",
-                "PayControl", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(ArayuzYardimcisi.AktifPencere!, $"Geri yükleme tamamlandı.\nÖnceki verilerin güvenlik yedeği:\n{guvenlik}\n\nPersonel Yönetim Sistemi şimdi yeniden başlatılacak.",
+                "Personel Yönetim Sistemi", MessageBoxButton.OK, MessageBoxImage.Information);
             YenidenBaslat();
         }
         catch (Exception ex) { Mesaj = ex.Message; }
@@ -235,7 +235,7 @@ public partial class YonetimViewModel : ObservableObject
         try
         {
             var (ok, cikti) = WindowsGorevZamanlayici.Kaydet(Environment.ProcessPath ?? "PayControl.exe", dk);
-            GorevDurumu = ok ? $"Kayıtlı: her {dk} dakikada bir (PayControl kapalıyken de)" : "Kaydedilemedi";
+            GorevDurumu = ok ? $"Kayıtlı: her {dk} dakikada bir (Personel Yönetim Sistemi kapalıyken de)" : "Kaydedilemedi";
             Mesaj = ok ? "Windows Görev Zamanlayıcısı'na kaydedildi: otomatik yedek, zamanlanmış raporlar ve bildirim yeniden denemeleri uygulama kapalıyken de çalışır." : cikti;
         }
         catch (Exception ex) { Mesaj = ex.Message; }
@@ -318,7 +318,7 @@ public partial class YonetimViewModel : ObservableObject
             GuncellemeDurumu = "Denetleniyor…";
             _bulunan = await _guncelleme.DenetleAsync(MevcutSurum);
             GuncellemeHazir = _bulunan is not null;
-            GuncellemeDurumu = _bulunan is null ? "PayControl güncel." : $"Yeni sürüm: {_bulunan.Surum}" + (string.IsNullOrWhiteSpace(_bulunan.Notlar) ? "" : $" — {_bulunan.Notlar}");
+            GuncellemeDurumu = _bulunan is null ? "Personel Yönetim Sistemi güncel." : $"Yeni sürüm: {_bulunan.Surum}" + (string.IsNullOrWhiteSpace(_bulunan.Notlar) ? "" : $" — {_bulunan.Notlar}");
         }
         catch (Exception ex) { GuncellemeDurumu = ex.Message; }
     }
@@ -327,7 +327,7 @@ public partial class YonetimViewModel : ObservableObject
     private async Task GuncellemeKurAsync()
     {
         if (_bulunan is null) return;
-        if (!ArayuzYardimcisi.Onayla($"PayControl {_bulunan.Surum} indirilip kurulacak. Kurulumdan önce otomatik yedek alınır; uygulama kapanıp yeniden açılır. Devam edilsin mi?")) return;
+        if (!ArayuzYardimcisi.Onayla($"Personel Yönetim Sistemi {_bulunan.Surum} indirilip kurulacak. Kurulumdan önce otomatik yedek alınır; uygulama kapanıp yeniden açılır. Devam edilsin mi?")) return;
         try
         {
             try { await _yedek.YedekAlAsync(Kullanici, otomatik: false); } catch { /* yedek alınamazsa da kullanıcı onayıyla devam */ }

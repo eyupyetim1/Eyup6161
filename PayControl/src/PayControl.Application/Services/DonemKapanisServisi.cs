@@ -457,7 +457,7 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         await OzetHesaplaAsync(donem.Id, ct);
         if (acik > 0)
             await OlayBildirAsync(BildirimTetikleyici.MutabakatFarkiOlustu, $"{yil}-{ay:D2}:{acik}:{bulunan.Sum(b => b.Fark):F2}",
-                $"PayControl: {yil}-{ay:D2} mutabakatında {acik} açık fark",
+                $"Personel Yönetim Sistemi: {yil}-{ay:D2} mutabakatında {acik} açık fark",
                 string.Join("\n", mevcutFarklar.Where(f => f.Durum == FarkDurumu.Acik).Take(20)
                     .Select(f => $"• {f.AdSoyad ?? "Eşleşmeyen"} ({f.Tesis}): {f.FarkTuru} {f.Fark:N2} — {f.Aciklama}")), ct);
         return mevcutFarklar.OrderBy(f => f.Durum).ThenBy(f => f.AdSoyad).ToList();
@@ -653,7 +653,7 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
 
         await _db.SaveChangesAsync(ct);
         await OlayBildirAsync(BildirimTetikleyici.DonemKapandi, $"{donem.DonemYil}-{donem.DonemAy:D2}:{donem.KapanisSayisi}",
-            $"PayControl: {donem.DonemYil}-{donem.DonemAy:D2} maaş dönemi kapatıldı",
+            $"Personel Yönetim Sistemi: {donem.DonemYil}-{donem.DonemAy:D2} maaş dönemi kapatıldı",
             $"Kapatan: {kullanici}\nBeklenen maaş: {o.Beklenen:N2}\nBanka/kasa ödemesi: {o.Odenen:N2}\nEksik: {o.Eksik:N2}  Fazla: {o.Fazla:N2}\n" +
             $"Açık avans: {o.AcikAvans:N2}\nGerekçeli istisna: {o.Istisna}\nNot: {not}", ct);
     }
@@ -1014,7 +1014,7 @@ public sealed class DonemKapanisServisi : IDonemKapanisServisi
         var r = await KapanisRaporuAsync(donemId, ct);
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Kapanış Özeti");
-        ws.Cell(1, 1).Value = $"PayControl — {r.DonemYil}-{r.DonemAy:D2} Maaş Dönemi Kapanış Raporu";
+        ws.Cell(1, 1).Value = $"Personel Yönetim Sistemi — {r.DonemYil}-{r.DonemAy:D2} Maaş Dönemi Kapanış Raporu";
         ws.Cell(1, 1).Style.Font.Bold = true;
         ws.Cell(2, 1).Value = $"Durum: {r.Durum} | Kapanış sayısı: {r.KapanisSayisi} | {(r.DondurulmusVeri ? "Kapanış anında dondurulmuş değerler" : "Canlı değerler (dönem açık)")}";
         var satirlar = new (string, object)[]

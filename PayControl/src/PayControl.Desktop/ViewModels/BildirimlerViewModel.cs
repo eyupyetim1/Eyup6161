@@ -149,8 +149,8 @@ public partial class BildirimlerViewModel : ObservableObject
         {
             var k = await _servis.GonderAsync(new BildirimTalebi
             {
-                Kanal = BildirimKanali.Eposta, DogrudanAdresler = [adres], Konu = "PayControl deneme e-postası",
-                Metin = $"Bu e-posta PayControl bildirim ayarlarını doğrulamak için {DateTime.Now:dd.MM.yyyy HH:mm} tarihinde gönderildi."
+                Kanal = BildirimKanali.Eposta, DogrudanAdresler = [adres], Konu = "Personel Yönetim Sistemi deneme e-postası",
+                Metin = $"Bu e-posta Personel Yönetim Sistemi bildirim ayarlarını doğrulamak için {DateTime.Now:dd.MM.yyyy HH:mm} tarihinde gönderildi."
             }, Kullanici);
             Mesaj = k.All(x => x.Durum == BildirimDurumu.Gonderildi) ? $"Deneme e-postası {adres} adresine gönderildi." : $"Gönderilemedi: {k.FirstOrDefault()?.Hata}";
             await GecmisYukleAsync();

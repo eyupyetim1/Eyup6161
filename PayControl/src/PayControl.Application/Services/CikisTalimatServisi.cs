@@ -57,11 +57,11 @@ public sealed class CikisTalimatServisi : ICikisTalimatServisi
         });
         await _db.SaveChangesAsync(ct);
 
-        var konu = $"PayControl: {p.AdSoyad} için çıkış talimatı (son gün {dto.SonCalismaGunu:dd.MM.yyyy})";
+        var konu = $"Personel Yönetim Sistemi: {p.AdSoyad} için çıkış talimatı (son gün {dto.SonCalismaGunu:dd.MM.yyyy})";
         var metin = $"{p.AdSoyad} ({p.TcKimlikNo}, {p.Isyeri}) için işten çıkış yapılması istendi.\n" +
                     $"Son çalışma günü: {dto.SonCalismaGunu:dd.MM.yyyy}\nNeden: {t.Neden}\nTalimatı veren: {kullanici}\n" +
                     (string.IsNullOrWhiteSpace(t.Aciklama) ? "" : $"Not: {t.Aciklama}\n") +
-                    "Lütfen SGK çıkışını yapıp PayControl'de işten çıkış kaydını girin. Çıkış kaydı girilene kadar ödeme kontrolü bu kişiyi engeller.";
+                    "Lütfen SGK çıkışını yapıp Personel Yönetim Sistemi'de işten çıkış kaydını girin. Çıkış kaydı girilene kadar ödeme kontrolü bu kişiyi engeller.";
         await BildirAsync(BildirimTetikleyici.CikisTalimatiVerildi, t.Id.ToString("N"), konu, metin, p.Isyeri, t.SorumluAliciId, ct);
         return t;
     }
@@ -235,7 +235,7 @@ public sealed class CikisTalimatServisi : ICikisTalimatServisi
                 $"HATIRLATMA: {p.AdSoyad} çıkışı {gun} gündür yapılmadı",
                 $"{p.AdSoyad} ({p.TcKimlikNo}, {p.Isyeri}) için son çalışma günü {t.SonCalismaGunu:dd.MM.yyyy} olarak verilen çıkış talimatı " +
                 $"{gun} gündür uygulanmadı.\nTalimatı veren: {t.TalepEden} ({t.TalepZamani.ToLocalTime():dd.MM.yyyy})\nNeden: {t.Neden}\n" +
-                "Çıkış kaydı yapılmadıkça personele çalışmadığı günler için maaş ödenme riski vardır. Lütfen bugün SGK çıkışını yapıp PayControl'e girin.",
+                "Çıkış kaydı yapılmadıkça personele çalışmadığı günler için maaş ödenme riski vardır. Lütfen bugün SGK çıkışını yapıp Personel Yönetim Sistemi'e girin.",
                 p.Isyeri, t.SorumluAliciId, ct);
             t.SonHatirlatma = simdi.Kind == DateTimeKind.Utc ? simdi : simdi.ToUniversalTime();
             t.HatirlatmaSayisi++;

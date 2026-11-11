@@ -136,7 +136,7 @@ public partial class App : System.Windows.Application
         try
         {
             ServiceCollectionExtensions.ConfigurePayControlLogging();
-            Log.Information("PayControl başlatılıyor");
+            Log.Information("Personel Yönetim Sistemi başlatılıyor");
 
             var services = new ServiceCollection();
             services.AddPayControlInfrastructure();
@@ -215,10 +215,10 @@ public partial class App : System.Windows.Application
             File.WriteAllText(yol, sb.ToString(), Encoding.UTF8);
 
             MessageBox.Show(
-                "PayControl açılamadı.\n\n" +
+                "Personel Yönetim Sistemi açılamadı.\n\n" +
                 ex.Message +
                 "\n\nDetay masaüstüne yazıldı:\nPayControl-HATA.txt",
-                "PayControl Hata",
+                "Personel Yönetim Sistemi Hata",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
@@ -234,7 +234,7 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            Log.Information("PayControl kapatılıyor");
+            Log.Information("Personel Yönetim Sistemi kapatılıyor");
             Log.CloseAndFlush();
         }
         catch { /* ignore */ }

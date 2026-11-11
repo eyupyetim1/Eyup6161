@@ -576,7 +576,7 @@ public sealed class OdemeOncesiKontrolServisi : IOdemeOncesiKontrolServisi
 
         // Kontrol bilgisi ayrı sayfada — banka formatı bozulmaz.
         var k2 = wb.AddWorksheet("Kontrol Bilgisi");
-        k2.Cell(1, 1).Value = "PayControl onaylı ödeme listesi — bankaya otomatik gönderilmez";
+        k2.Cell(1, 1).Value = "Personel Yönetim Sistemi onaylı ödeme listesi — bankaya otomatik gönderilmez";
         k2.Cell(2, 1).Value = $"Dönem: {oturum.DonemYil}-{oturum.DonemAy:D2} | Sürüm: v{surum} | Oluşturan: {kullanici} | {DateTime.Now:dd.MM.yyyy HH:mm}";
         k2.Cell(3, 1).Value = $"Bordro: {oturum.BordroDosyaAdi} | Banka dosyası: {oturum.BankaDosyaAdi} | Kontrol oturumu: {oturum.Id}";
         string[] kb = ["Talimat satırı", "TC", "Ad Soyad", "IBAN", "Tutar", "Bordro net", "Kontrol sonucu", "İstisna", "Gerekçe", "Onaylayan"];

@@ -224,11 +224,11 @@ public partial class OdemeKontrolViewModel : ObservableObject
         if (KontrolOturumu is null) return;
         try
         {
-            var klasor = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "PayControl", "OnayliOdemeListeleri");
+            var klasor = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Personel Yönetim Sistemi", "OnayliOdemeListeleri");
             var liste = await _servis.OnayliListeUretAsync(KontrolOturumu.Id, Kullanici, klasor);
             await GosterAsync(KontrolOturumu.Id);
             Mesaj = $"Onaylı liste oluşturuldu (v{liste.Surum}, {liste.SatirSayisi} satır, {liste.ToplamTutar:N2} TL): {liste.DosyaYolu}" +
-                    Environment.NewLine + "Dosyayı bankaya kendiniz iletmelisiniz; PayControl ödeme göndermez.";
+                    Environment.NewLine + "Dosyayı bankaya kendiniz iletmelisiniz; Personel Yönetim Sistemi ödeme göndermez.";
         }
         catch (Exception ex)
         {

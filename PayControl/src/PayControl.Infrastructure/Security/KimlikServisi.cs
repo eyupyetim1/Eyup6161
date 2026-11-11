@@ -123,7 +123,7 @@ public sealed class KimlikServisi : IKimlikServisi
             SifreHash = hash,
             SifreSalt = salt,
             Rol = dto.Rol,
-            AdSoyad = dto.AdSoyad,
+            AdSoyad = IsimKurallari.Duzelt(dto.AdSoyad),
             Eposta = dto.Eposta,
             Telefon = dto.Telefon,
             Aktif = true,
@@ -147,7 +147,7 @@ public sealed class KimlikServisi : IKimlikServisi
         var eski = $"Rol={k.Rol}, Aktif={k.Aktif}";
         k.Rol = rol;
         k.Aktif = aktif;
-        k.AdSoyad = adSoyad;
+        k.AdSoyad = IsimKurallari.Duzelt(adSoyad);
         k.Eposta = eposta;
         k.Telefon = telefon;
         Denetim(k, "KullaniciGuncellendi", $"Rol={rol}, Aktif={aktif} (önce: {eski})", yapan);

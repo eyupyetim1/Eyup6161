@@ -51,7 +51,7 @@ public class RaporTestleri : TestOrtami
 
             var xlsx = srv.DisaAktar(r, RaporBicimi.Excel);
             using (var wb = new XLWorkbook(new MemoryStream(xlsx)))
-                Assert.Contains("PayControl", wb.Worksheets.First().Cell(1, 1).GetString());
+                Assert.Contains("Personel Yönetim Sistemi", wb.Worksheets.First().Cell(1, 1).GetString());
             var pdf = srv.DisaAktar(r, RaporBicimi.Pdf);
             Assert.StartsWith("%PDF-1.4", Encoding.Latin1.GetString(pdf, 0, 8));
             var csv = srv.DisaAktar(r, RaporBicimi.Csv);
