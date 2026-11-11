@@ -65,7 +65,7 @@ public partial class PuantajWindow : Window
             else if (g.HaftaSonu) stil.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(Color.FromRgb(0xE0, 0xE7, 0xFF))));
             var sutun = new DataGridTemplateColumn
             {
-                Header = baslik, Width = 40, CanUserSort = false, CanUserResize = false, HeaderStyle = stil,
+                Header = baslik, Width = 35, CanUserSort = false, CanUserResize = false, HeaderStyle = stil,
                 CellTemplate = (DataTemplate)XamlReader.Parse(HucreSablonu.Replace("{G}", g.Gun.ToString()))
             };
             if (g.ResmiTatil is not null) ToolTipService.SetToolTip(baslik, $"{g.ResmiTatil} ({g.TatilHakki:0.#} gün)");
@@ -86,7 +86,7 @@ public partial class PuantajWindow : Window
             stil.Setters.Add(new Setter(HorizontalContentAlignmentProperty, HorizontalAlignment.Center));
             Tablo.Columns.Add(new DataGridTemplateColumn
             {
-                Header = b, Width = 54, CanUserSort = false, HeaderStyle = stil,
+                Header = b, Width = 50, CanUserSort = false, HeaderStyle = stil,
                 CellTemplate = (DataTemplate)XamlReader.Parse(OzetSablonu.Replace("{A}", alan))
             });
         }

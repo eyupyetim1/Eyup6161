@@ -49,6 +49,15 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        var ac = Array.IndexOf(e.Args, "--access-csv");
+        if (ac >= 0 && ac + 2 < e.Args.Length)
+        {
+            // Tanılama: Access dosyasını CSV'ye çıkarır (veri aktarımının Windows adımını doğrulamak için)
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = AccessCsvAsync(e.Args[ac + 1], e.Args[ac + 2]);
+            return;
+        }
+
         if (e.Args.Contains("--zamanlanmis-gorevler"))
         {
             // Windows Görev Zamanlayıcısı modu: pencere açmadan arka plan işlerini çalıştırır ve çıkar.
@@ -109,6 +118,25 @@ public partial class App : System.Windows.Application
         _zamanlayici.Tick += (_, _) => Calis();
         _zamanlayici.Start();
         Calis();
+    }
+
+    private async Task AccessCsvAsync(string accdb, string hedef)
+    {
+        var kod = 0;
+        try
+        {
+            var srv = new PayControl.Infrastructure.Import.AccessAktarimServisi(null!, null!);
+            var klasor = await srv.CsvyeCikarAsync(accdb);
+            Directory.CreateDirectory(hedef);
+            foreach (var f in Directory.GetFiles(klasor, "*.csv")) File.Copy(f, Path.Combine(hedef, Path.GetFileName(f)), true);
+            File.WriteAllText(Path.Combine(hedef, "TAMAM.txt"), "ok");
+        }
+        catch (Exception ex)
+        {
+            try { Directory.CreateDirectory(hedef); File.WriteAllText(Path.Combine(hedef, "HATA.txt"), ex.ToString()); } catch { /* yoksay */ }
+            kod = 1;
+        }
+        Shutdown(kod);
     }
 
     private async Task ZamanlanmisGorevlerAsync()

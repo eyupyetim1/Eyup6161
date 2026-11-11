@@ -109,6 +109,35 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Access aktarımı (Windows sürücüsü ile gerçek .accdb okuma)
+        continue-on-error: true
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          $db = Join-Path $env:RUNNER_TEMP 'deneme.accdb'
+          $olustur = @"
+          `$cat = New-Object -ComObject ADOX.Catalog
+          `$cat.Create('Provider=Microsoft.ACE.OLEDB.12.0;Data Source=$db') | Out-Null
+          `$cn = New-Object -ComObject ADODB.Connection
+          `$cn.Open('Provider=Microsoft.ACE.OLEDB.12.0;Data Source=$db')
+          `$cn.Execute('CREATE TABLE Personel (TCKN TEXT(20), AdSoyad TEXT(150), Tesis TEXT(100), Unvan TEXT(100), Cinsiyet TEXT(20), Durum TEXT(20), IseBaslama DATETIME, IstenCikis DATETIME, DogumTarihi DATETIME, MedeniHal TEXT(20), PersonelID LONG, Sicil TEXT(20), IBAN TEXT(34), Telefon TEXT(20))') | Out-Null
+          `$cn.Execute("INSERT INTO Personel (TCKN, AdSoyad, Tesis, Unvan, Durum, IseBaslama) VALUES ('12345678901', 'EYÜP   YETİM', 'Arsin Limanı', 'Gemici', 'Aktif', #2025-01-01#)") | Out-Null
+          `$cn.Execute('CREATE TABLE PuantajGunluk_Arsin_Limani (Yil INTEGER, Ay INTEGER, TCKN TEXT(20), Gun INTEGER, Kod TEXT(5))') | Out-Null
+          `$cn.Execute("INSERT INTO PuantajGunluk_Arsin_Limani VALUES (2026, 10, '12345678901', 1, 'Ç')") | Out-Null
+          `$cn.Close()
+          "@
+          $f = Join-Path $env:RUNNER_TEMP 'olustur.ps1'; Set-Content $f $olustur -Encoding utf8
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $f
+          if (-not (Test-Path $db)) { & "$env:WINDIR\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File $f }
+          if (-not (Test-Path $db)) { Write-Output "ACCESS_TEST: bu Windows imajında Access sürücüsü yok, test atlandı"; exit 0 }
+          $out = Join-Path $env:RUNNER_TEMP 'access-csv'
+          $p = Start-Process "publish/win-x64/PayControl.exe" -ArgumentList @('--access-csv', "`"$db`"", "`"$out`"") -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill() }
+          if (Test-Path "$out/HATA.txt") { Get-Content "$out/HATA.txt"; throw "Access okunamadı" }
+          Get-ChildItem $out | ForEach-Object { Write-Output "ACCESS_TEST dosya: $($_.Name)" }
+          Get-Content "$out/Personel.csv" -Encoding utf8 | ForEach-Object { Write-Output "ACCESS_TEST: $_" }
+          Get-Content "$out/PuantajGunluk_Arsin_Limani.csv" -Encoding utf8 | ForEach-Object { Write-Output "ACCESS_TEST: $_" }
+
       - name: Kurulum programı (NSIS setup.exe) — oluştur ve sessiz kur/kaldır testi
         shell: pwsh
         working-directory: PayControl

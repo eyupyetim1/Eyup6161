@@ -1,5 +1,15 @@
 # Değişiklik Geçmişi
 
+## 1.4.0 — 2026-11-11 (Excel/VBA sisteminin taşınması — 1. paket)
+
+- **Access veri aktarımı** (Yönetim → Veri aktarımı): eski sistemin `Database.accdb` dosyasından tesisler, personel kartları (cinsiyet, doğum tarihi, medeni hal, sicil, telefon, IBAN dahil), tüm tesislerin günlük puantajı, puantaj notları, aylık özetler, nakiller ve kişisel izin ayarları aktarılır. Tekrar çalıştırılabilir. Access sürücüsü 64 ve 32 bit denenir.
+- **Puantaj tablosu**: tesis/ay seçimi, aynı kodlar (Ç, HT, Yi, RT, R, Üİ, M, YG, G, Gİ, Hİ, İİ) ve renkler; hücre seçip kod düğmesiyle toplu giriş, Delete ile silme, "Boşları doldur" (hafta içi Ç, pazar HT, resmi tatil RT), gün notları, hafta sonu/resmi tatil başlıkları.
+- **Aylık özet** VBA kurallarıyla anında hesaplanır: çalışılan (Ç+G+½YG), hafta sonu hakkı (haftada 2+ Üİ olunca hak yanar, rapor cezası), kullanılan haftalık izin, devreden, yıllık izin, rapor, resmi tatil, ücretsiz izin, aylık toplam. Gerçek Access verisindeki 401 kişi-ay özetiyle karşılaştırıldı: 12 alan birebir aynı, devreden izinde 1 satır farklı.
+- **Resmi tatiller** (Excel Ayarlar listesi, arifeler yarım gün) ve **nakil geçmişi / personel aktarma**.
+- Personel kartında cinsiyet, doğum tarihi, medeni hal, telefon.
+- Kenar menü başlık → alt başlık şeklinde, açılır/kapanır gruplar; KPI kartları büyük, kalın ve yüksek kontrastlı.
+
+
 ## 1.3.4 — 2026-11-11
 
 - Programın adı **Personel Yönetim Sistemi** oldu (pencereler, giriş ekranı, kurulum, kısayollar, e-posta ve raporlar). Veri klasörü ve dosya adı değişmedi; mevcut veriler korunur.

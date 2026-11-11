@@ -11,7 +11,7 @@
         Loaded="MainWindow_OnLoaded">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="276"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -25,7 +25,7 @@
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Personel Yönetim" FontFamily="{StaticResource BaslikFont}" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Text="Sistemi · 1.3.4" FontSize="11.5" Foreground="#8EA0BC" ToolTip="Sürüm 1.3.4 · Bankaya otomatik ödeme göndermez"/>
+                        <TextBlock Text="Sistemi · 1.4.0" FontSize="11.5" Foreground="#8EA0BC" ToolTip="Sürüm 1.4.0 · Bankaya otomatik ödeme göndermez"/>
                     </StackPanel>
                 </StackPanel>
 

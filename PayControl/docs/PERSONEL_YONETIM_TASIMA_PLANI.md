@@ -41,6 +41,10 @@ Kural: VBA'daki kodlar, puantaj kodları, hesap kuralları ve kontroller **aynen
 
 Her aşama sonunda: testler (Access verisiyle karşılaştırma dahil), Windows'ta otomatik kurulum/çalıştırma denetimi, yeni kurulum paketi.
 
+## Durum
+
+- **1.4.0:** 1. aşamanın veri aktarımı ve 2. aşamanın puantaj kısmı tamamlandı (Access aktarımı, puantaj tablosu, aylık özet, resmi tatiller, nakil). Henüz aktarılmayan Access tabloları aktarım sonunda listelenir ve sonraki paketlerde eklenir: izin hareketleri/bakiye, belgeler, sözleşmeler, şirketler, zimmet, eğitim, avans, görevlendirme, işe giriş kontrolü, kullanıcılar.
+
 ## Notlar
 
 - Kullanıcı şifreleri Access'te farklı bir özetleme yöntemiyle saklandığı için aktarılmaz; kullanıcılar aktarılır, ilk girişte yeni şifre belirlenir.

@@ -41,7 +41,7 @@
                     <!-- Kod düğmeleri -->
                     <Border DockPanel.Dock="Top" Style="{StaticResource Kart}" Padding="12,10" Margin="0,0,0,10">
                         <DockPanel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
                                 <TextBox Width="190" Style="{StaticResource AramaKutusu}" Tag="Personel ara…" Text="{Binding Arama, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0"/>
                                 <Button Style="{StaticResource SecondaryButton}" Click="BoslariDoldur_Click"
                                         ToolTip="Seçili personellerin (seçim yoksa tümünün) boş günlerini doldurur: hafta içi Ç, pazar HT, resmi tatil RT">
@@ -100,7 +100,7 @@
                                   EnableColumnVirtualization="True" EnableRowVirtualization="True" BorderThickness="0" HeadersVisibility="Column"
                                   SelectedCellsChanged="Tablo_SelectedCellsChanged" PreviewKeyDown="Tablo_PreviewKeyDown">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Personel" Width="220" SortMemberPath="AdSoyad">
+                                <DataGridTemplateColumn Header="Personel" Width="200" SortMemberPath="AdSoyad">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Margin="4,2">
