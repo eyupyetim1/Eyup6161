@@ -1,4 +1,4 @@
-; PayControl kurulum programı (NSIS 3, Unicode)
+﻿; PayControl kurulum programı (NSIS 3, Unicode)
 ; Derleme: makensis -DSURUM=1.3.1 -DKAYNAK=<publish klasörü> -DCIKTI=<setup.exe yolu> installer/PayControl.nsi
 ; Yönetici hakkı gerekmez: kullanıcı klasörüne kurar (%LOCALAPPDATA%\Programs\PayControl).
 ; Veriler (%LOCALAPPDATA%\PayControl) kurulumdan ayrıdır; güncelleme ve kaldırma verilere dokunmaz.
