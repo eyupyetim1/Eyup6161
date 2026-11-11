@@ -1,0 +1,270 @@
+name: Build Windows Installer Package
+
+on:
+  push:
+    branches:
+      - main
+      - 'cursor/paycontrol-v1-personel-maas-cikis-5f7e'
+    tags:
+      - 'v*'
+    paths:
+      - 'PayControl/**'
+      - '.github/workflows/build-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-postgresql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pc_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test (SQLite)
+        working-directory: PayControl
+        run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --verbosity minimal
+      - name: Test (PostgreSQL 16)
+        working-directory: PayControl
+        env:
+          PAYCONTROL_TEST_PG: Host=localhost;Username=postgres;Password=pc_test
+        run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --no-build --verbosity minimal
+
+  build-win-x64:
+    runs-on: windows-latest
+    env:
+      CODE_SIGN_PFX: ${{ secrets.CODE_SIGN_PFX }}
+      CODE_SIGN_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test (core)
+        working-directory: PayControl
+        run: dotnet test PayControl.sln -c Release -p:ExcludeDesktop=true --verbosity minimal
+
+      - name: Publish self-contained (folder, more reliable than single-file)
+        working-directory: PayControl
+        run: >
+          dotnet publish src/PayControl.Desktop/PayControl.Desktop.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=false
+          -o publish/win-x64
+
+      - name: Kod imzalama (CODE_SIGN_PFX tanımlıysa)
+        if: env.CODE_SIGN_PFX != ''
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'imza.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CODE_SIGN_PFX))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe | Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+          foreach ($f in @('publish/win-x64/PayControl.exe', 'publish/win-x64/PayControl.dll')) {
+            & $signtool.FullName sign /f $pfx /p $env:CODE_SIGN_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $f
+            if ($LASTEXITCODE -ne 0) { throw "İmzalama başarısız: $f" }
+          }
+          Remove-Item $pfx -Force
+
+      - name: Ekran görüntüleri (sentetik demo veri)
+        continue-on-error: true
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          $out = Join-Path $PWD "ekran-goruntuleri"
+          $p = Start-Process -FilePath "publish/win-x64/PayControl.exe" -ArgumentList @("--ekran-goruntusu", "`"$out`"") -PassThru
+          if (-not $p.WaitForExit(300000)) { $p.Kill(); Write-Output "ZAMAN_ASIMI" }
+          Write-Output "Cikis kodu: $($p.ExitCode)"
+          if (Test-Path "$out/HATA.txt") { Get-Content "$out/HATA.txt" }
+          Get-ChildItem $out -Filter *.png | ForEach-Object {
+            $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_.FullName))
+            Write-Output "===PNG-BASLA $($_.Name)==="
+            for ($i = 0; $i -lt $b64.Length; $i += 4000) { Write-Output $b64.Substring($i, [Math]::Min(4000, $b64.Length - $i)) }
+            Write-Output "===PNG-BITIR==="
+          }
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PayControl-Ekran-Goruntuleri
+          path: PayControl/ekran-goruntuleri
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Access aktarımı (Windows sürücüsü ile gerçek .accdb okuma)
+        continue-on-error: true
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          # GitHub imajında Access sürücüsü yok: Microsoft'un ücretsiz Access Database Engine'i (x64) kurulur
+          choco install msaccess2010-redist-x64 -y --no-progress | Select-Object -Last 3
+          $db = Join-Path $env:RUNNER_TEMP 'deneme.accdb'
+          $olustur = @"
+          `$cat = New-Object -ComObject ADOX.Catalog
+          `$cat.Create('Provider=Microsoft.ACE.OLEDB.12.0;Data Source=$db') | Out-Null
+          `$cn = New-Object -ComObject ADODB.Connection
+          `$cn.Open('Provider=Microsoft.ACE.OLEDB.12.0;Data Source=$db')
+          `$cn.Execute('CREATE TABLE Personel (TCKN TEXT(20), AdSoyad TEXT(150), Tesis TEXT(100), Unvan TEXT(100), Cinsiyet TEXT(20), Durum TEXT(20), IseBaslama DATETIME, IstenCikis DATETIME, DogumTarihi DATETIME, MedeniHal TEXT(20), PersonelID LONG, Sicil TEXT(20), IBAN TEXT(34), Telefon TEXT(20))') | Out-Null
+          `$cn.Execute("INSERT INTO Personel (TCKN, AdSoyad, Tesis, Unvan, Durum, IseBaslama) VALUES ('12345678901', 'EYÜP   YETİM', 'Arsin Limanı', 'Gemici', 'Aktif', #2025-01-01#)") | Out-Null
+          `$cn.Execute('CREATE TABLE PuantajGunluk_Arsin_Limani (Yil INTEGER, Ay INTEGER, TCKN TEXT(20), Gun INTEGER, Kod TEXT(5))') | Out-Null
+          `$cn.Execute("INSERT INTO PuantajGunluk_Arsin_Limani VALUES (2026, 10, '12345678901', 1, 'Ç')") | Out-Null
+          `$cn.Close()
+          "@
+          $f = Join-Path $env:RUNNER_TEMP 'olustur.ps1'; Set-Content $f $olustur -Encoding utf8
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $f
+          if (-not (Test-Path $db)) { & "$env:WINDIR\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File $f }
+          if (-not (Test-Path $db)) { Write-Output "ACCESS_TEST: bu Windows imajında Access sürücüsü yok, test atlandı"; exit 0 }
+          $out = Join-Path $env:RUNNER_TEMP 'access-csv'
+          $p = Start-Process "publish/win-x64/PayControl.exe" -ArgumentList @('--access-csv', "`"$db`"", "`"$out`"") -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill() }
+          if (Test-Path "$out/HATA.txt") { Get-Content "$out/HATA.txt"; throw "Access okunamadı" }
+          Get-ChildItem $out | ForEach-Object { Write-Output "ACCESS_TEST dosya: $($_.Name)" }
+          Get-Content "$out/Personel.csv" -Encoding utf8 | ForEach-Object { Write-Output "ACCESS_TEST: $_" }
+          Get-Content "$out/PuantajGunluk_Arsin_Limani.csv" -Encoding utf8 | ForEach-Object { Write-Output "ACCESS_TEST: $_" }
+
+      - name: Kurulum programı (NSIS setup.exe) — oluştur ve sessiz kur/kaldır testi
+        shell: pwsh
+        working-directory: PayControl
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress | Out-Null }
+            $env:PATH += ";${env:ProgramFiles(x86)}\NSIS"
+          }
+          [xml]$proj = Get-Content src/PayControl.Desktop/PayControl.Desktop.csproj
+          $surum = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $kur = Join-Path $env:RUNNER_TEMP 'kur'
+          New-Item -ItemType Directory -Force -Path "$kur/app" | Out-Null
+          Copy-Item publish/win-x64/* "$kur/app" -Recurse -Force
+          Get-ChildItem "$kur/app" -Filter *.pdb | Remove-Item
+          Copy-Item docs/KULLANIM.md "$kur/app"
+          Copy-Item src/PayControl.Desktop/Assets/PayControl.ico, samples/bordro-ornek.xlsx $kur
+          $setup = Join-Path $PWD "dist/PersonelYonetimSistemi-$surum-Kurulum.exe"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          makensis -V2 -INPUTCHARSET UTF8 "-DSURUM=$surum" "-DKAYNAK=$kur\app" "-DCIKTI=$setup" installer/PayControl.nsi
+          if ($LASTEXITCODE -ne 0) { throw "makensis başarısız" }
+          if ($env:CODE_SIGN_PFX) {
+            $pfx = Join-Path $env:RUNNER_TEMP 'imza2.pfx'
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CODE_SIGN_PFX))
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe | Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+            & $signtool.FullName sign /f $pfx /p $env:CODE_SIGN_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $setup
+            Remove-Item $pfx -Force
+          }
+          # Sessiz kurulum testi
+          $p = Start-Process $setup -ArgumentList '/S' -PassThru -Wait
+          Write-Output "Kurulum çıkış kodu: $($p.ExitCode)"
+          $hedef = Join-Path $env:LOCALAPPDATA 'Programs\PayControl'
+          foreach ($f in @('PayControl.exe', 'Kaldir.exe', 'KULLANIM.md', 'Ornekler\bordro-ornek.xlsx')) {
+            if (-not (Test-Path (Join-Path $hedef $f))) { throw "Kurulumda eksik: $f" }
+          }
+          if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Personel Yönetim Sistemi.lnk'))) { throw "Masaüstü kısayolu yok" }
+          $kayit = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\PayControl'
+          if ($kayit.DisplayVersion -ne $surum) { throw "Programlar listesinde sürüm hatalı: $($kayit.DisplayVersion)" }
+          Write-Output "KURULUM TAMAM: $hedef, sürüm $($kayit.DisplayVersion)"
+          # Kurulu exe ile ekran görüntüsü modunun açıldığını doğrula (kurulan dosyalar eksiksiz)
+          $o = Join-Path $env:RUNNER_TEMP 'kurulu-test'
+          $q = Start-Process (Join-Path $hedef 'PayControl.exe') -ArgumentList @('--ekran-goruntusu', "`"$o`"") -PassThru
+          if (-not $q.WaitForExit(300000)) { $q.Kill(); throw "Kurulu uygulama zaman aşımı" }
+          if (-not (Test-Path "$o/TAMAM.txt")) { if (Test-Path "$o/HATA.txt") { Get-Content "$o/HATA.txt" }; throw "Kurulu uygulama çalışmadı" }
+          Write-Output "KURULU UYGULAMA ÇALIŞTI: $((Get-ChildItem $o -Filter *.png).Count) ekran"
+          # Sessiz kaldırma testi (veriler korunur)
+          $u = Start-Process (Join-Path $hedef 'Kaldir.exe') -ArgumentList '/S' -PassThru -Wait
+          Start-Sleep -Seconds 5
+          if (Test-Path (Join-Path $hedef 'PayControl.exe')) { throw "Kaldırma sonrası dosyalar duruyor" }
+          if (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\PayControl') { throw "Kaldırma kaydı silinmedi" }
+          Write-Output "KALDIRMA TAMAM"
+          Get-Item $setup | Format-List FullName, Length
+
+      - name: Upload setup.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: PayControl-Kurulum-Setup
+          path: PayControl/dist/PersonelYonetimSistemi-*-Kurulum.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Stage installer package
+        shell: pwsh
+        run: |
+          $stage = "PayControl/dist/PayControl-Kurulum"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item PayControl/publish/win-x64/* $stage -Recurse -Force
+          Copy-Item PayControl/installer/Install-PayControl.ps1 $stage -Force
+          Copy-Item PayControl/installer/KURULUM.cmd $stage -Force
+          Copy-Item PayControl/installer/BASLAT.cmd $stage -Force
+          Copy-Item PayControl/installer/OKU-BENO.txt $stage -Force
+          Copy-Item PayControl/installer/KURULUM.txt $stage -Force
+          Copy-Item PayControl/docs/KULLANIM.md $stage -Force
+          Copy-Item PayControl/samples/bordro-ornek.xlsx $stage -Force
+          if (-not (Test-Path "$stage/PayControl.exe")) {
+            throw "PayControl.exe publish çıktısında yok"
+          }
+
+      - name: Zip package
+        shell: pwsh
+        run: |
+          $zip = "PayControl/dist/PayControl-Kurulum-win-x64.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "PayControl/dist/PayControl-Kurulum/*" -DestinationPath $zip -Force
+          Get-Item $zip | Format-List FullName, Length
+
+      - name: Güncelleme bildirimi (guncelleme.json)
+        shell: pwsh
+        run: |
+          $zip = "PayControl/dist/PayControl-Kurulum-win-x64.zip"
+          [xml]$proj = Get-Content PayControl/src/PayControl.Desktop/PayControl.Desktop.csproj
+          $surum = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $sha = (Get-FileHash $zip -Algorithm SHA256).Hash
+          @{ surum = $surum; adres = 'PayControl-Kurulum-win-x64.zip'; sha256 = $sha; tarih = (Get-Date).ToUniversalTime().ToString('o'); notlar = "PayControl $surum" } |
+            ConvertTo-Json | Set-Content PayControl/dist/guncelleme.json -Encoding utf8
+          Get-Content PayControl/dist/guncelleme.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PayControl-Kurulum-win-x64
+          path: |
+            PayControl/dist/PayControl-Kurulum-win-x64.zip
+            PayControl/dist/guncelleme.json
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-win-x64, test-postgresql]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: PayControl-Kurulum-win-x64
+          path: paket
+      - uses: actions/download-artifact@v4
+        with:
+          name: PayControl-Kurulum-Setup
+          path: paket
+      - name: GitHub sürümü oluştur (otomatik güncelleme bu dosyaları okur)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -R paket
+          gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --title "PayControl ${GITHUB_REF_NAME}" --generate-notes \
+            $(find paket -name 'PersonelYonetimSistemi-*-Kurulum.exe') $(find paket -name 'PayControl-Kurulum-win-x64.zip') $(find paket -name 'guncelleme.json')

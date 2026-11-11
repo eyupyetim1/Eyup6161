@@ -1,0 +1,92 @@
+<Window x:Class="PayControl.Desktop.Views.ModulVeriWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Grup}"
+        Height="860" Width="1440" MinHeight="600" MinWidth="1040"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <DockPanel Margin="24,20,24,20">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <TextBlock Text="{Binding Grup}" Style="{StaticResource SayfaBasligi}"/>
+            <TextBlock Text="{Binding GrupAciklama}" Style="{StaticResource AltBaslik}"/>
+        </StackPanel>
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource BilgiSeridi}" Margin="0,10,0,0" Visibility="{Binding Mesaj, Converter={StaticResource Gorunurluk}}">
+            <TextBlock Text="{Binding Mesaj}" Style="{StaticResource MesajYazi}"/>
+        </Border>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Kart}" Padding="8" Margin="0,0,14,0">
+                <ListBox ItemsSource="{Binding Sekmeler}" SelectedItem="{Binding SeciliSekme}" BorderThickness="0" Background="Transparent">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="k" CornerRadius="10" Padding="12,10" Margin="0,2" Background="Transparent">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="k" Property="Background" Value="{StaticResource HoverBrush}"/></Trigger>
+                                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="k" Property="Background" Value="{StaticResource BirincilYumusakBrush}"/></Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel>
+                                <Border DockPanel.Dock="Right" Background="{StaticResource YuzeyIkincilBrush}" CornerRadius="999" Padding="8,1">
+                                    <TextBlock Text="{Binding Satir}" FontSize="12" FontWeight="SemiBold"/>
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Baslik}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Tanim.Aciklama}" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,2,6,0"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource Kart}" Padding="0">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="16,12,16,10">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <TextBox Width="240" Style="{StaticResource AramaKutusu}" Tag="Ara (ad, TC, tarih, açıklama…)" Text="{Binding Arama, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding TabloYukleCommand}" ToolTip="Yenile" Margin="0,0,6,0">
+                                <TextBlock Text="&#xE72C;" Style="{StaticResource IkonYazi}" FontSize="13"/>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding ExcelCommand}" ToolTip="Excel'e aktar" Margin="0,0,6,0">
+                                <TextBlock Text="&#xE9F9;" Style="{StaticResource IkonYazi}" FontSize="13"/>
+                            </Button>
+                            <Button Style="{StaticResource DangerButton}" Click="Sil_Click" Margin="0,0,6,0" ToolTip="Seçili satırları sil">
+                                <TextBlock Text="&#xE74D;" Style="{StaticResource IkonYazi}" FontSize="13"/>
+                            </Button>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding KaydetCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Kaydet"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SeciliSekme.Baslik}" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock Text="{Binding Durum}" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock DockPanel.Dock="Bottom" Margin="16,8,16,10" FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
+                               Text="Hücreye çift tıklayarak düzeltin; en alttaki boş satıra yazarak yeni kayıt ekleyin; değişiklikler Kaydet'e basınca kalıcı olur. Personel sütunu TC'den otomatik doldurulur."/>
+                    <DataGrid x:Name="Tablo" ItemsSource="{Binding Gorunum}" AutoGenerateColumns="True" CanUserAddRows="True" CanUserDeleteRows="False"
+                              BorderThickness="0,1" AutoGeneratingColumn="Tablo_AutoGeneratingColumn" FrozenColumnCount="1"
+                              EnableRowVirtualization="True" EnableColumnVirtualization="True" MinColumnWidth="70"/>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

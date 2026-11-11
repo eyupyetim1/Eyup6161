@@ -1,0 +1,447 @@
+<Window x:Class="PayControl.Desktop.Views.BildirimlerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bildirimler — E-posta ve WhatsApp"
+        Height="820" Width="1380" MinHeight="620" MinWidth="1040"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <Window.Resources>
+        <Style x:Key="FormSatiri" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="24,20,24,20">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <TextBlock Text="Bildirimler" Style="{StaticResource SayfaBasligi}"/>
+            <TextBlock Style="{StaticResource AltBaslik}" Text="Raporları ve uyarıları e-posta ve WhatsApp ile elle veya otomatik gönderin · her gönderim kayıt altında"/>
+        </StackPanel>
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource BilgiSeridi}" Margin="0,12,0,0" Visibility="{Binding Mesaj, Converter={StaticResource Gorunurluk}}">
+            <TextBlock Text="{Binding Mesaj}" Style="{StaticResource MesajYazi}"/>
+        </Border>
+
+        <TabControl>
+            <!-- ================= Elle gönder ================= -->
+            <TabItem Header="Elle gönder">
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Kart}" Margin="0,0,14,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Kayıtlı alıcılar" Style="{StaticResource BolumBasligi}" Margin="0,0,0,8"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding SecilebilirAlicilar}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Secili}" Margin="0,4">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Etiket}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Iletisim}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                                </StackPanel>
+                                            </CheckBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Kart}">
+                        <DockPanel>
+                            <WrapPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                                <Button Style="{StaticResource PrimaryButton}" Command="{Binding ElleGonderCommand}" Margin="0,0,8,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE724;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Gönder"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource BasariButton}" Command="{Binding WhatsAppAcCommand}"
+                                        ToolTip="API anahtarı gerekmez: mesaj hazır doldurulmuş WhatsApp sohbeti açılır, siz gönderirsiniz">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8BD;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Text="WhatsApp'ta aç (elle)"/>
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="200"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Style="{StaticResource FormSatiri}">
+                                        <TextBlock Text="Kanal" Style="{StaticResource AlanEtiketi}"/>
+                                        <ComboBox ItemsSource="{Binding Kanallar}" DisplayMemberPath="Ad" SelectedValuePath="Deger" SelectedValue="{Binding ElleKanal}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Style="{StaticResource FormSatiri}">
+                                        <TextBlock Text="Ek adresler (e-posta veya telefon, virgülle)" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding ElleAdresler}" Margin="0,4,0,0" Tag="ornek@firma.com, 0532 111 22 33"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4" Style="{StaticResource FormSatiri}">
+                                        <TextBlock Text="WhatsApp elle: telefon" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding WaTelefon}" Margin="0,4,0,0" Tag="05xx xxx xx xx"/>
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Konu" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding ElleKonu}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <TextBlock Text="Mesaj" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding ElleMetin}" Height="300" Margin="0,4,0,0" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                         VerticalScrollBarVisibility="Auto"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ================= Otomatik kurallar ================= -->
+            <TabItem Header="Otomatik kurallar">
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="320"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="16,14,16,10">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Style="{StaticResource SecondaryButton}" Command="{Binding KurallariSimdiCalistirCommand}" Margin="0,0,8,0"
+                                            ToolTip="Vadesi gelen kuralları, otomatik yedeği ve yeniden denemeleri hemen çalıştır">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE768;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Şimdi çalıştır"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource SecondaryButton}" Command="{Binding YeniKuralCommand}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE710;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Yeni kural"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <TextBlock Text="Kurallar" Style="{StaticResource BolumBasligi}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding Kurallar}" SelectedItem="{Binding SeciliKural}" IsReadOnly="True" BorderThickness="0,1,0,0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Kural" Binding="{Binding Ad}" Width="1.6*"/>
+                                    <DataGridTextColumn Header="Tetikleyici" Binding="{Binding Tetikleyici, Converter={StaticResource Rozet}, ConverterParameter=metin}" Width="1.3*"/>
+                                    <DataGridTextColumn Header="Gün/saat" Binding="{Binding GunSaatMetni}" Width="110"/>
+                                    <DataGridTemplateColumn Header="Kanal" Width="165">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Kanal}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Alıcı rolü" Binding="{Binding AliciRolu}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="Tesis" Binding="{Binding Tesis}" Width="*"/>
+                                    <DataGridTextColumn Header="Son çalışma" Binding="{Binding SonCalisma, StringFormat=dd.MM.yyyy HH:mm}" Width="110"/>
+                                    <DataGridTemplateColumn Header="Aktif" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Aktif}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Kart}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel DataContext="{Binding FormKural}">
+                                <TextBlock Text="Kural ayrıntısı" Style="{StaticResource BolumBasligi}" Margin="0,0,0,12"/>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Ad" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding Ad}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Tetikleyici" Style="{StaticResource AlanEtiketi}"/>
+                                    <ComboBox ItemsSource="{Binding DataContext.Tetikleyiciler, RelativeSource={RelativeSource AncestorType=Window}}" DisplayMemberPath="Ad"
+                                              SelectedValuePath="Deger" SelectedValue="{Binding Tetikleyici}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Rapor (zamanlanmış raporda zorunlu)" Style="{StaticResource AlanEtiketi}"/>
+                                    <ComboBox ItemsSource="{Binding DataContext.RaporTurleri, RelativeSource={RelativeSource AncestorType=Window}}" DisplayMemberPath="Ad"
+                                              SelectedValuePath="Deger" SelectedValue="{Binding RaporTuru}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="56"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="56"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Sıklık" Style="{StaticResource AlanEtiketi}"/>
+                                        <ComboBox ItemsSource="{Binding DataContext.Sikliklar, RelativeSource={RelativeSource AncestorType=Window}}" DisplayMemberPath="Ad"
+                                                  SelectedValuePath="Deger" SelectedValue="{Binding Siklik}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Gün" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding Gun}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="Saat" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding Saat}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Kanal ve ek biçimi" Style="{StaticResource AlanEtiketi}"/>
+                                    <DockPanel Margin="0,4,0,0">
+                                        <ComboBox DockPanel.Dock="Right" Width="100" Margin="8,0,0,0" ItemsSource="{Binding DataContext.Bicimler, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  DisplayMemberPath="Ad" SelectedValuePath="Deger" SelectedValue="{Binding RaporBicimi}"/>
+                                        <ComboBox ItemsSource="{Binding DataContext.Kanallar, RelativeSource={RelativeSource AncestorType=Window}}" DisplayMemberPath="Ad"
+                                                  SelectedValuePath="Deger" SelectedValue="{Binding Kanal}"/>
+                                    </DockPanel>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Alıcı rolü (bu roldeki tüm alıcılara)" Style="{StaticResource AlanEtiketi}"/>
+                                    <ComboBox ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding AliciRolu}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Tesis (boş = tüm tesisler)" Style="{StaticResource AlanEtiketi}"/>
+                                    <ComboBox ItemsSource="{Binding DataContext.Tesisler, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Tesis}" Margin="0,4,0,0"/>
+                                    <TextBlock Text="Tesis seçilirse rapor o tesise süzülür ve yalnız o tesisin (veya tesissiz) alıcılarına gider." FontSize="11.5"
+                                               Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <CheckBox Content="Aktif" IsChecked="{Binding Aktif}" Margin="0,0,0,14"/>
+                                <Button Style="{StaticResource PrimaryButton}" Command="{Binding DataContext.KuralKaydetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Kuralı kaydet"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ================= Alıcılar ================= -->
+            <TabItem Header="Alıcılar">
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="340"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="16,14,16,10">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Command="{Binding YeniAliciCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8FA;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Yeni alıcı"/>
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Text="Alıcı listesi" Style="{StaticResource BolumBasligi}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding Alicilar}" SelectedItem="{Binding SeciliAlici}" IsReadOnly="True" BorderThickness="0,1,0,0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Ad soyad" Binding="{Binding AdSoyad}" Width="1.3*"/>
+                                    <DataGridTextColumn Header="E-posta" Binding="{Binding Eposta}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="Telefon" Binding="{Binding Telefon}" Width="*"/>
+                                    <DataGridTextColumn Header="Rol" Binding="{Binding Rol}" Width="*"/>
+                                    <DataGridTextColumn Header="Tesis" Binding="{Binding Tesis}" Width="*"/>
+                                    <DataGridTemplateColumn Header="Aktif" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Aktif}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Kart}">
+                        <StackPanel DataContext="{Binding FormAlici}">
+                            <TextBlock Text="Alıcı bilgileri" Style="{StaticResource BolumBasligi}" Margin="0,0,0,12"/>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Ad soyad" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding AdSoyad}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="E-posta" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding Eposta}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Telefon (WhatsApp)" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding Telefon}" Margin="0,4,0,0" Tag="05xx xxx xx xx"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Rol" Style="{StaticResource AlanEtiketi}"/>
+                                <ComboBox ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Rol}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Tesis (boş = tüm tesisler)" Style="{StaticResource AlanEtiketi}"/>
+                                <ComboBox ItemsSource="{Binding DataContext.Tesisler, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Tesis}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <CheckBox Content="Aktif" IsChecked="{Binding Aktif}" Margin="0,0,0,14"/>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding DataContext.AliciKaydetCommand, RelativeSource={RelativeSource AncestorType=Window}}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Alıcıyı kaydet"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ================= Geçmiş ================= -->
+            <TabItem Header="Gönderim geçmişi">
+                <Border Style="{StaticResource Kart}" Padding="0" Margin="0,14,0,0">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="16,14,16,10">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource SecondaryButton}" Command="{Binding YenidenDeneCommand}" Margin="0,0,8,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE777;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Başarısızları yeniden dene"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource SecondaryButton}" Command="{Binding GecmisYukleCommand}" ToolTip="Yenile">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource IkonYazi}" FontSize="13"/>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Son 500 gönderim" Style="{StaticResource BolumBasligi}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DataGrid ItemsSource="{Binding Gecmis}" IsReadOnly="True" BorderThickness="0,1,0,0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Zaman" Binding="{Binding OlusturmaZamani, Converter={StaticResource YerelZaman}}" Width="120"/>
+                                <DataGridTemplateColumn Header="Kanal" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><ContentControl Content="{Binding Kanal}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Alıcı" Binding="{Binding Alici}" Width="*"/>
+                                <DataGridTextColumn Header="Konu" Binding="{Binding Konu}" Width="1.6*"/>
+                                <DataGridTextColumn Header="Ek" Binding="{Binding EkDosyaAdi}" Width="*" ElementStyle="{StaticResource SolukHucre}"/>
+                                <DataGridTemplateColumn Header="Durum" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><ContentControl Content="{Binding Durum}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Deneme" Binding="{Binding DenemeSayisi}" Width="70"/>
+                                <DataGridTextColumn Header="Hata" Binding="{Binding Hata}" Width="1.6*" ElementStyle="{StaticResource SarilanHucre}"/>
+                                <DataGridTextColumn Header="Kullanıcı" Binding="{Binding Kullanici}" Width="90"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+            </TabItem>
+
+            <!-- ================= Ayarlar ================= -->
+            <TabItem Header="Bağlantı ayarları">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource Kart}" VerticalAlignment="Top">
+                            <StackPanel DataContext="{Binding Ayar}">
+                                <TextBlock Text="E-posta (SMTP)" Style="{StaticResource BolumBasligi}"/>
+                                <TextBlock Text="Kurumsal e-posta, Gmail (uygulama şifresi) veya Outlook/Office 365 SMTP ayarlarını girin." FontSize="12" Foreground="{StaticResource MutedBrush}"
+                                           TextWrapping="Wrap" Margin="0,4,0,14"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="SMTP sunucusu" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding SmtpSunucu}" Tag="smtp.office365.com" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Port" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding SmtpPort}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="4" Content="SSL / TLS" IsChecked="{Binding SmtpSsl}" VerticalAlignment="Bottom" Margin="0,0,0,8"/>
+                                </Grid>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Kullanıcı adı" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding SmtpKullanici}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Şifre (boş bırakılırsa kayıtlı şifre korunur)" Style="{StaticResource AlanEtiketi}"/>
+                                    <PasswordBox x:Name="SmtpSifreKutusu" Margin="0,4,0,0" PasswordChanged="SmtpSifre_OnPasswordChanged"/>
+                                </StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Gönderen e-posta" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding GonderenEposta}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Gönderen adı" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding GonderenAd}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource Kart}" VerticalAlignment="Top">
+                            <StackPanel DataContext="{Binding Ayar}">
+                                <TextBlock Text="WhatsApp Business Cloud API" Style="{StaticResource BolumBasligi}"/>
+                                <TextBlock FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,4,0,14"
+                                           Text="Otomatik WhatsApp için Meta Business hesabı, telefon numarası kimliği ve kalıcı erişim anahtarı gerekir. Meta kuralı gereği iş tarafından başlatılan mesajlar onaylı şablonla gönderilir (şablonda tek {{1}} gövde değişkeni). Anahtar yoksa 'WhatsApp'ta aç (elle)' kullanılabilir."/>
+                                <CheckBox Content="WhatsApp ile otomatik gönderim etkin" IsChecked="{Binding WhatsAppEtkin}" Margin="0,0,0,12"/>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Telefon numarası kimliği (Phone number ID)" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding WhatsAppTelefonNumarasiId}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Erişim anahtarı (boş bırakılırsa korunur)" Style="{StaticResource AlanEtiketi}"/>
+                                    <PasswordBox x:Name="WhatsAppAnahtarKutusu" Margin="0,4,0,0" PasswordChanged="WhatsAppAnahtar_OnPasswordChanged"/>
+                                </StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="90"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Onaylı şablon adı" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding WhatsAppSablonAdi}" Tag="paycontrol_bildirim" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Dil" Style="{StaticResource AlanEtiketi}"/>
+                                        <TextBox Text="{Binding WhatsAppDil}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <WrapPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,14,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding AyarKaydetCommand}" Margin="0,0,8,0" ToolTip="Yönetici yetkisi gerekir">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Ayarları kaydet"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding DenemeGonderCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE715;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Deneme e-postası gönder"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

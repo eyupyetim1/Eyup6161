@@ -1,0 +1,184 @@
+<Window x:Class="PayControl.Desktop.Views.RaporMerkeziWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Rapor Merkezi"
+        Height="860" Width="1440" MinHeight="640" MinWidth="1120"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <Grid Margin="24,20,24,20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,16">
+            <TextBlock Text="Rapor merkezi" Style="{StaticResource SayfaBasligi}"/>
+            <TextBlock Style="{StaticResource AltBaslik}" Text="Dönem, tesis ve şirket bazında ayrıntılı raporlar · Excel, PDF ve CSV · e-posta / WhatsApp ile gönderim"/>
+        </StackPanel>
+
+        <!-- Rapor listesi -->
+        <Border Grid.Row="1" Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{Binding Tanimlar.Count, StringFormat=Rapor türleri ({0})}" Style="{StaticResource BolumBasligi}" Margin="16,14,16,8"/>
+                <ListBox ItemsSource="{Binding Tanimlar}" SelectedItem="{Binding SeciliTanim}" BorderThickness="0" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="8,0,8,8">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Kutu" CornerRadius="10" Padding="12,9" Margin="0,2" Background="Transparent">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Kutu" Property="Background" Value="{StaticResource HoverBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Kutu" Property="Background" Value="{StaticResource BirincilYumusakBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Ad}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Kategori}" FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Önizleme -->
+        <DockPanel Grid.Row="1" Grid.Column="1">
+            <Border DockPanel.Dock="Top" Style="{StaticResource Kart}" Padding="14,12" Margin="0,0,0,12">
+                <WrapPanel VerticalAlignment="Center">
+                    <TextBlock Text="Başlangıç" Style="{StaticResource AlanEtiketi}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox Width="64" Text="{Binding BaslangicYil}" ToolTip="Yıl"/>
+                    <TextBox Width="44" Margin="4,0,14,0" Text="{Binding BaslangicAy}" ToolTip="Ay"/>
+                    <TextBlock Text="Bitiş" Style="{StaticResource AlanEtiketi}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox Width="64" Text="{Binding BitisYil}" ToolTip="Yıl"/>
+                    <TextBox Width="44" Margin="4,0,14,0" Text="{Binding BitisAy}" ToolTip="Ay"/>
+                    <ComboBox Width="160" ItemsSource="{Binding Tesisler}" SelectedItem="{Binding SeciliTesis}" ToolTip="Tesis filtresi" Margin="0,0,8,0"/>
+                    <TextBox Width="110" Tag="Şirket" Text="{Binding Sirket}" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding OlusturCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72C;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                            <TextBlock Text="Oluştur"/>
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom" Style="{StaticResource BilgiSeridi}" Margin="0,12,0,0"
+                    Visibility="{Binding Mesaj, Converter={StaticResource Gorunurluk}}">
+                <TextBlock Text="{Binding Mesaj}" Style="{StaticResource MesajYazi}"/>
+            </Border>
+
+            <Border Style="{StaticResource Kart}" Padding="0">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="18,14,18,10">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding ExcelCommand}" Margin="0,0,6,0" ToolTip="Excel olarak kaydet">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE9F9;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Excel"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding PdfCommand}" Margin="0,0,6,0" ToolTip="PDF olarak kaydet">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xEA90;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,6,0"/>
+                                    <TextBlock Text="PDF"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding CsvCommand}" ToolTip="CSV olarak kaydet">
+                                <TextBlock Text="CSV"/>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding RaporBasligi}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SatirSayisi}" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="10,3,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding RaporAciklamasi}" FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Ozet}" Margin="14,0,14,10">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource YuzeyIkincilBrush}" CornerRadius="10" Padding="12,7" Margin="4">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Ad}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                        <TextBlock Text="{Binding Deger}" FontSize="15" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid>
+                        <DataGrid ItemsSource="{Binding Tablo}" AutoGenerateColumns="True" IsReadOnly="True" BorderThickness="0,1,0,0"
+                                  ColumnWidth="Auto" MinColumnWidth="80" EnableRowVirtualization="True"/>
+                        <TextBlock Text="Rapor hazırlanıyor…" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"
+                                   Visibility="{Binding Mesgul, Converter={StaticResource BoolGorunur}}"/>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </DockPanel>
+
+        <!-- Gönderim -->
+        <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Kart}" Margin="14,0,0,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Gönder" Style="{StaticResource BolumBasligi}"/>
+                <TextBlock DockPanel.Dock="Top" Text="Rapor seçilen biçimde ek olarak gönderilir. WhatsApp için Bildirimler ekranında Cloud API ayarı gerekir."
+                           FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                    <TextBlock Text="Not (mesaj gövdesine eklenir)" Style="{StaticResource AlanEtiketi}"/>
+                    <TextBox Text="{Binding NotMetni}" Height="70" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Margin="0,4,0,10"/>
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding GonderCommand}" HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE724;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                            <TextBlock Text="Raporu gönder"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="Kanal" Style="{StaticResource AlanEtiketi}"/>
+                    <ComboBox ItemsSource="{Binding Kanallar}" DisplayMemberPath="Ad" SelectedValuePath="Deger" SelectedValue="{Binding GonderimKanali}" Margin="0,4,0,10"/>
+                    <TextBlock Text="Biçim" Style="{StaticResource AlanEtiketi}"/>
+                    <ComboBox ItemsSource="{Binding Bicimler}" DisplayMemberPath="Ad" SelectedValuePath="Deger" SelectedValue="{Binding GonderimBicimi}" Margin="0,4,0,10"/>
+                    <TextBlock Text="Alıcılar" Style="{StaticResource AlanEtiketi}"/>
+                </StackPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                    <ItemsControl ItemsSource="{Binding Alicilar}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding Secili}" Margin="0,4">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Etiket}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Iletisim}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                    </StackPanel>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

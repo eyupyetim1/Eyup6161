@@ -1,0 +1,26 @@
+PayControl — Kurulum (Windows 10/11, 64-bit)
+============================================
+
+ONEMLI: Indirdiginiz ZIP icinde PayControl.exe olmali.
+"Eyup6161-cursor-..." kaynak kod ZIP'i DEGILDIR.
+
+1) PayControl-Kurulum-win-x64.zip dosyasini masaustune indirin
+   (GitHub Actions > Artifacts bolumunden)
+2) ZIP'e sag tik > Tumunu ayikla
+3) Acilan klasorde KURULUM.cmd dosyasina CIFTtiklayin
+   (veya Install-PayControl.ps1 > sag tik > PowerShell ile Calistir)
+4) Masaustundeki PayControl kisayolunu acin
+
+Giris
+-----
+Kullanici: admin
+Sifre:     Admin123!
+
+Siyah ekran acilip hemen kapaniyorsa
+------------------------------------
+Yanlis ZIP'i acmissinizdir (kaynak kod).
+Dogru pakette su dosyalar BIRLIKTE olur:
+  - PayControl.exe   (cok buyuk, ~70 MB)
+  - KURULUM.cmd
+  - Install-PayControl.ps1
+  - KURULUM.txt

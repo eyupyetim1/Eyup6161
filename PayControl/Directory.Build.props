@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Linux / macOS üzerinde WPF Desktop projesini varsayılan olarak atla -->
+    <ExcludeDesktop Condition="'$(ExcludeDesktop)' == '' and $([MSBuild]::IsOSPlatform('Windows')) == false">true</ExcludeDesktop>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,354 @@
+<Window x:Class="PayControl.Desktop.Views.YonetimWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctl="clr-namespace:PayControl.Desktop.Controls"
+        Title="Ayarlar ve Yönetim"
+        Height="820" Width="1300" MinHeight="600" MinWidth="1040"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <Window.Resources>
+        <Style x:Key="FormSatiri" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style x:Key="Aciklama" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,4,0,14"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="24,20,24,20">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <TextBlock Text="Ayarlar ve yönetim" Style="{StaticResource SayfaBasligi}"/>
+            <TextBlock Style="{StaticResource AltBaslik}" Text="Kullanıcılar ve roller · yedekleme ve geri yükleme · zamanlanmış görevler · veritabanı · güncelleme"/>
+        </StackPanel>
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource BilgiSeridi}" Margin="0,12,0,0" Visibility="{Binding Mesaj, Converter={StaticResource Gorunurluk}}">
+            <TextBlock Text="{Binding Mesaj}" Style="{StaticResource MesajYazi}"/>
+        </Border>
+        <TabControl>
+            <!-- ================= Kullanıcılar ================= -->
+            <TabItem Header="Kullanıcılar">
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="340"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource SatirCizgiBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+                                <StackPanel>
+                                    <TextBlock Text="Seçili kullanıcıyı düzenle" Style="{StaticResource BolumBasligi}" Margin="0,0,0,10"/>
+                                    <WrapPanel>
+                                        <ComboBox Width="260" ItemsSource="{Binding Roller}" DisplayMemberPath="Ad" SelectedValuePath="Deger" SelectedValue="{Binding DuzenRol}" Margin="0,0,8,8"/>
+                                        <TextBox Width="170" Text="{Binding DuzenAdSoyad}" Tag="Ad soyad" Margin="0,0,8,8"/>
+                                        <TextBox Width="190" Text="{Binding DuzenEposta}" Tag="E-posta" Margin="0,0,8,8"/>
+                                        <TextBox Width="140" Text="{Binding DuzenTelefon}" Tag="Telefon" Margin="0,0,8,8"/>
+                                        <CheckBox Content="Aktif" IsChecked="{Binding DuzenAktif}" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding KullaniciGuncelleCommand}" Margin="0,0,0,8">
+                                            <TextBlock Text="Güncelle"/>
+                                        </Button>
+                                    </WrapPanel>
+                                    <WrapPanel>
+                                        <TextBlock Text="Geçici şifre" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,0,8,0"/>
+                                        <PasswordBox Width="210" ctl:SifreBaglama.Sifre="{Binding GeciciSifre}" ToolTip="Geçici şifre (politikaya uygun)" Margin="0,0,8,0"/>
+                                        <Button Style="{StaticResource SecondaryButton}" Command="{Binding SifreSifirlaCommand}"
+                                                ToolTip="Kilidi kaldırır; kullanıcı ilk girişte yeni şifre belirler">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE8D7;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Geçici şifre ata / kilidi aç"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                            <DataGrid ItemsSource="{Binding Kullanicilar}" SelectedItem="{Binding SeciliKullanici}" IsReadOnly="True" BorderThickness="0" MinRowHeight="48">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Kullanıcı" Width="1.6*" SortMemberPath="KullaniciAdi">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ContentControl Content="{Binding KullaniciAdi}" ContentTemplate="{StaticResource AvatarSablonu}" Margin="0,0,10,0" Focusable="False"/>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding KullaniciAdi}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding AdSoyad}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Rol" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Rol}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="E-posta" Binding="{Binding Eposta}" Width="*"/>
+                                    <DataGridTemplateColumn Header="Aktif" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Aktif}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Kilitli" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Kilitli}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Son giriş" Binding="{Binding SonGiris, Converter={StaticResource YerelZaman}}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Kart}">
+                        <StackPanel>
+                            <TextBlock Text="Yeni kullanıcı" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Şifre en az 8 karakter; büyük/küçük harf ve rakam içermeli. 5 hatalı girişte hesap 15 dakika kilitlenir."/>
+                            <StackPanel DataContext="{Binding YeniKullanici}">
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Kullanıcı adı" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding KullaniciAdi}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="İlk şifre" Style="{StaticResource AlanEtiketi}"/>
+                                    <PasswordBox ctl:SifreBaglama.Sifre="{Binding Sifre}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Rol" Style="{StaticResource AlanEtiketi}"/>
+                                    <ComboBox ItemsSource="{Binding DataContext.Roller, RelativeSource={RelativeSource AncestorType=Window}}" DisplayMemberPath="Ad"
+                                              SelectedValuePath="Deger" SelectedValue="{Binding Rol}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Ad soyad" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding AdSoyad}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="E-posta" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding Eposta}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Style="{StaticResource FormSatiri}">
+                                    <TextBlock Text="Telefon" Style="{StaticResource AlanEtiketi}"/>
+                                    <TextBox Text="{Binding Telefon}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding KullaniciOlusturCommand}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8FA;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Kullanıcı oluştur"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ================= Yedekleme ================= -->
+            <TabItem Header="Yedekleme">
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="360"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Kart}" Padding="0" Margin="0,0,14,0">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="16,14,16,10">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding YedekAlCommand}" Margin="0,0,8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE8F7;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Şimdi yedek al"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource DangerButton}" Command="{Binding GeriYukleCommand}" ToolTip="Yönetici yetkisi gerekir">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE777;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Yedekten geri yükle…"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <TextBlock Text="Yedek geçmişi" Style="{StaticResource BolumBasligi}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DockPanel DockPanel.Dock="Bottom" Margin="16,10,16,14">
+                                <TextBlock DockPanel.Dock="Left" Text="Şifreli yedeği geri yüklerken şifre:" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" Margin="0,0,8,0"/>
+                                <PasswordBox ctl:SifreBaglama.Sifre="{Binding GeriYuklemeSifresi}" Width="220" HorizontalAlignment="Left"/>
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding Yedekler}" IsReadOnly="True" BorderThickness="0,1">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Zaman" Binding="{Binding Zaman, Converter={StaticResource YerelZaman}}" Width="120"/>
+                                    <DataGridTemplateColumn Header="Durum" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate><ContentControl Content="{Binding Basarili}" ContentTemplate="{StaticResource RozetSablonu}" Focusable="False"/></DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Otomatik" Binding="{Binding Otomatik}" Width="80"/>
+                                    <DataGridTextColumn Header="Şifreli" Binding="{Binding Sifreli}" Width="70"/>
+                                    <DataGridTextColumn Header="Boyut (bayt)" Binding="{Binding Boyut, StringFormat=N0}" Width="110" ElementStyle="{StaticResource SagaHizali}"/>
+                                    <DataGridTextColumn Header="Dosya" Binding="{Binding DosyaYolu}" Width="2*" ElementStyle="{StaticResource SarilanHucre}"/>
+                                    <DataGridTextColumn Header="Hata" Binding="{Binding Hata}" Width="*" ElementStyle="{StaticResource SarilanHucre}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Kart}">
+                        <StackPanel>
+                            <TextBlock Text="Yedekleme ayarları" Style="{StaticResource BolumBasligi}"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Tutarlı anlık yedek (çalışırken alınabilir), SHA-256 bütünlük özeti; şifre verilirse AES-256-GCM ile şifrelenir. Yedek klasörü olarak ağ sürücüsü veya harici disk seçmeniz önerilir."/>
+                            <CheckBox Content="Günde bir otomatik yedek al" IsChecked="{Binding OtomatikYedek}" Margin="0,0,0,12"/>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Yedek klasörü (boş = varsayılan)" Style="{StaticResource AlanEtiketi}"/>
+                                <DockPanel Margin="0,4,0,0">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Command="{Binding KlasorSecCommand}" Margin="6,0,0,0" ToolTip="Klasör seç">
+                                        <TextBlock Text="&#xE8B7;" Style="{StaticResource IkonYazi}" FontSize="13"/>
+                                    </Button>
+                                    <TextBox Text="{Binding YedekKlasoru}"/>
+                                </DockPanel>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Saklanacak otomatik yedek sayısı" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding SaklamaSayisi}" Width="80" HorizontalAlignment="Left" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource FormSatiri}">
+                                <TextBlock Text="Yedek şifresi (yazılmazsa değişmez)" Style="{StaticResource AlanEtiketi}"/>
+                                <PasswordBox ctl:SifreBaglama.Sifre="{Binding YedekSifresi}" Margin="0,4,0,0"/>
+                                <TextBlock Style="{StaticResource Aciklama}" Text="Şifreyi kaybederseniz şifreli yedekler açılamaz; güvenli bir yerde saklayın."/>
+                            </StackPanel>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding YedekAyarlariKaydetCommand}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Ayarları kaydet"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ================= Zamanlanmış görevler ================= -->
+            <TabItem Header="Zamanlanmış görevler">
+                <Border Style="{StaticResource Kart}" Margin="0,14,0,0" VerticalAlignment="Top" MaxWidth="820" HorizontalAlignment="Left">
+                    <StackPanel>
+                        <TextBlock Text="Otomatik işler" Style="{StaticResource BolumBasligi}"/>
+                        <TextBlock Style="{StaticResource Aciklama}" Text="Otomatik yedek, zamanlanmış rapor/uyarı e-postaları ve WhatsApp mesajları, başarısız bildirimlerin yeniden denenmesi. Program açıkken her 5 dakikada bir kendiliğinden çalışır. Bilgisayar açık ama program kapalıyken de çalışması için Windows Görev Zamanlayıcısı'na kaydedin (yönetici hakkı gerekmez)."/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <TextBlock Text="Durum:" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding GorevDurumu}"/>
+                        </StackPanel>
+                        <WrapPanel>
+                            <TextBlock Text="Her" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox Width="60" Text="{Binding GorevAraligi}"/>
+                            <TextBlock Text="dakikada bir" VerticalAlignment="Center" Margin="6,0,12,0"/>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding GorevKaydetCommand}" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE823;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Windows görevini kaydet"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding GorevKaldirCommand}" Margin="0,0,8,0">
+                                <TextBlock Text="Görevi kaldır"/>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding GorevSimdiCalistirCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE768;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Şimdi çalıştır"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- ================= Veritabanı ================= -->
+            <TabItem Header="Veritabanı">
+                <Border Style="{StaticResource Kart}" Margin="0,14,0,0" VerticalAlignment="Top" MaxWidth="820" HorizontalAlignment="Left">
+                    <StackPanel>
+                        <TextBlock Text="Veritabanı" Style="{StaticResource BolumBasligi}"/>
+                        <TextBlock Style="{StaticResource Aciklama}" Text="{Binding VeritabaniOzeti}"/>
+                        <RadioButton Content="Yerel SQLite (tek bilgisayar, kurulum gerektirmez)" IsChecked="{Binding PgSecili, Converter={StaticResource TersBool}}" Margin="0,0,0,8"/>
+                        <RadioButton Content="PostgreSQL sunucusu (birden fazla kullanıcı aynı anda, tesisler ortak veri)" IsChecked="{Binding PgSecili}" Margin="0,0,0,14"/>
+                        <Grid IsEnabled="{Binding PgSecili}" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Sunucu" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding PgSunucu}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Port" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding PgPort}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Veritabanı" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding PgVeritabani}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                                <TextBlock Text="Kullanıcı" Style="{StaticResource AlanEtiketi}"/>
+                                <TextBox Text="{Binding PgKullanici}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Margin="0,12,0,0">
+                                <TextBlock Text="Şifre" Style="{StaticResource AlanEtiketi}"/>
+                                <PasswordBox ctl:SifreBaglama.Sifre="{Binding PgSifre}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Style="{StaticResource Aciklama}" Text="Bağlantı bilgisi bu bilgisayarda şifrelenmiş olarak saklanır (veritabani.json). Her kullanıcının bilgisayarında aynı ayar yapılmalıdır. Sunucu yedeği için pg_dump kullanın."/>
+                        <WrapPanel>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding PgDeneCommand}" Margin="0,0,8,0" IsEnabled="{Binding PgSecili}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE703;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Bağlantıyı dene"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding VeritabaniKaydetCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Kaydet ve yeniden başlat"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- ================= Güncelleme ================= -->
+            <TabItem Header="Güncelleme">
+                <Border Style="{StaticResource Kart}" Margin="0,14,0,0" VerticalAlignment="Top" MaxWidth="820" HorizontalAlignment="Left">
+                    <StackPanel>
+                        <TextBlock Text="{Binding SurumMetni}" Style="{StaticResource BolumBasligi}"/>
+                        <TextBlock Style="{StaticResource Aciklama}" Text="Güncelleme paketi SHA-256 ile doğrulanmadan kurulmaz; kurulumdan önce yedek alınır ve hata olursa önceki sürüm geri yüklenir. Bildirim adresi boşsa GitHub sürümleri kullanılır; şirket içi kullanım için ağ paylaşımındaki guncelleme.json dosyasını gösterebilirsiniz."/>
+                        <StackPanel Style="{StaticResource FormSatiri}">
+                            <TextBlock Text="Güncelleme bildirimi adresi (https://… veya \\sunucu\paylasim\guncelleme.json)" Style="{StaticResource AlanEtiketi}"/>
+                            <TextBox Text="{Binding GuncellemeAdresi}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <CheckBox Content="Açılışta güncellemeleri denetle" IsChecked="{Binding GuncellemeOtomatik}" Margin="0,0,0,12"/>
+                        <WrapPanel Margin="0,0,0,12">
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding GuncellemeAyarKaydetCommand}" Margin="0,0,8,0">
+                                <TextBlock Text="Kaydet"/>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding GuncellemeDenetleCommand}" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE895;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Güncellemeleri denetle"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource BasariButton}" Command="{Binding GuncellemeKurCommand}" IsEnabled="{Binding GuncellemeHazir}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE896;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="İndir ve kur"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                        <TextBlock Text="{Binding GuncellemeDurumu}" TextWrapping="Wrap" Foreground="{StaticResource BirincilKoyuBrush}"/>
+                        <ProgressBar Value="{Binding IndirmeIlerleme}" Height="6" Margin="0,10,0,0" Maximum="100"
+                                     Visibility="{Binding GuncellemeHazir, Converter={StaticResource BoolGorunur}}"/>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

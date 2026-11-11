@@ -1,0 +1,68 @@
+<Window x:Class="PayControl.Desktop.Views.DenetimGecmisiWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Denetim Geçmişi"
+        Height="800" Width="1380" MinHeight="560" MinWidth="1040"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AnaFont}"
+        Background="{StaticResource ZeminBrush}">
+    <DockPanel Margin="24,20,24,20">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <TextBlock Text="Denetim geçmişi" Style="{StaticResource SayfaBasligi}"/>
+            <TextBlock Style="{StaticResource AltBaslik}" Text="Kim, ne zaman, neyi, neden değiştirdi · kayıtlar değiştirilemez ve silinemez"/>
+        </StackPanel>
+        <Border DockPanel.Dock="Top" Style="{StaticResource Kart}" Padding="14,12" Margin="0,0,0,12">
+            <WrapPanel>
+                <DatePicker Width="130" SelectedDate="{Binding Baslangic}" Margin="0,0,6,0" ToolTip="Başlangıç"/>
+                <DatePicker Width="130" SelectedDate="{Binding Bitis}" Margin="0,0,10,0" ToolTip="Bitiş"/>
+                <ComboBox Width="140" ItemsSource="{Binding Kullanicilar}" SelectedItem="{Binding SeciliKullanici}" Margin="0,0,6,0" ToolTip="Kullanıcı"/>
+                <ComboBox Width="190" ItemsSource="{Binding Islemler}" SelectedItem="{Binding SeciliIslem}" Margin="0,0,6,0" ToolTip="İşlem"/>
+                <TextBox Width="140" Text="{Binding VarlikTuru}" Tag="Kayıt türü" Margin="0,0,6,0"/>
+                <TextBox Width="200" Text="{Binding Metin, UpdateSourceTrigger=PropertyChanged}" Tag="Değer / neden içinde ara…" Margin="0,0,8,0">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding FiltreUygulaCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding FiltreUygulaCommand}" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE71C;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Filtrele"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding ExcelCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE9F9;" Style="{StaticResource IkonYazi}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Excel"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+        </Border>
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding OncekiCommand}" Margin="0,0,6,0" ToolTip="Önceki sayfa">
+                    <TextBlock Text="&#xE76B;" Style="{StaticResource IkonYazi}" FontSize="12"/>
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding SonrakiCommand}" ToolTip="Sonraki sayfa">
+                    <TextBlock Text="&#xE76C;" Style="{StaticResource IkonYazi}" FontSize="12"/>
+                </Button>
+            </StackPanel>
+            <TextBlock Text="{Binding SayfaBilgisi}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+            <TextBlock Text="{Binding Mesaj}" VerticalAlignment="Center" Foreground="{StaticResource BirincilKoyuBrush}" Margin="16,0,0,0" TextWrapping="Wrap"/>
+        </DockPanel>
+        <Border Style="{StaticResource Kart}" Padding="0">
+            <DataGrid ItemsSource="{Binding Kayitlar}" SelectedItem="{Binding SeciliKayit}" IsReadOnly="True" BorderThickness="0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Zaman" Binding="{Binding IslemZamani, Converter={StaticResource YerelZaman}}" Width="120"/>
+                    <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdi}" Width="100"/>
+                    <DataGridTextColumn Header="İşlem" Binding="{Binding Islem}" Width="1.3*"/>
+                    <DataGridTextColumn Header="Kayıt türü" Binding="{Binding VarlikTuru}" Width="*" ElementStyle="{StaticResource SolukHucre}"/>
+                    <DataGridTextColumn Header="Personel" Binding="{Binding Personel.AdSoyad}" Width="*"/>
+                    <DataGridTextColumn Header="Alan" Binding="{Binding AlanAdi}" Width="0.8*"/>
+                    <DataGridTextColumn Header="Eski değer" Binding="{Binding EskiDeger}" Width="1.2*" ElementStyle="{StaticResource SarilanHucre}"/>
+                    <DataGridTextColumn Header="Yeni değer" Binding="{Binding YeniDeger}" Width="1.2*" ElementStyle="{StaticResource SarilanHucre}"/>
+                    <DataGridTextColumn Header="Neden" Binding="{Binding DegisiklikNedeni}" Width="1.4*" ElementStyle="{StaticResource SarilanHucre}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </DockPanel>
+</Window>
