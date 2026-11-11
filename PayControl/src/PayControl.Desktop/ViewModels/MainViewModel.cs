@@ -233,6 +233,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private void Nakil() { Ac<NakilWindow>(); _ = YenileAsync(); }
     [RelayCommand] private void VeriAktarimi() { Ac<VeriAktarimiWindow>(); _ = YenileAsync(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void RaporMerkezi() => Ac<RaporMerkeziWindow>();
+    [RelayCommand] private void IzinBakiye() { Ac<IzinBakiyeWindow>(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void CikisTakibi() { Ac<CikisTakibiWindow>(); _ = YenileAsync(); _ = GostergeYukleAsync(); }
     [RelayCommand] private void Bildirimler() => Ac<BildirimlerWindow>();
     [RelayCommand] private void Tesisler() { Ac<TesislerWindow>(); _ = GostergeYukleAsync(); }

@@ -93,6 +93,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<ModulVeriViewModel>();
         services.AddTransient<ModulVeriWindow>();
         services.AddTransient<CikisTakibiWindow>();
+        services.AddTransient<IzinBakiyeViewModel>();
+        services.AddTransient<IzinBakiyeWindow>();
         services.AddTransient<RaporMerkeziWindow>();
         services.AddTransient<BildirimlerWindow>();
         services.AddTransient<UyariMerkeziWindow>();

@@ -99,12 +99,7 @@ public sealed class AccessAktarimServisi : IAccessAktarimServisi
     // ------------------------------------------------------------------ CSV → program
 
     /// <summary>VBA'daki tablo adı dönüşümü: Türkçe harfler sadeleşir, harf/rakam dışı '_' olur ("Giresun (Keşap) Limanı" → "Giresun__Kesap__Limani").</summary>
-    public static string TabloAdi(string tesis)
-    {
-        var s = tesis.Replace('ı', 'i').Replace('İ', 'I').Replace('ş', 's').Replace('Ş', 'S').Replace('ğ', 'g').Replace('Ğ', 'G')
-            .Replace('ü', 'u').Replace('Ü', 'U').Replace('ö', 'o').Replace('Ö', 'O').Replace('ç', 'c').Replace('Ç', 'C');
-        return new string(s.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_').ToArray());
-    }
+    public static string TabloAdi(string tesis) => PuantajHesaplayici.TabloAdi(tesis);
 
     private static DateOnly? Tarih(string? s) =>
         DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) && d.Year > 1900 ? DateOnly.FromDateTime(d) : null;

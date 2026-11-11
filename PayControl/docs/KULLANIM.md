@@ -48,6 +48,18 @@ Bir personelin çıkarılmasını İK'ya söylediğinizde bunu **Çıkış Takib
 
 **Yalnız sorunlular** filtresi gecikenleri ve son günden sonra ödeme yapılanları gösterir. Excel düğmesi listeyi rapor olarak kaydeder (Rapor Merkezi → Çıkış talimatı takibi).
 
+## İzin ve bakiye
+
+Kenar menü → **İK ve özlük → İzin ve bakiye**. Liste herkesin güncel izin durumunu (artı = alacak, eksi = borç), hafta tatili ve resmi tatil bakiyesini ve kalan yıllık iznini gösterir. Tesis, arama, "Yalnız borçlular" ve "Pasifler dahil" ile süzülür; Excel'e aktarılır.
+
+- Bir kişiye tıklayınca sağda **izin kartı** açılır: bakiye özeti, yıllık izin, hareket defteri (hangi gün neden arttı / azaldı), manuel kayıtlar, resmi tatiller, yıl özeti ve işlem günlüğü.
+- **Elle işlem**: türü seçin (kesin bakiye, HT düzeltme, RT kullanımı, Gİ / Hİ kesintisi, yıllık izin kullanımı, ekle / düş, kalan, sezon kapama), tarih ve günü yazıp Kaydet'e basın. Yanlış girdiyseniz **İşlem günlüğü** sekmesinden seçip **Geri al**.
+- Puantajda Yİ yazılmış günler için ayrıca elle yıllık izin girmeyin; program aynı günleri iki kez düşmeyi engeller.
+- **Sezon kapama**: listenin altından tarih ve bakiye (çoğunlukla 0) girip "Sezonu kapat". Tüm liste ya da yalnız seçili kişi. "Son sezon kapamayı geri al" ile tek seferde geri alınır.
+- **İzin günü**: kişiye özel hafta tatili (ör. perşembe) kişi ayarlarından; birden çok kişi seçip "Seçililere izin günü uygula". Genel kural (Sadece Pazar vb.) sağ üstten, yalnız yönetici.
+- **İzin süresi** sekmesi: başlangıç ve izin günü yazınca son gün ve işbaşı tarihini hesaplar.
+- Hesabın tüm kuralları **Hesap kuralları** düğmesinde.
+
 ## Tesisler (birden fazla tesis)
 
 1. **Tesisler → Personelden oluştur** ile personel kartlarındaki işyeri adlarından tesisler açılır (bordro içe aktarırken de otomatik açılır). Sorumlu ve iletişim bilgilerini girin.

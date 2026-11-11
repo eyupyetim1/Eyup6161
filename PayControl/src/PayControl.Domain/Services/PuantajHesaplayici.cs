@@ -118,4 +118,12 @@ public static class PuantajHesaplayici
         var devreden = calisilan == 0 && ui == 0 ? 0 : haftasonuHakki - kullanilan;
         return new AylikPuantajOzeti(haftasonuHakki, kullanilan, calisilan, yi, r, rt, ui, ht, kodlu - ii - yg, ii, devreden, g, gi, m, hi, yg);
     }
+
+    /// <summary>VBA'daki tablo adı dönüşümü: Türkçe harfler sadeleşir, harf/rakam dışı '_' olur ("Giresun (Keşap) Limanı" → "Giresun__Kesap__Limani").</summary>
+    public static string TabloAdi(string tesis)
+    {
+        var s = tesis.Replace('ı', 'i').Replace('İ', 'I').Replace('ş', 's').Replace('Ş', 'S').Replace('ğ', 'g').Replace('Ğ', 'G')
+            .Replace('ü', 'u').Replace('Ü', 'U').Replace('ö', 'o').Replace('Ö', 'O').Replace('ç', 'c').Replace('Ç', 'C');
+        return new string(s.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_').ToArray());
+    }
 }

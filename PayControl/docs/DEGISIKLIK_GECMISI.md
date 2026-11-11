@@ -1,5 +1,16 @@
 # Değişiklik Geçmişi
 
+## 1.6.0 — 2026-11-11 (İzin ve bakiye motoru)
+
+- **İzin ve bakiye ekranı** (İK ve özlük → İzin ve bakiye) VBA'daki `mdlBakiye` kurallarının birebir karşılığıyla: kişi kişi hafta tatili (HT) ve resmi tatil (RT) bakiyesi, güncel izin durumu (HT + dahilse RT), yıllık izin hakkı / kullanılan / kalan. Gerçek veride Excel 7. sayfasındaki güncel izin durumu ile **114 kişinin 114'ü birebir aynı** çıktı.
+- Kurallar: her hafta tatili günü +1 (genel ayar Sadece Pazar / Cumartesi / Cumartesi ve Pazar ya da kişiye özel gün), haftada 2+ Üİ olunca hak yanar, HT −1, YG −0,5, yıllık izne denk gelen pazar ve izin dönüşü pazarı HT'den düşer, aylık rapor kesintisi (7 günde 1, kalan 6+ ise 1 daha; o ayın hakkını geçmez), aylık manuel hak, Gİ / Hİ kesintileri, pazara denk gelmeyen resmi tatiller (yarım gün arifeler dahil), kesin bakiye (o günün gün sonu, sonrası ondan devam eder), işe giriş / çıkış sınırları. Yıllık izin her hizmet yılı dolunca kıdem ve yaşa göre (14 / 20 / 26, 50 yaş üstü ve 18 yaş altı en az 20) birikir.
+- **İzin kartı**: bakiye özeti, hareket defteri (en yeni üstte, gün gün bakiye), manuel kayıtlar (iptal / yeniden etkinleştir), resmi tatil tablosu, yıl özeti, işlem günlüğü.
+- **Elle işlemler** VBA ile aynı 10 tür: kesin bakiye, HT düzeltme, RT kullanımı (bitiş girilince gün sayısı kendiliğinden), RT ek hak / düşürme, görev ve hasat izni kesintisi, yıllık izin kullanımı, yıllık izin ekle / düş, yıllık izin kalan (kesin), sezon kapama. Aynı denetimler: gelecek tarihli kesin bakiye yok, eksi kullanım yok, yarım gün katları, aynı yıllık izin puantajda Yİ ise **çift düşüm engellenir**.
+- **Her işlem geri alınabilir** (işlem günlüğü). Excel'den gelen eski işlem kayıtları da bu programdan geri alınır.
+- **Sezon kapama** (listedeki herkes ya da seçili kişi, tek işlemle geri alma), **toplu izin günü**, kişiye özel izin günü, RT bakiyeye dahil, doğum tarihi (14 yaş / 1930 / işe giriş denetimiyle), genel hafta tatili kuralı (yönetici).
+- **Yıllık izin süresi hesaplama**: başlangıç + izin günü → son gün ve işbaşı (pazar ve resmi tatiller atlanır).
+- Çift düşüm kontrolü, hesap kuralları penceresi, listeyi ve defteri Excel'e aktarma. Ham kayıt tabloları "Kayıt tabloları" düğmesiyle açılmaya devam eder.
+
 ## 1.5.0 — 2026-11-11
 
 - **Tüm Access tabloları aktarılıyor** (35 tablo daha): izin hareketleri, HT bakiye sabitleme, görev/hasat izin kesintileri, manuel düzeltmeler, izin işlem geçmişi, personel belgeleri ve belge tanımları, şirket ve personel sözleşmeleri, İSG belgeleri, zimmet/malzeme/bakım, eğitim/katılım/türler, avans ve taksitler, fazla mesai, disiplin, görevlendirme, işe giriş kontrolü, şirketler ve eşleşmeleri, eski kullanıcılar/yetkiler/ayarlar/günlükler. Sütunlar Access ile birebir.

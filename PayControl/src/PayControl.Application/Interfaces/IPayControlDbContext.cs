@@ -59,4 +59,5 @@ public interface IPayControlDbContext
     DbSet<UygulamaAyari> UygulamaAyarlari { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade Database { get; }
 }

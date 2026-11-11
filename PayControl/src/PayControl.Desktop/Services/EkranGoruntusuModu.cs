@@ -141,10 +141,23 @@ public static class EkranGoruntusuModu
         await KaydetAsync(sp.GetRequiredService<NakilWindow>(), Path.Combine(klasor, "17-nakil.png"));
         await KaydetAsync(sp.GetRequiredService<VeriAktarimiWindow>(), Path.Combine(klasor, "18-veri-aktarimi.png"));
 
-        // 19) İzin ve bakiye (eski sistem tabloları)
+        // 19) İzin ve bakiye: liste + izin kartı özeti, 20) aynı kişinin hareket defteri
+        foreach (var (dosya, sekme) in new[] { ("19-izin-ve-bakiye.png", 0), ("20-izin-defteri.png", 1) })
+        {
+            var izinVm = sp.GetRequiredService<IzinBakiyeViewModel>();
+            await KaydetAsync(new IzinBakiyeWindow(izinVm), Path.Combine(klasor, dosya), async () =>
+            {
+                for (var i = 0; i < 40 && (izinVm.Yukleniyor || izinVm.Satirlar.Count == 0); i++) await Task.Delay(100);
+                izinVm.SeciliSatir = izinVm.Satirlar.Where(x => x.Toplam is not null).OrderByDescending(x => x.S.Defter.Count + (x.Toplam ?? 0)).FirstOrDefault()
+                                     ?? izinVm.Satirlar.FirstOrDefault();
+                await Task.Delay(900);
+            }, sekme: sekme);
+        }
+
+        // 21) Eski sistem kayıt tabloları (izin ve bakiye grubu)
         var modul = sp.GetRequiredService<ModulVeriWindow>();
         modul.Grup = "İzin ve bakiye";
-        await KaydetAsync(modul, Path.Combine(klasor, "19-izin-ve-bakiye.png"), () => Task.Delay(800));
+        await KaydetAsync(modul, Path.Combine(klasor, "21-izin-kayit-tablolari.png"), () => Task.Delay(800));
 
         // 15) Çıkış takibi
         var takipVm = sp.GetRequiredService<CikisTakibiViewModel>();
